@@ -1,98 +1,238 @@
-# llmlog
+## llmlog — New Config-Driven Experiment Framework
 
-**Experiments with LLMs and logic: what can LLMs solve?**
+This repository hosts a new, unified framework for running logic-focused LLM experiments efficiently and reproducibly. The legacy one-off scripts (exp1–exp8) have been moved under `_legacy/` and remain intact. The new setup replaces copy‑pasted per-experiment code with a single runner configured via YAML, prompt templates, and pluggable parsing/filters.
 
-## Code and files
+### Goals
+- **Single runner, many configs**: No per-experiment code forks
+- **Prompt templating**: Jinja2 templates with per-run variables
+- **Pluggable parsing**: Swap out how model outputs are parsed (e.g., yes/no, contradiction)
+- **Flexible filtering**: Run subsets (e.g., horn-only) without editing code
+- **Concurrency + retries**: Faster runs with rate-limit aware backoff
+- **Resumability**: Safe to stop/resume without redoing completed items
+- **Standard JSONL outputs**: One schema across all experiments
+- **Reproducibility**: Save config, template hash, and git SHA per run
 
-`makeproblems.py` prints out a configurable number of different propositional logic problem distributions along with their proofs or satisfying valuations.
-The global configuration variables are at the beginning of the code. The first printed line describes the format of following lines.
-Each following line is one propositional problem along with the metainformation and a proof or a satisfying valuation, as a json / python nested list of integers.
-The meaning of the list elements, as indicated on the first line:
+### Directory Layout (new)
+- `.gitignore` - ignore files for git (e.g., secrets.json)
+- `_legacy/` — previous experiments kept as-is
+- `experiments/`
+  - `runner.py` — generic executor (config-driven)
+  - `analyze_generic.py` — analysis over the standard JSONL schema
+  - `parsers.py` — output parsers (e.g., `yes_no`, `contradiction`)
+  - `filters.py` — input filters (e.g., `horn_only`, `skip`, `limit`)
+  - `schema.py` — Pydantic models for input/output rows
+  - `configs/` — YAML configs, one per experiment variant
+  - `runs/` — run artifacts (results, config snapshot, metadata)
+- `prompts/` — Jinja2 prompt templates used by configs
+- `data/` — input JSONL problem sets (e.g., `problems_dist20_v1.js`)
+- `utils/` — shared helpers (providers, clients)
 
-    ["id","maxvarnr","maxlen","mustbehorn","issatisfiable","problem", 
-    "proof_of_inconsistency_or_satisfying_valuation","units_derived_by_horn_clauses"]
+Note: Some of these paths will be created as part of upcoming commits; the README documents the intended structure to enable a clean migration.
 
-* Here "maxvarnr","maxlen","mustbehorn","issatisfiable" indicate the concrete distribution. 
-* Problems are represented as clauses, each clause being a list of positive/negative integers. 
-* A proof is a list of input and derived clauses in the format 
-["clause_number_in_proof","parent_clause_numbers","derived_clause"]. 
-* A valuation is a list of positive/negative integers satisfying the problem.
-* The "units_derived_by_horn_clauses" is a list of integers representing units derivable by horn clauses in a linear manner. Zero at the end signifies that a a contradiction was derived.
+### Installation
+1) Python 3.10+ recommended (repo currently uses a recent Python; 3.13 works).
+2) Install deps:
+```
+python -m venv venv
+source venv/bin/activate
+pip install -U pip
+pip install -r requirements.txt
+```
 
-The outer loop of distribution generation is the maximal number of variables allowed (from 3 to 15), followed by the maximal length of a clause (2,3 or 4), followed by horn or not (1 or 0). Inside a distribution the provable/satisfiable clauses are interleaved, with exactly the same number of provable and satisfiable clauses.
+### Provider Credentials (unified `secret.json`)
+All provider credentials live in a single root file: `secret.json`.
 
-`someprop.js` is an example file created by `makeproblems.py`, with 10 provable and 10 satisfiable problems for each distribution.
+Minimal example (OpenAI + Anthropic):
+```
+{
+  "openai": {
+    "api_key": "sk-..."
+  },
+  "anthropic": {
+    "api_key": "sk-ant-..."
+  }
+}
+```
 
-`gpt.py` is for trying out prompts over the GPT API from the command line. Run without arguments to get a help text.
+Optional/extended keys per provider (only if needed by your account/deployment):
+```
+{
+  "openai": { "api_key": "..." },
+  "anthropic": { "api_key": "..." },
+  "azure_openai": { "api_key": "...", "endpoint": "https://...", "deployment": "gpt-4o" },
+  "groq": { "api_key": "..." }
+}
+```
 
-`askllm.py` is for GPT-solving the problems created by `makeproblems.py`. It reads the file row by row, makes a prompt and asks GPT API.
-Run without arguments to get a help text. The output is both printed and written to a file `gptresults.js` row-by-row as json lists. Each list
-contains the original full input problem along with metainfo and proofs/valuations, to which is appended the parsed answer, either 0 (GPT claims contradiction) or 1 (GPT claims satisfiable) and finally the whole textual answer given by LLM.
+Environment variables may override the file at runtime (if set):
+- `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `AZURE_OPENAI_API_KEY`, `GROQ_API_KEY`, etc.
 
-`analyze.py` is for creating statistics about one askllm.py output.
+Provider wiring is centralized under `utils/`; additional providers can be added without changing experiment configs.
 
-`utils/provider_manager.py` provides a unified interface for handling multiple LLM providers. Currently, it supports the Anthropic provider (via `utils/anthropic_client.py`) and can be extended to support others like OpenAI.
+### Input Data
+Inputs are JSONL (one JSON array/object per line). Existing datasets (e.g., `problems_dist20_v1.js`) can be reused. Header lines can be skipped via config.
 
-`utils/anthropic_client.py` provides an interface to the Anthropic API (Claude models) for generating completions. It reads API keys from the secrets.json file and offers functions to create a client and generate completions.
+### Config-Driven Runs
+Each experiment is defined by a YAML file under `experiments/configs/`.
 
-## Subfolders and separate experiments 
+Single-target example (exp8-equivalent yes/no on horn clauses):
+```yaml
+name: exp8_yesno_horn
+provider: openai
+model: gpt-4o-2024-11-20
+temperature: 0
+seed: 1234
+max_tokens: 2000
 
-The *exp* subfolders contain code and data for specific separate experiments. They do typically have their own README.
+input_file: data/problems_dist20_v1.js
+output_file: experiments/runs/${name}/results.jsonl
 
-These exp folders all use the problem file `problems_dist20_v1.js`:
+filters:
+  horn_only: true
+  skip_rows: 1     # skip header if present
+  limit_rows: null # or a number for quick tests
 
-* exp1 : base experiment with GPT-4o and 800 problems, using "p1 is true" and "p1 is false" representation with connecting "or".
-* exp2 : a more compact representation ("p1" and "not(p1)") than used in exp1: seems slightly better
-* exp3 : just 200 first horn clauses only, asking for a linear p1, p2, ... etc CoT output with derived variables printed out one by one
-* exp4 : just 200 first horn clauses only, asking for a linear p1 [parents], p2 [parents], ... etc CoT output with concrete derivation steps
-* exp5 : (superseded by exp7) just 300 first horn clauses only, using the "if...then" representation, asking for a linear p1, p2, ... etc CoT output with derived variables printed out 
-* exp6 : (superseded by exp8) Just 300 first horn clauses only, in the if...then representation, asking for just a yes/no output without CoT
-* exp7 : 520 horn clauses, using the "if...then" representation, asking for a linear p1, p2, ... etc CoT output with derived variables printed out 
-* exp8 : 520 horn clauses, using the if...then representation, asking for just a yes/no output without CoT
+prompt:
+  template: prompts/if_then_yesno.j2
+  variables: {}
 
-## Notes on performance 
+parse:
+  type: yes_no
+  yes_tokens: ["yes"]
+  no_tokens: ["no"]
 
-* exp1 demonstrates generally weak performance, getting worse as problems get more complex
-* exp2 shows that a more compact representation ("p1" and "not(p1)") vs ("p1 is true", "p1 is false") is slightly better
-* exp3 and exp4 show that the gpt4o does not understand the linear horn solving algorithm well enough when the clause notation with ... or ... is used
-* exp7 shows that gpt4o does understand the linear horn solving algorithm well (and performs well) in case the if .. then ... notation is used
-* exp8 shows that if linear horn solving algorithm is not described/explicated, then gpt4o performs badly on horn problems
+concurrency:
+  workers: 4
+  rate_limit_per_min: 120
+  retry:
+    max_attempts: 3
+    backoff_seconds: [2, 5, 10]
 
-## Environment Setup
+resume: true
+save_prompt: true
+save_response: true
+```
 
-It is recommended to use a Python virtual environment to manage dependencies for this project. Follow these steps:
+Multi-target example (run the same experiment for multiple providers/models):
+```yaml
+name: horn_yesno_suite
 
-1. Create a new virtual environment:
-   ```
-   python3 -m venv venv
-   ```
+# When `targets` is present, the runner fans out and runs each target concurrently
+targets:
+  - provider: openai
+    model: gpt-4o-2024-11-20
+    temperature: 0
+    seed: 1234
+    max_tokens: 2000
+  - provider: anthropic
+    model: claude-3-7-sonnet-latest
+    temperature: 0
+    seed: 1234
+    max_tokens: 2000
 
-2. Activate the virtual environment:
-   - On macOS/Linux:
-     ```
-     source venv/bin/activate
-     ```
-   - On Windows:
-     ```
-     venv\Scripts\activate
-     ```
+input_file: data/problems_dist20_v1.js
 
-3. Install the necessary packages:
-   - If a `requirements.txt` file is provided:
-     ```
-     pip install -r requirements.txt
-     ```
-   - Otherwise, you can manually install the needed packages. For example, to install matplotlib (which is required by `analyze.py`):
-     ```
-     pip install matplotlib
-     ```
+# Either write one merged results file, or shard by provider/model using a pattern
+output_file: experiments/runs/${name}/merged.results.jsonl
+# Alternatively:
+# output_pattern: experiments/runs/${name}/${provider}/${model}/results.jsonl
 
-4. Add your API credentials:
-   Create a `secrets.json` file in the project root. This file should contain your API keys in valid JSON format. For example:
-   ```json
-   {
-     "gpt_key": "your-openai-api-key-here",
-     "anthropic_api_key": "your-anthropic-api-key-here"
-   }
-   ```
-   Make sure to add `secrets.json` to your `.gitignore` file to prevent it from being tracked by version control.
+filters:
+  horn_only: true
+  skip_rows: 1
+
+prompt:
+  template: prompts/if_then_yesno.j2
+
+parse:
+  type: yes_no
+
+concurrency:
+  workers: 4              # per-target concurrency over items
+  targets_workers: 2      # number of targets processed in parallel
+  rate_limit_per_min: 120 # applied per provider target
+  retry:
+    max_attempts: 3
+    backoff_seconds: [2, 5, 10]
+
+resume: true
+save_prompt: false
+save_response: true
+```
+
+Prompt template example `prompts/if_then_yesno.j2`:
+```jinja2
+Your task is to solve a problem in propositional logic containing both facts and if-then rules.
+You will get a list of facts and if-then rules and have to determine whether a fact p0 can be derived from this list.
+If a fact p0 can be derived, the last word of your answer should be 'yes', otherwise the last word should be 'no'.
+
+Statements:
+{% for clause in clauses %}
+{{ clause }}
+{% endfor %}
+
+Please answer whether a fact p0 can be derived from the following facts and rules.
+```
+
+### Running Experiments
+Run the new generic runner with a config:
+```
+python experiments/runner.py --config experiments/configs/exp8_yesno_horn.yaml
+```
+Useful options (to be supported by the CLI):
+- `--limit 50` — process only the first 50 items
+- `--dry-run` — print prompts without calling the API
+- `--resume` — continue an interrupted run
+- `--only openai,anthropic` — restrict to a subset of providers in a multi-target config
+- `--models openai:gpt-4o-2024-11-20,anthropic:claude-3-7-sonnet-latest` — restrict models per provider
+
+Artifacts are stored under `experiments/runs/<name>/` and include:
+- `results.jsonl` — standard output rows
+- `config.used.yaml` — the exact config snapshot
+- `metadata.json` — git SHA, start/end time, model, etc.
+
+### Standard Output Schema
+Each line in `results.jsonl` is a JSON object with at least:
+```
+{
+  "id": <int|str>,
+  "meta": { "maxvars": int, "maxlen": int, "horn": 0|1, "satflag": 0|1, "proof": [...] },
+  "provider": "openai|anthropic|...",
+  "prompt": "...",               # optional if save_prompt=true
+  "completion_text": "...",      # optional if save_response=true
+  "parsed_answer": 0|1|2,         # 2 = unclear
+  "correct": true|false|null,     # null if no ground truth
+  "timing_ms": <int>,
+  "model": "...",
+  "seed": <int>,
+  "temperature": <number>
+}
+```
+
+### Analysis
+Use the generic analyzer on any run file:
+```
+python experiments/analyze_generic.py experiments/runs/exp8_yesno_horn/results.jsonl
+```
+It reports accuracy grouped by `maxvars`/`maxlen`/`horn` and, when present, per-depth stats using `proof` data.
+
+### Porting a Legacy Experiment
+1) Identify the prompt style and parsing logic from `legacy/expX/`.
+2) Create a template in `prompts/` capturing that style.
+3) Add a YAML config under `experiments/configs/` that:
+   - points to the dataset
+   - references the template
+   - selects the appropriate parser type and tokens
+   - defines any filters (e.g., horn-only, skip/limit)
+4) Run and compare a small subset vs. the legacy output to validate parity.
+
+### Roadmap
+- Implement `experiments/runner.py` with asyncio, retry/backoff, resumable checkpoints
+- Implement parsers/filters/schema and the generic analyzer
+- Wire providers via `utils/provider_manager.py` (OpenAI first, Anthropic next)
+- Add caching-by-hash to avoid duplicate API calls (optional)
+
+### License
+Apache 2.0. See `LICENSE`.
+
+
