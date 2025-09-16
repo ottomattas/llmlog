@@ -1,4 +1,4 @@
-name: exp1_cnf_v1
+name: exp4_cnf_cot_parents
 provider: openai
 model: gpt-4o-2024-11-20
 temperature: 0
@@ -9,11 +9,13 @@ input_file: data/problems_dist20_v1.js
 output_file: experiments/runs/${name}/results.jsonl
 
 filters:
+  horn_only: true
   skip_rows: 1
+  limit_rows: 200
 
 prompt:
-  template: prompts/exp1_cnf_v1_contradiction.j2
-  style: cnf_v1
+  template: prompts/exp4_horn_cnf_cot_parents_contradiction.j2
+  style: cnf_v2
 
 parse:
   type: contradiction

@@ -13,8 +13,8 @@ filters:
   skip_rows: 1
 
 prompt:
-  template: prompts/if_then_yesno.j2
-  variables: {}
+  template: prompts/exp8_if_then_yesno.j2
+  style: horn_if_then
 
 parse:
   type: yes_no

@@ -1,4 +1,4 @@
-name: exp1_cnf_v1
+name: exp6_horn_yesno
 provider: openai
 model: gpt-4o-2024-11-20
 temperature: 0
@@ -9,14 +9,15 @@ input_file: data/problems_dist20_v1.js
 output_file: experiments/runs/${name}/results.jsonl
 
 filters:
+  horn_only: true
   skip_rows: 1
 
 prompt:
-  template: prompts/exp1_cnf_v1_contradiction.j2
-  style: cnf_v1
+  template: prompts/exp6_if_then_yesno.j2
+  style: horn_if_then
 
 parse:
-  type: contradiction
+  type: yes_no
 
 concurrency:
   workers: 4

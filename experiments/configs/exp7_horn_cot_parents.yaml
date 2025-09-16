@@ -13,7 +13,7 @@ filters:
   skip_rows: 1
 
 prompt:
-  template: prompts/horn_cot_parents.j2
+  template: prompts/exp7_horn_cot_parents.j2
   style: horn_if_then
 
 parse:

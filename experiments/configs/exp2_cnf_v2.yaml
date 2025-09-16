@@ -12,7 +12,7 @@ filters:
   skip_rows: 1
 
 prompt:
-  template: prompts/cnf_v2_contradiction.j2
+  template: prompts/exp2_cnf_v2_contradiction.j2
   style: cnf_v2
 
 parse:

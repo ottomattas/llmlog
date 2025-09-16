@@ -1,0 +1,20 @@
+Your task is to solve a problem in propositional logic.
+You will get a list of statements and have to determine whether the statements form a logical contradiction or not.
+If the statements form a contradiction, the last word of your answer should be 'contradiction',
+otherwise the last word should be either 'satisfiable' or 'unknown'.
+
+Propositional variables are represented as 'pN' where N is a number. They are either true or false.
+pN means that pN is true. not(pN) means that pN is false.
+'X or Y' means that X is true or Y is true or both X and Y are true.
+All the given statements are implicitly connected with 'and': they are all claimed to be true.
+All the statements are horn clauses: not more than one positive variable per clause.
+
+In order to solve a problem, print each newly derived true variable as X[from S1 & S2 ...] where S1, S2 are the statements used for the derivation.
+Continue deriving until no new variables can be derived or a contradiction is found; then print 'contradiction' with 'from' and the statements used.
+If no contradiction is found and no new variables can be derived, finally print 'satisfiable'.
+
+Statements:
+{{ clauses }}
+
+Print only the derivation tokens with their parents and the final answer.
+
