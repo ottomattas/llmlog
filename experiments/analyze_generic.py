@@ -78,6 +78,54 @@ def main() -> None:
                 line.append(f"len{ml} {tag} {pct:3.2f}")
         print("  ".join(line))
 
+    # Proof-depth breakdowns (overall and horn-only), when proof data present in meta
+    def depth_from_proof(meta: dict) -> int:
+        proof = meta.get("proof")
+        if not isinstance(proof, list):
+            return -1
+        steps = 0
+        for el in proof:
+            try:
+                if isinstance(el, list) and len(el) > 1 and el[1]:
+                    steps += 1
+            except Exception:
+                pass
+        return steps
+
+    buckets_all = {}
+    buckets_horn = {}
+    for obj in rows:
+        meta = obj.get("meta") or {}
+        sat = meta.get("satflag")
+        parsed = obj.get("parsed_answer")
+        if sat != 0:  # consider only provable (unsat flag per legacy convention)
+            continue
+        d = depth_from_proof(meta)
+        if d < 0:
+            continue
+        def upd(bk):
+            if d not in bk:
+                bk[d] = [0, 0]
+            bk[d][0] += 1
+            if parsed == sat:
+                bk[d][1] += 1
+        upd(buckets_all)
+        if meta.get("horn") == 1:
+            upd(buckets_horn)
+
+    if buckets_all:
+        print("Correctness percentages for provable, by proof depth:")
+        for k in sorted(buckets_all.keys()):
+            total, ok = buckets_all[k]
+            pct = round(ok / total, 3) if total else 0.0
+            print(k, total, ok, pct)
+    if buckets_horn:
+        print("Correctness percentages for provable horn problems, by proof depth:")
+        for k in sorted(buckets_horn.keys()):
+            total, ok = buckets_horn[k]
+            pct = round(ok / total, 3) if total else 0.0
+            print(k, total, ok, pct)
+
 
 if __name__ == "__main__":
     main()
