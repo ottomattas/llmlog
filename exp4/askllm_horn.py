@@ -31,7 +31,7 @@ import time
 
 # ======= llm configuration ===
 
-secrets_file="secrets.js"
+secrets_file="secrets.json"
 
 gpt2="davinci-002"         # text-davinci-002 code-davinci-002 babbage-002 
 gpt3="gpt-3.5-turbo-0125"  # 
@@ -60,7 +60,7 @@ helptext="""Usage example: ./askllm.py 4 someprop.js
 Use 4 for gpt4, 3 for gpt3, 2 for gpt and instruct for gpt3 instruct version.
 Another example: ./askllm.py 4 10 someprop.js
 Here 10 (or any number above 4) is the number of rows to be actually processed.
-NB! you must have a file secrets.js with the content {"gpt_key": keystring} in the folder."""
+NB! you must have a file secrets.json with the content {"gpt_key": keystring} in the folder."""
 
 # ========= code ===================
 

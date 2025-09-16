@@ -30,7 +30,7 @@ import http.client
 
 # ======= llm configuration ===
 
-secrets_file="secrets.js"
+secrets_file="secrets.json"
 
 gpt2="davinci-002"         # text-davinci-002 code-davinci-002 babbage-002 
 gpt3="gpt-3.5-turbo-0125"  # 
@@ -52,7 +52,7 @@ helptext="""Usage example: ./gpt.py 4 -s logifyprompt3.txt "John is a nice perso
 Use 4 for gpt4, 3 for gpt3, 2 for gpt and instruct for gpt3 instruct version.
 You may skip the -s key along with the (system)prompt file parameter.
 
-NB! you must have a file secrets.js with the content {"gpt_key": keystring} in the folder."""
+NB! you must have a file secrets.json with the content {"gpt_key": keystring} in the folder."""
 
 # ========= code ===================
 
