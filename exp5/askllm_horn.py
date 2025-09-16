@@ -31,7 +31,7 @@ import time
 
 # ======= llm configuration ===
 
-secrets_file="secrets.js"
+secrets_file="secrets.json"
 
 gpt2="davinci-002"         # text-davinci-002 code-davinci-002 babbage-002 
 gpt3="gpt-3.5-turbo-0125"  # 
