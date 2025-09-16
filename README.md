@@ -13,7 +13,7 @@ This repository hosts a new, unified framework for running logic-focused LLM exp
 - **Reproducibility**: Save config, template hash, and git SHA per run
 
 ### Directory Layout (new)
-- `.gitignore` - ignore files for git (e.g., secrets.json)
+- `.gitignore` - ignore files for git (e.g., secrets.json, experiments/runs/)
 - `_legacy/` — previous experiments kept as-is
 - `experiments/`
   - `runner.py` — generic executor (config-driven)
@@ -39,8 +39,8 @@ pip install -U pip
 pip install -r requirements.txt
 ```
 
-### Provider Credentials (unified `secret.json`)
-All provider credentials live in a single root file: `secret.json`.
+### Provider Credentials (unified `secrets.json`)
+All provider credentials live in a single root file: `secrets.json`.
 
 Minimal example (OpenAI + Anthropic):
 ```
