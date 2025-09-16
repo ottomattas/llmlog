@@ -1,0 +1,31 @@
+name: exp1_cnf_v1
+provider: openai
+model: gpt-4o-2024-11-20
+temperature: 0
+seed: 1234
+max_tokens: 2000
+
+input_file: data/problems_dist20_v1.js
+output_file: experiments/runs/${name}/results.jsonl
+
+filters:
+  skip_rows: 1
+
+prompt:
+  template: prompts/cnf_v1_contradiction.j2
+  style: cnf_v1
+
+parse:
+  type: contradiction
+
+concurrency:
+  workers: 4
+  rate_limit_per_min: 120
+  retry:
+    max_attempts: 3
+    backoff_seconds: [2, 5, 10]
+
+resume: true
+save_prompt: false
+save_response: true
+

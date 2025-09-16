@@ -22,6 +22,7 @@ class ParseConfig(BaseModel):
 
 class PromptConfig(BaseModel):
     template: str
+    style: Optional[str] = None  # e.g., horn_if_then | cnf_v1 | cnf_v2
     variables: Dict[str, Any] = Field(default_factory=dict)
 
 

@@ -55,32 +55,56 @@ def apply_filters(rows: Iterable[List[Any]], cfg: RunConfig) -> Iterator[List[An
     return r
 
 
-def render_prompt(problem: List[Any], template_text: str) -> str:
-    # For initial scaffold, re-use exp8 horn textualization from problem[5]
+def render_prompt(problem: List[Any], template_text: str, style: Optional[str]) -> str:
     clauses = problem[5]
-    lines: List[str] = []
-    for clause in clauses:
-        pos: List[int] = []
-        neg: List[int] = []
-        for var in clause:
-            if var > 0:
-                pos.append(var)
+    if style in (None, "horn_if_then"):
+        lines: List[str] = []
+        for clause in clauses:
+            pos: List[int] = []
+            neg: List[int] = []
+            for var in clause:
+                if var > 0:
+                    pos.append(var)
+                else:
+                    neg.append(var)
+            if pos and not neg and len(pos) == 1:
+                s = f"p{pos[0]}"
+                lines.append(s)
+            elif neg and not pos:
+                prem = " and ".join([f"p{0 - el}" for el in neg])
+                lines.append(f"if {prem} then p0")
+            elif neg and len(pos) == 1:
+                prem = " and ".join([f"p{0 - el}" for el in neg])
+                lines.append(f"if {prem} then p{pos[0]}")
             else:
-                neg.append(var)
-        if pos and not neg and len(pos) == 1:
-            s = f"p{pos[0]}"
-            lines.append(s)
-        elif neg and not pos:
-            prem = " and ".join([f"p{0 - el}" for el in neg])
-            lines.append(f"if {prem} then p0")
-        elif neg and len(pos) == 1:
-            prem = " and ".join([f"p{0 - el}" for el in neg])
-            lines.append(f"if {prem} then p{pos[0]}")
-        else:
-            raise RuntimeError(f"Cannot handle clause (maybe not horn?): {clause}")
-    # very simple replacement without full Jinja to avoid extra deps for now
-    body = "\n".join(lines)
-    return template_text.replace("{{ clauses }}", body)
+                raise RuntimeError(f"Cannot handle clause (maybe not horn?): {clause}")
+        body = "\n".join(lines)
+        return template_text.replace("{{ clauses }}", body)
+    elif style == "cnf_v1":
+        # v1: "pN is true/false" with ORs
+        lines: List[str] = []
+        for clause in clauses:
+            parts: List[str] = []
+            for var in clause:
+                if var > 0:
+                    parts.append(f"p{var} is true")
+                else:
+                    parts.append(f"p{0 - var} is false")
+            lines.append(" or ".join(parts) + ".")
+        body = "\n".join(lines)
+        return template_text.replace("{{ clauses }}", body)
+    elif style == "cnf_v2":
+        # v2: compact "pN" and "not(pN)" with ORs
+        lines: List[str] = []
+        for clause in clauses:
+            parts: List[str] = []
+            for var in clause:
+                parts.append(f"p{var}" if var > 0 else f"not(p{0 - var})")
+            lines.append(" or ".join(parts) + ".")
+        body = "\n".join(lines)
+        return template_text.replace("{{ clauses }}", body)
+    else:
+        raise RuntimeError(f"Unknown prompt style: {style}")
 
 
 def parse_output(text: str, parse_cfg) -> int:
@@ -147,7 +171,7 @@ def run_target(cfg: RunConfig, target: SingleTarget, only_providers: Optional[Li
                 if pid in processed_ids:
                     continue
 
-                prompt = render_prompt(problem, tmpl)
+                prompt = render_prompt(problem, tmpl, cfg.prompt.style)
                 sysprompt = None
 
                 if dry_run:
