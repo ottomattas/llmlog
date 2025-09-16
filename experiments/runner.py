@@ -1,0 +1,237 @@
+#!/usr/bin/env python3
+
+import argparse
+import json
+import os
+import sys
+import time
+from typing import Any, Dict, Iterable, Iterator, List, Optional
+
+import yaml
+
+from .schema import RunConfig, SingleTarget, ResultRow, ProblemMeta
+from .filters import horn_only as filter_horn_only, skip as filter_skip, limit as filter_limit
+from .parsers import parse_yes_no, parse_contradiction
+from ..utils.provider_router import run_chat
+
+
+def read_jsonl_rows(path: str) -> Iterator[List[Any]]:
+    with open(path, "r") as f:
+        header_skipped = False
+        for line in f:
+            txt = line.strip()
+            if not txt:
+                continue
+            try:
+                row = json.loads(txt)
+            except Exception:
+                # allow a header or malformed first line
+                if not header_skipped:
+                    header_skipped = True
+                    continue
+                else:
+                    continue
+            yield row
+
+
+def apply_filters(rows: Iterable[List[Any]], cfg: RunConfig) -> Iterator[List[Any]]:
+    r: Iterator[List[Any]] = iter(rows)
+    if cfg.filters.skip_rows:
+        r = filter_skip(r, cfg.filters.skip_rows)
+    if cfg.filters.horn_only:
+        r = filter_horn_only(r)
+    if cfg.filters.limit_rows is not None:
+        r = filter_limit(r, cfg.filters.limit_rows)
+    return r
+
+
+def render_prompt(problem: List[Any], template_text: str) -> str:
+    # For initial scaffold, re-use exp8 horn textualization from problem[5]
+    clauses = problem[5]
+    lines: List[str] = []
+    for clause in clauses:
+        pos: List[int] = []
+        neg: List[int] = []
+        for var in clause:
+            if var > 0:
+                pos.append(var)
+            else:
+                neg.append(var)
+        if pos and not neg and len(pos) == 1:
+            s = f"p{pos[0]}"
+            lines.append(s)
+        elif neg and not pos:
+            prem = " and ".join([f"p{0 - el}" for el in neg])
+            lines.append(f"if {prem} then p0")
+        elif neg and len(pos) == 1:
+            prem = " and ".join([f"p{0 - el}" for el in neg])
+            lines.append(f"if {prem} then p{pos[0]}")
+        else:
+            raise RuntimeError(f"Cannot handle clause (maybe not horn?): {clause}")
+    # very simple replacement without full Jinja to avoid extra deps for now
+    body = "\n".join(lines)
+    return template_text.replace("{{ clauses }}", body)
+
+
+def parse_output(text: str, parse_cfg) -> int:
+    if parse_cfg.type == "yes_no":
+        return parse_yes_no(text, parse_cfg.yes_tokens or ["yes"], parse_cfg.no_tokens or ["no"])
+    elif parse_cfg.type == "contradiction":
+        return parse_contradiction(text)
+    else:
+        return 2
+
+
+def read_text(path: str) -> str:
+    with open(path, "r") as f:
+        return f.read()
+
+
+def ensure_dir(path: str) -> None:
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+
+
+def run_target(cfg: RunConfig, target: SingleTarget, only_providers: Optional[List[str]] = None, model_overrides: Optional[Dict[str, List[str]]] = None) -> None:
+    if only_providers and target.provider.lower() not in [p.lower() for p in only_providers]:
+        return
+    models: List[str]
+    if model_overrides and target.provider in model_overrides:
+        models = model_overrides[target.provider]
+    else:
+        models = [target.model]
+
+    rows = read_jsonl_rows(cfg.input_file)
+    rows = apply_filters(rows, cfg)
+
+    tmpl = read_text(cfg.prompt.template)
+
+    for model in models:
+        # decide output path
+        if cfg.output_pattern:
+            outpath = cfg.output_pattern
+            outpath = outpath.replace("${name}", cfg.name).replace("${provider}", target.provider).replace("${model}", model)
+        else:
+            outpath = cfg.output_file or f"experiments/runs/{cfg.name}/results.jsonl"
+        ensure_dir(outpath)
+
+        # resume support: append mode, naive duplicate avoidance via counting lines
+        processed_ids = set()
+        if cfg.resume and os.path.exists(outpath):
+            try:
+                with open(outpath, "r") as rf:
+                    for line in rf:
+                        try:
+                            obj = json.loads(line)
+                            processed_ids.add(obj.get("id"))
+                        except Exception:
+                            continue
+            except Exception:
+                pass
+
+        with open(outpath, "a") as of:
+            idx = 0
+            for problem in rows:
+                idx += 1
+                pid = problem[0] if isinstance(problem, list) and len(problem) > 0 else idx
+                if pid in processed_ids:
+                    continue
+
+                prompt = render_prompt(problem, tmpl)
+                sysprompt = None
+
+                start = time.time()
+                text = run_chat(
+                    provider=target.provider,
+                    model=model,
+                    prompt=prompt,
+                    sysprompt=sysprompt,
+                    max_tokens=target.max_tokens or cfg.max_tokens,
+                    temperature=target.temperature if target.temperature is not None else (cfg.temperature or 0.0),
+                    seed=target.seed if target.seed is not None else cfg.seed,
+                )
+                dur_ms = int((time.time() - start) * 1000)
+
+                parsed = parse_output(text, cfg.parse)
+                gt = None
+                try:
+                    satflag = int(problem[4])
+                    gt = (parsed == satflag)
+                except Exception:
+                    gt = None
+
+                meta = ProblemMeta(
+                    maxvars=problem[1] if len(problem) > 1 else None,
+                    maxlen=problem[2] if len(problem) > 2 else None,
+                    horn=problem[3] if len(problem) > 3 else None,
+                    satflag=problem[4] if len(problem) > 4 else None,
+                    proof=problem[6] if len(problem) > 6 else None,
+                )
+                row = ResultRow(
+                    id=pid,
+                    meta=meta,
+                    provider=target.provider,
+                    model=model,
+                    prompt=prompt if cfg.save_prompt else None,
+                    completion_text=text if cfg.save_response else None,
+                    parsed_answer=parsed,
+                    correct=gt,
+                    timing_ms=dur_ms,
+                    seed=target.seed if target.seed is not None else cfg.seed,
+                    temperature=target.temperature if target.temperature is not None else cfg.temperature,
+                )
+                of.write(row.model_dump_json() + "\n")
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(description="Run config-driven LLM experiments")
+    ap.add_argument("--config", required=True, help="Path to YAML config")
+    ap.add_argument("--limit", type=int, default=None, help="Limit processed items")
+    ap.add_argument("--dry-run", action="store_true", help="Only render prompts without calling the API")
+    ap.add_argument("--resume", action="store_true", help="Resume an interrupted run")
+    ap.add_argument("--only", type=str, default=None, help="Comma-separated providers to include")
+    ap.add_argument("--models", type=str, default=None, help="Comma-separated provider:model filters, e.g. openai:gpt-4o,anthropic:claude-3")
+    args = ap.parse_args()
+
+    with open(args.config, "r") as f:
+        raw = yaml.safe_load(f)
+    cfg = RunConfig(**raw)
+
+    # CLI overrides
+    if args.limit is not None:
+        cfg.filters.limit_rows = args.limit
+    if args.resume:
+        cfg.resume = True
+
+    only_providers: Optional[List[str]] = None
+    if args.only:
+        only_providers = [p.strip() for p in args.only.split(",") if p.strip()]
+
+    model_overrides: Optional[Dict[str, List[str]]] = None
+    if args.models:
+        model_overrides = {}
+        for pair in args.models.split(","):
+            pair = pair.strip()
+            if not pair:
+                continue
+            if ":" not in pair:
+                continue
+            prov, mod = pair.split(":", 1)
+            model_overrides.setdefault(prov, []).append(mod)
+
+    # Build target list
+    targets: List[SingleTarget] = []
+    if cfg.targets and len(cfg.targets) > 0:
+        targets = cfg.targets
+    else:
+        if not (cfg.provider and cfg.model):
+            raise RuntimeError("Config must include either (provider, model) or targets[]")
+        targets = [SingleTarget(provider=cfg.provider, model=cfg.model, temperature=cfg.temperature or 0.0, seed=cfg.seed, max_tokens=cfg.max_tokens)]
+
+    for t in targets:
+        run_target(cfg, t, only_providers=only_providers, model_overrides=model_overrides)
+
+
+if __name__ == "__main__":
+    main()
+
+

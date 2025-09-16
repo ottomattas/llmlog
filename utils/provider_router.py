@@ -1,7 +1,7 @@
 from typing import List, Dict, Any, Optional
 
 from .openai_client import chat_completion as openai_chat
-from .anthropic_client_new import chat_completion as anthropic_chat
+from .anthropic_client import chat_completion as anthropic_chat
 
 
 def run_chat(provider: str, model: str, prompt: str, sysprompt: Optional[str] = None, max_tokens: Optional[int] = None, temperature: float = 0.0, seed: Optional[int] = None) -> str:

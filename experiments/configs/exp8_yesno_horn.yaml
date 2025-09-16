@@ -1,0 +1,34 @@
+name: exp8_yesno_horn
+provider: openai
+model: gpt-4o-2024-11-20
+temperature: 0
+seed: 1234
+max_tokens: 2000
+
+input_file: _legacy/exp8/problems_dist20_v1.js
+output_file: experiments/runs/${name}/results.jsonl
+
+filters:
+  horn_only: true
+  skip_rows: 1
+
+prompt:
+  template: prompts/if_then_yesno.j2
+  variables: {}
+
+parse:
+  type: yes_no
+  yes_tokens: ["yes"]
+  no_tokens: ["no"]
+
+concurrency:
+  workers: 4
+  rate_limit_per_min: 120
+  retry:
+    max_attempts: 3
+    backoff_seconds: [2, 5, 10]
+
+resume: true
+save_prompt: false
+save_response: true
+
