@@ -9,10 +9,20 @@ from typing import Any, Dict, Iterable, Iterator, List, Optional
 
 import yaml
 
-from .schema import RunConfig, SingleTarget, ResultRow, ProblemMeta
-from .filters import horn_only as filter_horn_only, skip as filter_skip, limit as filter_limit
-from .parsers import parse_yes_no, parse_contradiction
-from ..utils.provider_router import run_chat
+# Support running both as a module (python -m experiments.runner)
+# and as a script (python experiments/runner.py)
+try:
+    from .schema import RunConfig, SingleTarget, ResultRow, ProblemMeta
+    from .filters import horn_only as filter_horn_only, skip as filter_skip, limit as filter_limit
+    from .parsers import parse_yes_no, parse_contradiction
+    from ..utils.provider_router import run_chat
+except Exception:
+    # Fallback for script execution
+    sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+    from experiments.schema import RunConfig, SingleTarget, ResultRow, ProblemMeta
+    from experiments.filters import horn_only as filter_horn_only, skip as filter_skip, limit as filter_limit
+    from experiments.parsers import parse_yes_no, parse_contradiction
+    from utils.provider_router import run_chat
 
 
 def read_jsonl_rows(path: str) -> Iterator[List[Any]]:
@@ -91,7 +101,7 @@ def ensure_dir(path: str) -> None:
     os.makedirs(os.path.dirname(path), exist_ok=True)
 
 
-def run_target(cfg: RunConfig, target: SingleTarget, only_providers: Optional[List[str]] = None, model_overrides: Optional[Dict[str, List[str]]] = None) -> None:
+def run_target(cfg: RunConfig, target: SingleTarget, only_providers: Optional[List[str]] = None, model_overrides: Optional[Dict[str, List[str]]] = None, dry_run: bool = False) -> None:
     if only_providers and target.provider.lower() not in [p.lower() for p in only_providers]:
         return
     models: List[str]
@@ -100,8 +110,9 @@ def run_target(cfg: RunConfig, target: SingleTarget, only_providers: Optional[Li
     else:
         models = [target.model]
 
-    rows = read_jsonl_rows(cfg.input_file)
-    rows = apply_filters(rows, cfg)
+    rows_iter = read_jsonl_rows(cfg.input_file)
+    rows_iter = apply_filters(rows_iter, cfg)
+    problems = list(rows_iter)
 
     tmpl = read_text(cfg.prompt.template)
 
@@ -111,7 +122,7 @@ def run_target(cfg: RunConfig, target: SingleTarget, only_providers: Optional[Li
             outpath = cfg.output_pattern
             outpath = outpath.replace("${name}", cfg.name).replace("${provider}", target.provider).replace("${model}", model)
         else:
-            outpath = cfg.output_file or f"experiments/runs/{cfg.name}/results.jsonl"
+            outpath = (cfg.output_file or f"experiments/runs/{cfg.name}/results.jsonl").replace("${name}", cfg.name)
         ensure_dir(outpath)
 
         # resume support: append mode, naive duplicate avoidance via counting lines
@@ -130,7 +141,7 @@ def run_target(cfg: RunConfig, target: SingleTarget, only_providers: Optional[Li
 
         with open(outpath, "a") as of:
             idx = 0
-            for problem in rows:
+            for problem in problems:
                 idx += 1
                 pid = problem[0] if isinstance(problem, list) and len(problem) > 0 else idx
                 if pid in processed_ids:
@@ -139,19 +150,23 @@ def run_target(cfg: RunConfig, target: SingleTarget, only_providers: Optional[Li
                 prompt = render_prompt(problem, tmpl)
                 sysprompt = None
 
-                start = time.time()
-                text = run_chat(
-                    provider=target.provider,
-                    model=model,
-                    prompt=prompt,
-                    sysprompt=sysprompt,
-                    max_tokens=target.max_tokens or cfg.max_tokens,
-                    temperature=target.temperature if target.temperature is not None else (cfg.temperature or 0.0),
-                    seed=target.seed if target.seed is not None else cfg.seed,
-                )
-                dur_ms = int((time.time() - start) * 1000)
+                if dry_run:
+                    text = ""
+                    dur_ms = 0
+                else:
+                    start = time.time()
+                    text = run_chat(
+                        provider=target.provider,
+                        model=model,
+                        prompt=prompt,
+                        sysprompt=sysprompt,
+                        max_tokens=target.max_tokens or cfg.max_tokens,
+                        temperature=target.temperature if target.temperature is not None else (cfg.temperature or 0.0),
+                        seed=target.seed if target.seed is not None else cfg.seed,
+                    )
+                    dur_ms = int((time.time() - start) * 1000)
 
-                parsed = parse_output(text, cfg.parse)
+                parsed = parse_output(text, cfg.parse) if not dry_run else 2
                 gt = None
                 try:
                     satflag = int(problem[4])
@@ -228,7 +243,7 @@ def main() -> None:
         targets = [SingleTarget(provider=cfg.provider, model=cfg.model, temperature=cfg.temperature or 0.0, seed=cfg.seed, max_tokens=cfg.max_tokens)]
 
     for t in targets:
-        run_target(cfg, t, only_providers=only_providers, model_overrides=model_overrides)
+        run_target(cfg, t, only_providers=only_providers, model_overrides=model_overrides, dry_run=args.dry_run)
 
 
 if __name__ == "__main__":
