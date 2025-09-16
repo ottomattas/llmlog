@@ -3,10 +3,17 @@ You will get a list of statements and have to determine whether the statements f
 If the statements form a contradiction, the last word of your answer should be 'contradiction',
 otherwise the last word should be either 'satisfiable' or 'unknown'.
 
-Propositional variables are represented as 'pN'. 'pN' means true, 'not(pN)' means false.
+Propositional variables are represent as 'pN' where N is a number. They are either true or false.
+pN means that pN is true. not(pN) means that pN is false.
+'X or Y' means that X is true or Y is true or both X and Y are true.
+All the given statements are implicitly connected with 'and': they are all claimed to be true.
+
+Two examples:
+Example 1. Statements: p1. not(p1) or p2. not(p2). Answer: contradiction.
+Example 2. Statements: p1. p1 or p2. not(p2). Answer: satisfiable.
 
 Statements:
 {{ clauses }}
 
-Please think step by step and answer whether the given statements form a logical contradiction or are satisfiable.
+Please think step by step and answer whether the given statements form a logical contradiction or is satisfiable.
 

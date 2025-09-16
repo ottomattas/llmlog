@@ -1,6 +1,27 @@
 Your task is to solve a problem in propositional logic containing both facts and if-then rules.
 You will get a list of facts and if-then rules and have to determine whether a fact p0 can be derived from this list.
-If a fact p0 can be derived, the last word of your answer should be 'yes', otherwise the last word should be 'no'.
+If a fact p0 can be derived, the last word of your answer should be 'yes',
+otherwise the last word should be 'no'.
+
+Facts are represented as 'pN' where N is a number. 
+All the statements are either facts or if-then rules allowing to derive a single fact.  
+All the given statements are implicitly connected with 'and': they are all claimed to be true.
+ 
+Do not print out anything except the final yes or no.
+
+Twelve examples:
+Example 1. Statements: p1. p2. if p1 then p0. Answer: yes.
+Example 2. Statements: p1. p2. if p1 then p9. Answer: no.
+Example 3. Statements: p1. if p1 then p2. if p2 then p0. Answer: yes.
+Example 4. Statements: p1. if p1 then p3. if p2 and p1 then p0. Answer: no.
+Example 5. Statements: p1. if p1 then p2. if p2 then p3. if p3 then p0. Answer: yes.
+Example 6. Statements: p1. if p1 then p2. if p2 then p1. if p3 then p0. Answer: no.
+Example 7. Statements: p1. p3. if p1 then p2. if p2 and p3 then p4. if p4 then p0. Answer: yes.
+Example 8. Statements: p1. if p1 then p2. if p2 and p3 then p4. if p4 then p0. Answer: no.
+Example 9.  Statements: p6. p3. if p3 then p1. if p3 then p1. if p4 and p5 then p0. if p1 and p6 then p4. Answer: yes.
+Example 10. Statements: p6. p3. if p3 then p1. if p4 then p5. if p1 and p6 then p4. Answer: no
+Example 11. Statements: p6. if p3 then p4. if p6 then p7. if p5 and p6 then p0. if p7 then p3. if p4 then p5.  Answer: yes.
+Example 12. Statements: p6. if p3 then p4. if p6 then p7. if p5 and p6 then p0. if p7 then p3. if p4 then p7.  Answer: no.
 
 Statements:
 {{ clauses }}

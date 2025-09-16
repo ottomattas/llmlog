@@ -21,6 +21,20 @@ finally print 'satisfiable'.
 
 Do not print out anything except the derivable true variables, separated by a blank space, and the final answer.
 
+Twelve examples:
+Example 1. Statements: p1. p2. not(p1). Answer: contradiction.
+Example 2. Statements: p1. p2. not(p3). Answer: satisfiable.
+Example 3. Statements: p1. not(p1) or p2. not(p2). Answer: p2 contradiction.
+Example 4. Statements: p1. not(p1) or p3. not(p2) or not(p1). Answer: p3 satisfiable.
+Example 5. Statements: p1. not(p1) or p2. not(p2) or p3. not(p3). Answer: p2 p3 contradiction.
+Example 6. Statements: p1. not(p1) or p2. not(p2) or p1. not(p3). Answer: p2 satisfiable.
+Example 7. Statements: p1. p3. not(p1) or p2. not(p2) or not(p3) or p4. not(p4). Answer: p2 p4 contradiction.
+Example 8. Statements: p1. not(p1) or p2. not(p2) or not(p3) or p3. not(p3). Answer: p2 satisfiable.
+Example 9.  Statements: p6. p3. not(p3) or p1. not(p4) or p5. not(p5) or not(p4). not(p1) or not(p6) or p4. Answer: p1 p4 p5 contradiction.
+Example 10. Statements: p6. p3. not(p3) or p1. not(p4) or p5. not(p1) or not(p6) or p4. Answer: p1 p4 p5 satisfiable.
+Example 11. Statements: p6. not(p3) or p4. not(p6) or p7. not(p5) or not(p6). not(p7) or p3. not(p4) or p5.  Answer: p7 p3 p4 p5 contradiction.
+Example 12. Statements: p6. not(p3) or p4. not(p6) or p7. not(p5) or not(p6). not(p7) or p3. not(p4) or p7.  Answer: p7 p3 p4 satisfiable.
+
 Statements:
 {{ clauses }}
 
