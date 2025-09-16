@@ -72,6 +72,12 @@ Provider wiring is centralized under `utils/`; additional providers can be added
 ### Input Data
 Inputs are JSONL (one JSON array/object per line). Existing datasets (e.g., `problems_dist20_v1.js`) can be reused. Header lines can be skipped via config.
 
+Generate a dataset with the legacy generator:
+```
+python experiments/generate_dataset.py --output data/problems_dist20_v1.js
+```
+This wraps `_legacy/makeproblems.py` and writes the output to `data/`.
+
 ### Config-Driven Runs
 Each experiment is defined by a YAML file under `experiments/configs/`.
 
