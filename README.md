@@ -169,7 +169,7 @@ targets:
     seed: 1234
     max_tokens: 2000
   - provider: anthropic
-    model: claude-3-7-sonnet-latest
+    model: claude-3-5-sonnet-latest
     temperature: 0
     seed: 1234
     max_tokens: 2000
@@ -204,7 +204,7 @@ save_prompt: false
 save_response: true
 ```
 
-Prompt template example `prompts/if_then_yesno.j2`:
+Prompt template example `prompts/exp8_if_then_yesno.j2`:
 ```jinja2
 Your task is to solve a problem in propositional logic containing both facts and if-then rules.
 You will get a list of facts and if-then rules and have to determine whether a fact p0 can be derived from this list.
@@ -228,7 +228,7 @@ Useful options (to be supported by the CLI):
 - `--dry-run` — print prompts without calling the API
 - `--resume` — continue an interrupted run
 - `--only anthropic,openai` — restrict to a subset of providers in a multi-target config
-- `--models anthropic:claude-3-7-sonnet-latest,openai:gpt-4o-2024-11-20` — restrict models per provider
+- `--models anthropic:claude-3-5-sonnet-latest,openai:gpt-4o-2024-11-20` — restrict models per provider
 
 Artifacts are stored under `experiments/runs/<name>/` and include:
 - `results.jsonl` or per-target files via `output_pattern` — standard output rows
@@ -247,7 +247,8 @@ Each line in `results.jsonl` is a JSON object with at least:
   "timing_ms": <int>,
   "model": "...",
   "seed": <int>,
-  "temperature": <number>
+  "temperature": <number>,
+  "error": "..." | null
 }
 ```
 
