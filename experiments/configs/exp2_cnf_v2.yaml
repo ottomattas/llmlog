@@ -1,12 +1,10 @@
 name: exp2_cnf_v2
-provider: openai
-model: gpt-4o-2024-11-20
 temperature: 0
 seed: 1234
 max_tokens: 2000
 
 input_file: data/problems_dist20_v1.js
-output_file: experiments/runs/${name}/results.jsonl
+output_pattern: experiments/runs/${name}/${provider}_${model}.jsonl
 
 filters:
   skip_rows: 1
@@ -28,4 +26,12 @@ concurrency:
 resume: true
 save_prompt: false
 save_response: true
+
+targets:
+  - provider: openai
+    model: gpt-4o-2024-11-20
+    temperature: 0
+  - provider: anthropic
+    model: claude-3-5-sonnet-latest
+    temperature: 0
 
