@@ -19,6 +19,7 @@ def load_secrets(path: Optional[str] = None) -> Dict[str, Any]:
     env_overrides = {
         "openai": {"api_key": os.getenv("OPENAI_API_KEY")},
         "anthropic": {"api_key": os.getenv("ANTHROPIC_API_KEY")},
+        "google": {"api_key": os.getenv("GOOGLE_API_KEY")},
         "azure_openai": {
             "api_key": os.getenv("AZURE_OPENAI_API_KEY"),
             "endpoint": os.getenv("AZURE_OPENAI_ENDPOINT"),

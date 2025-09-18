@@ -42,14 +42,17 @@ pip install -r requirements.txt
 ### Provider Credentials (unified `secrets.json`)
 All provider credentials live in a single root file: `secrets.json`.
 
-Minimal example (OpenAI + Anthropic):
+Minimal example (Anthropic + Google + OpenAI):
 ```
 {
-  "openai": {
-    "api_key": "sk-..."
-  },
   "anthropic": {
     "api_key": "sk-ant-..."
+  },
+  "google": {
+    "api_key": "sk-..."
+  },
+  "openai": {
+    "api_key": "sk-..."
   }
 }
 ```
@@ -57,10 +60,11 @@ Minimal example (OpenAI + Anthropic):
 Optional/extended keys per provider (only if needed by your account/deployment):
 ```
 {
-  "openai": { "api_key": "..." },
   "anthropic": { "api_key": "..." },
   "azure_openai": { "api_key": "...", "endpoint": "https://...", "deployment": "gpt-4o" },
-  "groq": { "api_key": "..." }
+  "google": { "api_key": "..." },
+  "groq": { "api_key": "..." },
+  "openai": { "api_key": "..." }
 }
 ```
 
