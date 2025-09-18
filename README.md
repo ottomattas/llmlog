@@ -2,6 +2,38 @@
 
 This repository hosts a new, unified framework for running logic-focused LLM experiments efficiently and reproducibly. The legacy one-off scripts (exp1–exp8) have been moved under `_legacy/` and remain intact. The new setup replaces copy‑pasted per-experiment code with a single runner configured via YAML, prompt templates, and pluggable parsing/filters.
 
+### Quickstart
+1) Set up environment and install dependencies
+```
+python -m venv venv
+source venv/bin/activate
+pip install -U pip
+pip install -r requirements.txt
+```
+
+2) Provide API keys (alphabetically ordered providers)
+```
+export ANTHROPIC_API_KEY=...
+export OPENAI_API_KEY=...
+# or use a secrets.json as documented below
+```
+
+3) Run a small test (limit=10) against Anthropic + OpenAI using a ready config
+```
+python -m experiments.runner --config experiments/configs/exp8_yesno_horn.yaml \
+  --resume --limit 10 --only anthropic,openai
+```
+
+4) Analyze and plot results
+```
+python -m experiments.analyze_generic experiments/runs/exp8_yesno_horn/anthropic_claude-3-5-sonnet-latest.jsonl
+python -m experiments.analyze_generic experiments/runs/exp8_yesno_horn/openai_gpt-4o-2024-11-20.jsonl
+python -m experiments.plot_results
+ls experiments/plots
+```
+
+That’s it. Edit YAML configs under `experiments/configs/` to switch experiments or add more targets.
+
 ### Goals
 - **Single runner, many configs**: No per-experiment code forks
 - **Prompt templating**: Jinja2 templates with per-run variables
@@ -18,11 +50,13 @@ This repository hosts a new, unified framework for running logic-focused LLM exp
 - `experiments/`
   - `runner.py` — generic executor (config-driven)
   - `analyze_generic.py` — analysis over the standard JSONL schema
+  - `plot_results.py` — generates PNG plots from run outputs
   - `parsers.py` — output parsers (e.g., `yes_no`, `contradiction`)
   - `filters.py` — input filters (e.g., `horn_only`, `skip`, `limit`)
   - `schema.py` — Pydantic models for input/output rows
   - `configs/` — YAML configs, one per experiment variant
   - `runs/` — run artifacts (results, config snapshot, metadata)
+  - `plots/` — generated charts (PNG)
 - `prompts/` — Jinja2 prompt templates used by configs
 - `data/` — input JSONL problem sets (e.g., `problems_dist20_v1.js`)
 - `utils/` — shared helpers (providers, clients)
@@ -40,6 +74,7 @@ pip install -r requirements.txt
 ```
 
 ### Provider Credentials (unified `secrets.json`)
+Providers are documented and listed alphabetically to avoid implying preference.
 All provider credentials live in a single root file: `secrets.json`.
 
 Minimal example (Anthropic + Google + OpenAI):
@@ -63,13 +98,12 @@ Optional/extended keys per provider (only if needed by your account/deployment):
   "anthropic": { "api_key": "..." },
   "azure_openai": { "api_key": "...", "endpoint": "https://...", "deployment": "gpt-4o" },
   "google": { "api_key": "..." },
-  "groq": { "api_key": "..." },
   "openai": { "api_key": "..." }
 }
 ```
 
 Environment variables may override the file at runtime (if set):
-- `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `AZURE_OPENAI_API_KEY`, `GROQ_API_KEY`, etc.
+- `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`, `OPENAI_API_KEY`, etc.
 
 Provider wiring is centralized under `utils/`; additional providers can be added without changing experiment configs.
 
@@ -193,13 +227,11 @@ Useful options (to be supported by the CLI):
 - `--limit 50` — process only the first 50 items
 - `--dry-run` — print prompts without calling the API
 - `--resume` — continue an interrupted run
-- `--only openai,anthropic` — restrict to a subset of providers in a multi-target config
-- `--models openai:gpt-4o-2024-11-20,anthropic:claude-3-7-sonnet-latest` — restrict models per provider
+- `--only anthropic,openai` — restrict to a subset of providers in a multi-target config
+- `--models anthropic:claude-3-7-sonnet-latest,openai:gpt-4o-2024-11-20` — restrict models per provider
 
 Artifacts are stored under `experiments/runs/<name>/` and include:
-- `results.jsonl` — standard output rows
-- `config.used.yaml` — the exact config snapshot
-- `metadata.json` — git SHA, start/end time, model, etc.
+- `results.jsonl` or per-target files via `output_pattern` — standard output rows
 
 ### Standard Output Schema
 Each line in `results.jsonl` is a JSON object with at least:
@@ -207,7 +239,7 @@ Each line in `results.jsonl` is a JSON object with at least:
 {
   "id": <int|str>,
   "meta": { "maxvars": int, "maxlen": int, "horn": 0|1, "satflag": 0|1, "proof": [...] },
-  "provider": "openai|anthropic|...",
+  "provider": "anthropic|google|openai|...",
   "prompt": "...",               # optional if save_prompt=true
   "completion_text": "...",      # optional if save_response=true
   "parsed_answer": 0|1|2,         # 2 = unclear
@@ -226,6 +258,14 @@ python experiments/analyze_generic.py experiments/runs/exp8_yesno_horn/results.j
 ```
 It reports accuracy grouped by `maxvars`/`maxlen`/`horn` and, when present, per-depth stats using `proof` data.
 
+### Plotting
+Generate accuracy plots per experiment and an overall grouped chart. Requires matplotlib (already in `requirements.txt`).
+```
+python -m experiments.plot_results
+```
+Outputs PNG files under `experiments/plots/` (e.g., `overall.png`, `exp8_yesno_horn.png`).
+Provider series in plots are ordered alphabetically.
+
 ### Porting a Legacy Experiment
 1) Identify the prompt style and parsing logic from `legacy/expX/`.
 2) Create a template in `prompts/` capturing that style.
@@ -237,10 +277,10 @@ It reports accuracy grouped by `maxvars`/`maxlen`/`horn` and, when present, per-
 4) Run and compare a small subset vs. the legacy output to validate parity.
 
 ### Roadmap
-- Implement `experiments/runner.py` with asyncio, retry/backoff, resumable checkpoints
-- Implement parsers/filters/schema and the generic analyzer
-- Wire providers via `utils/provider_manager.py` (OpenAI first, Anthropic next)
-- Add caching-by-hash to avoid duplicate API calls (optional)
+- Enhance runner concurrency (async), keep retry/backoff and resumability
+- Extend parsers/filters/schema and analyzer as needed
+- Wire providers via `utils/provider_router.py` (Anthropic, Google, OpenAI; optional others)
+- Optional: caching-by-hash to avoid duplicate API calls
 
 ### License
 Apache 2.0. See `LICENSE`.
