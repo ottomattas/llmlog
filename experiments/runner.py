@@ -177,20 +177,40 @@ def run_target(cfg: RunConfig, target: SingleTarget, only_providers: Optional[Li
                 if dry_run:
                     text = ""
                     dur_ms = 0
+                    err_msg = None
                 else:
-                    start = time.time()
-                    text = run_chat(
-                        provider=target.provider,
-                        model=model,
-                        prompt=prompt,
-                        sysprompt=sysprompt,
-                        max_tokens=target.max_tokens or cfg.max_tokens,
-                        temperature=target.temperature if target.temperature is not None else (cfg.temperature or 0.0),
-                        seed=target.seed if target.seed is not None else cfg.seed,
-                    )
-                    dur_ms = int((time.time() - start) * 1000)
+                    attempts = 0
+                    err_msg = None
+                    text = ""
+                    while True:
+                        try:
+                            start = time.time()
+                            text = run_chat(
+                                provider=target.provider,
+                                model=model,
+                                prompt=prompt,
+                                sysprompt=sysprompt,
+                                max_tokens=target.max_tokens or cfg.max_tokens,
+                                temperature=target.temperature if target.temperature is not None else (cfg.temperature or 0.0),
+                                seed=target.seed if target.seed is not None else cfg.seed,
+                            )
+                            dur_ms = int((time.time() - start) * 1000)
+                            err_msg = None
+                            break
+                        except Exception as e:
+                            attempts += 1
+                            err_msg = str(e)
+                            # determine backoff
+                            max_attempts = (cfg.concurrency.retry.max_attempts if cfg.concurrency and cfg.concurrency.retry else 3)
+                            backoff = (cfg.concurrency.retry.backoff_seconds if cfg.concurrency and cfg.concurrency.retry else [2, 5, 10])
+                            if attempts >= max_attempts:
+                                dur_ms = None
+                                text = ""
+                                break
+                            wait_s = backoff[min(attempts - 1, len(backoff) - 1)]
+                            time.sleep(wait_s)
 
-                parsed = parse_output(text, cfg.parse) if not dry_run else 2
+                parsed = parse_output(text, cfg.parse) if (not dry_run and not err_msg) else 2
                 gt = None
                 try:
                     satflag = int(problem[4])
@@ -211,12 +231,13 @@ def run_target(cfg: RunConfig, target: SingleTarget, only_providers: Optional[Li
                     provider=target.provider,
                     model=model,
                     prompt=prompt if cfg.save_prompt else None,
-                    completion_text=text if cfg.save_response else None,
+                    completion_text=text if (cfg.save_response and not err_msg) else None,
                     parsed_answer=parsed,
                     correct=gt,
                     timing_ms=dur_ms,
                     seed=target.seed if target.seed is not None else cfg.seed,
                     temperature=target.temperature if target.temperature is not None else cfg.temperature,
+                    error=err_msg,
                 )
                 of.write(row.model_dump_json() + "\n")
 

@@ -84,5 +84,6 @@ class ResultRow(BaseModel):
     timing_ms: Optional[int] = None
     seed: Optional[int] = None
     temperature: Optional[float] = None
+    error: Optional[str] = None
 
 
