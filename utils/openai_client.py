@@ -11,7 +11,92 @@ def chat_completion(messages: List[Dict[str, str]], model: str, max_tokens: Opti
     if not key:
         raise RuntimeError("Missing OpenAI API key in secrets.json or OPENAI_API_KEY")
 
-    baseurl = "/v1/chat/completions"
+    host = "api.openai.com"
+
+    def _request(path: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+        conn = http.client.HTTPSConnection(host)
+        conn.request(
+            "POST",
+            path,
+            json.dumps(payload),
+            headers={
+                "Host": host,
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {key}",
+                # Enable Responses API features per official docs
+                "OpenAI-Beta": "responses=v1",
+            },
+        )
+        response = conn.getresponse()
+        raw = response.read()
+        if response.status != 200:
+            try:
+                data = json.loads(raw)
+                message = data.get("error", {}).get("message", "")
+            except Exception:
+                message = raw.decode("utf-8", errors="ignore")
+            raise RuntimeError(f"OpenAI error {response.status} {response.reason}: {message}")
+        try:
+            data = json.loads(raw)
+        except Exception:
+            raise RuntimeError(f"OpenAI response is not JSON: {raw}")
+        finally:
+            conn.close()
+        return data
+
+    # Prefer Responses API for GPT-5
+    if model.lower().startswith("gpt-5") or model == "gpt-5":
+        # Map chat messages -> Responses input format
+        input_blocks: List[Dict[str, Any]] = []
+        for m in messages:
+            role = m.get("role", "user")
+            text = m.get("content") or ""
+            input_blocks.append({
+                "role": role,
+                "content": [{"type": "input_text", "text": text}],
+            })
+
+        payload: Dict[str, Any] = {
+            "model": model,
+            "input": input_blocks,
+        }
+        # NOTE: Responses API may not accept 'seed' at top-level; omit to avoid 400
+        if max_tokens is not None:
+            payload["max_output_tokens"] = int(max_tokens)
+
+        data = _request("/v1/responses", payload)
+
+        # Extract text
+        resp_obj = data.get("response") or data
+        if isinstance(resp_obj, dict) and resp_obj.get("output_text"):
+            return resp_obj["output_text"]
+        # Fallback: stitch from output/content blocks
+        texts: List[str] = []
+        output = resp_obj.get("output") or []
+        if isinstance(output, list):
+            for item in output:
+                content = (item or {}).get("content") or []
+                for part in content:
+                    t = part.get("text") or part.get("content")
+                    if t:
+                        texts.append(str(t))
+        if texts:
+            return "\n".join(texts).strip()
+        # Absolute fallback: previous schema
+        choices = data.get("choices")
+        if choices:
+            res = ""
+            for ch in choices:
+                if "message" in ch and "content" in ch["message"]:
+                    res += ch["message"]["content"]
+                elif "text" in ch:
+                    if res:
+                        res += "\n"
+                    res += (ch["text"] or "").strip()
+            return res
+        return str(data)
+
+    # Default: Chat Completions API
     call: Dict[str, Any] = {
         "model": model,
         "messages": messages,
@@ -22,28 +107,7 @@ def chat_completion(messages: List[Dict[str, str]], model: str, max_tokens: Opti
     if max_tokens is not None:
         call["max_tokens"] = max_tokens
 
-    calltxt = json.dumps(call)
-    host = "api.openai.com"
-    conn = http.client.HTTPSConnection(host)
-    conn.request("POST", baseurl, calltxt, headers={
-        "Host": host,
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {key}",
-    })
-    response = conn.getresponse()
-    if response.status != 200 or response.reason != "OK":
-        try:
-            data = json.loads(response.read())
-            message = data.get("error", {}).get("message", "")
-        except Exception:
-            message = ""
-        raise RuntimeError(f"OpenAI error {response.status} {response.reason}: {message}")
-
-    rawdata = response.read()
-    try:
-        data = json.loads(rawdata)
-    except Exception:
-        raise RuntimeError(f"OpenAI response is not JSON: {rawdata}")
+    data = _request("/v1/chat/completions", call)
     if "choices" not in data:
         raise RuntimeError("OpenAI response missing 'choices'")
     res = ""
@@ -54,7 +118,6 @@ def chat_completion(messages: List[Dict[str, str]], model: str, max_tokens: Opti
             if res:
                 res += "\n"
             res += ch["text"].strip()
-    conn.close()
     return res
 
 
