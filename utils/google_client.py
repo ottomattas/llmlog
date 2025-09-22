@@ -29,12 +29,12 @@ def chat_completion(prompt: str, model: str, max_tokens: Optional[int] = None, t
         raise RuntimeError("Missing Google/Gemini API key in secrets.json or GOOGLE_API_KEY/GEMINI_API_KEY")
 
     host = "generativelanguage.googleapis.com"
+    # Include key in query param (in addition to header) for broader compatibility
     path = f"/v1beta/models/{model}:generateContent?key={key}"
 
     body: Dict[str, Any] = {
         "contents": [
             {
-                "role": "user",
                 "parts": [{"text": prompt}],
             }
         ],
@@ -42,6 +42,12 @@ def chat_completion(prompt: str, model: str, max_tokens: Optional[int] = None, t
             "temperature": float(temperature or 0.0),
         },
     }
+    # For Gemini 2.5 Flash, disable thinking to ensure plain text output and reduce blanks
+    try:
+        if str(model).startswith("gemini-2.5-flash"):
+            body.setdefault("generationConfig", {})["thinkingConfig"] = {"thinkingBudget": 0}
+    except Exception:
+        pass
     if max_tokens is not None:
         body["generationConfig"]["maxOutputTokens"] = int(max_tokens)
 
@@ -52,6 +58,7 @@ def chat_completion(prompt: str, model: str, max_tokens: Optional[int] = None, t
         json.dumps(body),
         headers={
             "Content-Type": "application/json",
+            "x-goog-api-key": key,
         },
     )
     resp = conn.getresponse()
