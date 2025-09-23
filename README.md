@@ -20,14 +20,14 @@ export OPENAI_API_KEY=...
 
 3) Run a small test (limit=10) against Anthropic + OpenAI using a ready config
 ```
-python -m experiments.runner --config experiments/configs/exp8_yesno_horn.yaml \
+python -m experiments.runner --config experiments/configs/exp8_horn_yesno.yaml \
   --resume --limit 10 --only anthropic,openai
 ```
 
 4) Analyze and plot results
 ```
-python -m experiments.analyze_generic experiments/runs/exp8_yesno_horn/anthropic_claude-3-5-sonnet-latest.jsonl
-python -m experiments.analyze_generic experiments/runs/exp8_yesno_horn/openai_gpt-4o-2024-11-20.jsonl
+python -m experiments.analyze_generic experiments/runs/exp8_horn_yesno/anthropic_claude-3-5-sonnet-latest.jsonl
+python -m experiments.analyze_generic experiments/runs/exp8_horn_yesno/openai_gpt-4o-2024-11-20.jsonl
 python -m experiments.plot_results
 ls experiments/plots
 ```
@@ -235,7 +235,7 @@ Please answer whether a fact p0 can be derived from the following facts and rule
 ### Running Experiments
 Run the new generic runner with a config:
 ```
-python experiments/runner.py --config experiments/configs/exp8_yesno_horn.yaml
+python experiments/runner.py --config experiments/configs/exp8_horn_yesno.yaml
 ```
 Useful options (to be supported by the CLI):
 - `--limit 50` — process only the first 50 items
@@ -269,7 +269,7 @@ Each line in `results.jsonl` is a JSON object with at least:
 ### Analysis
 Use the generic analyzer on any run file:
 ```
-python experiments/analyze_generic.py experiments/runs/exp8_yesno_horn/results.jsonl
+python experiments/analyze_generic.py experiments/runs/exp8_horn_yesno/results.jsonl
 ```
 It reports accuracy grouped by `maxvars`/`maxlen`/`horn` and, when present, per-depth stats using `proof` data.
 
@@ -278,7 +278,7 @@ Generate accuracy plots per experiment and an overall grouped chart. Requires ma
 ```
 python -m experiments.plot_results
 ```
-Outputs PNG files under `experiments/plots/` (e.g., `overall.png`, `exp8_yesno_horn.png`).
+Outputs PNG files under `experiments/plots/` (e.g., `overall.png`, `exp8_horn_yesno.png`).
 Provider series in plots are ordered alphabetically.
 
 ### Porting a Legacy Experiment
