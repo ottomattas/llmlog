@@ -1,0 +1,25 @@
+Your task is to solve a problem in propositional logic.
+You will get a list of statements and have to determine whether the statements form a logical contradiction or not.
+If the statements form a contradiction, the last word of your answer should be 'contradiction',
+otherwise the last word should be either 'satisfiable' or 'unknown'.
+
+Propositional variables are represent as 'pN' where N is a number. They are either true or false.
+'X or Y' means that X is true or Y is true or both X and Y are true.
+All the given statements are implicitly connected with 'and': they are all claimed to be true.
+
+Two examples:
+Example 1. Statements: p1 is true. p1 is false or p2 is true. p2 is false. Answer: contradiction.
+Example 2. Statements: p1 is true. p1 is true or p2 is true. p2 is false. Answer: satisfiable.
+
+Statements:
+p1 is true.
+p3 is false or p1 is true.
+p3 is false or p2 is true.
+p2 is false or p1 is false.
+p2 is false or p1 is true.
+p3 is false or p2 is false or p1 is true.
+
+Please think step by step and answer whether the given statements form a logical contradiction or is satisfiable.
+
+
+
