@@ -1,23 +1,43 @@
 name: exp3_cnf_cot_linear
-temperature: 0
-seed: 1234
-max_tokens: 2000
 
+# Target selection (unified structure)
+targets:
+  - provider: anthropic
+    model: claude-opus-4-1
+    temperature: 0
+    seed: 1234
+    max_tokens: 2000
+  - provider: google
+    model: gemini-2.5-flash  # or gemini-2.5-pro
+    temperature: 0
+    seed: 1234
+    max_tokens: 2000
+  - provider: openai
+    model: gpt-5             # Responses API
+    temperature: 0
+    seed: 1234
+    max_tokens: 2000
+
+# Input dataset and outputs
 input_file: data/problems_dist20_v1.js
-output_pattern: experiments/runs/${name}/${provider}_${model}.jsonl
+output_pattern: experiments/runs/${name}/${provider}/${model}/results.jsonl
 
+# Filters
 filters:
   horn_only: true
   skip_rows: 1
   limit_rows: 200
 
+# Prompt configuration
 prompt:
   template: prompts/exp3_horn_cnf_cot_linear_contradiction.j2
   style: cnf_v2
 
+# Parser configuration
 parse:
   type: contradiction
 
+# Concurrency and retry settings
 concurrency:
   workers: 4
   rate_limit_per_min: 120
@@ -25,15 +45,8 @@ concurrency:
     max_attempts: 3
     backoff_seconds: [2, 5, 10]
 
+# Execution settings
 resume: true
 save_prompt: false
 save_response: true
-
-targets:
-  - provider: openai
-    model: gpt-4o-2024-11-20
-    temperature: 0
-  - provider: anthropic
-    model: claude-3-5-sonnet-latest
-    temperature: 0
 
