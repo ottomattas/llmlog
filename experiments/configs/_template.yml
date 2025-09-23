@@ -48,7 +48,7 @@ targets:
 input_file: data/problems_dist20_v1.js       # e.g., data/problems_dist20_v1.js or _legacy/exp8/problems_dist20_v1.js
 # Choose one output style:
 # - Nested pattern (recommended for multi-targets):
-output_pattern: experiments/runs/${name}/${provider}/${model}/results.jsonl
+output_pattern: experiments/runs/${name}/${run}/${provider}/${model}/results.jsonl
 # - Flat pattern (alternative):
 # output_pattern: experiments/runs/${name}/${provider}_${model}.jsonl
 # - Single file (for single-target runs):

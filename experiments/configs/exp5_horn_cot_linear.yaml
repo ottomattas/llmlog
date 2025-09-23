@@ -20,7 +20,7 @@ targets:
 
 # Input dataset and outputs
 input_file: data/problems_dist20_v1.js
-output_pattern: experiments/runs/${name}/${provider}/${model}/results.jsonl
+output_pattern: experiments/runs/${name}/${run}/${provider}/${model}/results.jsonl
 
 # Filters
 filters:
