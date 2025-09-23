@@ -30,7 +30,7 @@ filters:
 
 # Prompt configuration
 prompt:
-  template: prompts/exp4_horn_cnf_cot_parents_contradiction.j2
+  template: prompts/exp4_cnf_cot_parents_contradiction.j2
   style: cnf_v2
 
 # Parser configuration

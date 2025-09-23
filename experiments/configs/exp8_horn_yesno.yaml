@@ -29,7 +29,7 @@ filters:
 
 # Prompt configuration
 prompt:
-  template: prompts/exp8_if_then_yesno.j2
+  template: prompts/exp8_horn_yesno.j2
   style: horn_if_then
 
 # Parser configuration
