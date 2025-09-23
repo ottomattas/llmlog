@@ -243,6 +243,7 @@ Useful options (to be supported by the CLI):
 - `--resume` — continue an interrupted run
 - `--only anthropic,openai` — restrict to a subset of providers in a multi-target config
 - `--models anthropic:claude-3-5-sonnet-latest,openai:gpt-4o-2024-11-20` — restrict models per provider
+- `--run 2025-09-23` — set a run id used in `${run}` output paths; defaults to timestamp when omitted
 
 Artifacts are stored under `experiments/runs/<name>/` and include:
 - `results.jsonl` or per-target files via `output_pattern` — standard output rows
@@ -280,6 +281,22 @@ python -m experiments.plot_results
 ```
 Outputs PNG files under `experiments/plots/` (e.g., `overall.png`, `exp8_horn_yesno.png`).
 Provider series in plots are ordered alphabetically.
+
+### Comparing Runs Over Time
+1) Configure your configs with an output pattern including `${run}`, for example:
+```
+output_pattern: experiments/runs/${name}/${run}/${provider}/${model}/results.jsonl
+```
+2) Run experiments with different run ids:
+```
+python -m experiments.runner --config experiments/configs/exp8_horn_yesno.yaml --run 2025-09-23
+python -m experiments.runner --config experiments/configs/exp8_horn_yesno.yaml --run 2025-10-01
+```
+3) Compare accuracies across runs:
+```
+python -m experiments.compare_runs --name exp8_horn_yesno --runs 2025-09-23,2025-10-01
+```
+This prints a per-provider/model table with accuracy and deltas against the first run.
 
 ### Porting a Legacy Experiment
 1) Identify the prompt style and parsing logic from `legacy/expX/`.
