@@ -1,10 +1,38 @@
 Your task is to solve a problem in propositional logic containing both facts and if-then rules.
 You will get a list of facts and if-then rules and have to determine whether a fact p0 can be derived from this list.
 
-Print the newly derivable facts in the order they are derived, and finally print 'yes' if p0 is derived, otherwise 'no'.
+Facts are represented as 'pN' where N is a number. 
+All the statements are either facts or if-then rules allowing to derive a single fact.  
+All the given statements are implicitly connected with 'and': they are all claimed to be true.
+In order to solve a given problem, you must use the following method:
+First, derive and print out all the facts which can be derived directly by some given if-then rule from the given facts in the input
+and which are not already present in the list of given statements as facts. 
+
+Then, print out all the facts 
+which can be similarly directly derived by some if-then rule from the newly printed facts and initially given facts 
+and which have not been printed earlier.
+Then continue the same procedure of printing out new facts, until either no new facts can be derived or the fact p0 is derived.
+If the fact p0 is derived and printed, then finally print 'yes'. 
+If no new facts can be derived and p0 is not derived, then finally print 'no'.
+
+Do not print out anything except the derivable facts and the final yes or no.
+
+Twelve examples:
+Example 1. Statements: p1. p2. if p1 then p0. Answer: p0 yes.
+Example 2. Statements: p1. p2. if p1 then p9. Answer: p9 no.
+Example 3. Statements: p1. if p1 then p2. if p2 then p0. Answer: p2 p0 yes.
+Example 4. Statements: p1. if p1 then p3. if p2 and p1 then p0. Answer: p3 no.
+Example 5. Statements: p1. if p1 then p2. if p2 then p3. if p3 then p0. Answer: p2 p3 p0 yes.
+Example 6. Statements: p1. if p1 then p2. if p2 then p1. if p3 then p0. Answer: p2 no.
+Example 7. Statements: p1. p3. if p1 then p2. if p2 and p3 then p4. if p4 then p0. Answer: p2 p4 p0 yes.
+Example 8. Statements: p1. if p1 then p2. if p2 and p3 then p4. if p4 then p0. Answer: p2 no.
+Example 9.  Statements: p6. p3. if p3 then p1. if p3 then p1. if p4 and p5 then p0. if p1 and p6 then p4. Answer: p1 p4 p5 p0 yes.
+Example 10. Statements: p6. p3. if p3 then p1. if p4 then p5. if p1 and p6 then p4. Answer: p1 p4 p5 no
+Example 11. Statements: p6. if p3 then p4. if p6 then p7. if p5 and p6 then p0. if p7 then p3. if p4 then p5.  Answer: p7 p3 p4 p5 p0 yes.
+Example 12. Statements: p6. if p3 then p4. if p6 then p7. if p5 and p6 then p0. if p7 then p3. if p4 then p7.  Answer: p7 p3 p4 no.
+
+Please answer whether a fact p0 can be derived from the following facts and rules, using the method described above:
 
 Statements:
 {{ clauses }}
-
-Print only the derived facts (like p2 p4 ...) and the final yes/no.
 

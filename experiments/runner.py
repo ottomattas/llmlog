@@ -68,14 +68,14 @@ def render_prompt(problem: List[Any], template_text: str, style: Optional[str]) 
                 else:
                     neg.append(var)
             if pos and not neg and len(pos) == 1:
-                s = f"p{pos[0]}"
+                s = f"p{pos[0]}."
                 lines.append(s)
             elif neg and not pos:
                 prem = " and ".join([f"p{0 - el}" for el in neg])
-                lines.append(f"if {prem} then p0")
+                lines.append(f"if {prem} then p0.")
             elif neg and len(pos) == 1:
                 prem = " and ".join([f"p{0 - el}" for el in neg])
-                lines.append(f"if {prem} then p{pos[0]}")
+                lines.append(f"if {prem} then p{pos[0]}.")
             else:
                 raise RuntimeError(f"Cannot handle clause (maybe not horn?): {clause}")
         body = "\n".join(lines)
