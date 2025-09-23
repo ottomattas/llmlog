@@ -1,1 +1,0 @@
-{"id":1,"meta":{"maxvars":3,"maxlen":3,"horn":1,"satflag":1,"proof":[1,-2,-3]},"provider":"openai","model":"gpt-5","prompt":null,"completion_text":"","parsed_answer":2,"correct":false,"timing_ms":0,"seed":1234,"temperature":0.0,"error":null}
