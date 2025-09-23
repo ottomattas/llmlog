@@ -125,7 +125,14 @@ def ensure_dir(path: str) -> None:
     os.makedirs(os.path.dirname(path), exist_ok=True)
 
 
-def run_target(cfg: RunConfig, target: SingleTarget, only_providers: Optional[List[str]] = None, model_overrides: Optional[Dict[str, List[str]]] = None, dry_run: bool = False) -> None:
+def run_target(
+    cfg: RunConfig,
+    target: SingleTarget,
+    only_providers: Optional[List[str]] = None,
+    model_overrides: Optional[Dict[str, List[str]]] = None,
+    dry_run: bool = False,
+    run_id: Optional[str] = None,
+) -> None:
     if only_providers and target.provider.lower() not in [p.lower() for p in only_providers]:
         return
     models: List[str]
@@ -144,9 +151,19 @@ def run_target(cfg: RunConfig, target: SingleTarget, only_providers: Optional[Li
         # decide output path
         if cfg.output_pattern:
             outpath = cfg.output_pattern
-            outpath = outpath.replace("${name}", cfg.name).replace("${provider}", target.provider).replace("${model}", model)
+            outpath = (
+                outpath.replace("${name}", cfg.name)
+                .replace("${provider}", target.provider)
+                .replace("${model}", model)
+            )
+            if "${run}" in outpath:
+                rid = run_id or time.strftime("%Y%m%d-%H%M%S")
+                outpath = outpath.replace("${run}", rid)
         else:
             outpath = (cfg.output_file or f"experiments/runs/{cfg.name}/results.jsonl").replace("${name}", cfg.name)
+            if "${run}" in outpath:
+                rid = run_id or time.strftime("%Y%m%d-%H%M%S")
+                outpath = outpath.replace("${run}", rid)
         ensure_dir(outpath)
 
         # resume support: append mode, naive duplicate avoidance via counting lines
@@ -162,6 +179,17 @@ def run_target(cfg: RunConfig, target: SingleTarget, only_providers: Optional[Li
                             continue
             except Exception:
                 pass
+
+        # basic stats for summary
+        total_count = 0
+        correct_count = 0
+        unclear_count = 0
+        sat_total = 0
+        sat_correct = 0
+        unsat_total = 0
+        unsat_correct = 0
+        timing_sum = 0
+        timing_count = 0
 
         with open(outpath, "a") as of:
             idx = 0
@@ -241,6 +269,57 @@ def run_target(cfg: RunConfig, target: SingleTarget, only_providers: Optional[Li
                 )
                 of.write(row.model_dump_json() + "\n")
 
+                # Update stats
+                total_count += 1
+                if row.correct:
+                    correct_count += 1
+                if row.parsed_answer == 2:
+                    unclear_count += 1
+                try:
+                    sf = int(problem[4])
+                    if sf == 1:
+                        sat_total += 1
+                        if row.correct:
+                            sat_correct += 1
+                    elif sf == 0:
+                        unsat_total += 1
+                        if row.correct:
+                            unsat_correct += 1
+                except Exception:
+                    pass
+                if isinstance(row.timing_ms, int):
+                    timing_sum += row.timing_ms
+                    timing_count += 1
+
+        # write summary file next to results
+        try:
+            base, ext = os.path.splitext(outpath)
+            summary_path = base + ".summary.json" if ext else outpath + ".summary.json"
+            ensure_dir(summary_path)
+            avg_timing = (timing_sum / timing_count) if timing_count > 0 else None
+            summary = {
+                "name": cfg.name,
+                "provider": target.provider,
+                "model": model,
+                "run": run_id,
+                "total": total_count,
+                "correct": correct_count,
+                "accuracy": (correct_count / total_count) if total_count > 0 else None,
+                "unclear": unclear_count,
+                "sat_total": sat_total,
+                "sat_correct": sat_correct,
+                "sat_accuracy": (sat_correct / sat_total) if sat_total > 0 else None,
+                "unsat_total": unsat_total,
+                "unsat_correct": unsat_correct,
+                "unsat_accuracy": (unsat_correct / unsat_total) if unsat_total > 0 else None,
+                "avg_timing_ms": avg_timing,
+                "timestamp": int(time.time()),
+            }
+            with open(summary_path, "w") as sf:
+                json.dump(summary, sf, indent=2)
+        except Exception:
+            pass
+
 
 def main() -> None:
     ap = argparse.ArgumentParser(description="Run config-driven LLM experiments")
@@ -250,6 +329,7 @@ def main() -> None:
     ap.add_argument("--resume", action="store_true", help="Resume an interrupted run")
     ap.add_argument("--only", type=str, default=None, help="Comma-separated providers to include")
     ap.add_argument("--models", type=str, default=None, help="Comma-separated provider:model filters, e.g. openai:gpt-4o,anthropic:claude-3")
+    ap.add_argument("--run", type=str, default=None, help="Run identifier to inject into ${run} in output paths (e.g., 20250923 or git-<sha>)")
     args = ap.parse_args()
 
     with open(args.config, "r") as f:
@@ -288,7 +368,7 @@ def main() -> None:
         targets = [SingleTarget(provider=cfg.provider, model=cfg.model, temperature=cfg.temperature or 0.0, seed=cfg.seed, max_tokens=cfg.max_tokens)]
 
     for t in targets:
-        run_target(cfg, t, only_providers=only_providers, model_overrides=model_overrides, dry_run=args.dry_run)
+        run_target(cfg, t, only_providers=only_providers, model_overrides=model_overrides, dry_run=args.dry_run, run_id=args.run)
 
 
 if __name__ == "__main__":
