@@ -1,6 +1,6 @@
 import json
 import http.client
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Tuple
 
 from .secrets import load_secrets, get_provider_key
 
@@ -21,7 +21,7 @@ def _extract_text(data: Dict[str, Any]) -> str:
         return ""
 
 
-def chat_completion(prompt: str, model: str, max_tokens: Optional[int] = None, temperature: float = 0.0) -> str:
+def chat_completion(prompt: str, model: str, max_tokens: Optional[int] = None, temperature: float = 0.0) -> Tuple[str, Dict[str, Any]]:
     secrets = load_secrets()
     # support both keys
     key = get_provider_key(secrets, "google") or get_provider_key(secrets, "gemini")
@@ -77,7 +77,12 @@ def chat_completion(prompt: str, model: str, max_tokens: Optional[int] = None, t
     finally:
         conn.close()
     text = _extract_text(data)
-    return text
+    meta: Dict[str, Any] = {
+        "raw_response": data,
+        "finish_reason": None,
+        "usage": (data.get("usageMetadata") or {}),
+    }
+    return text, meta
 
 
 

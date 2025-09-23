@@ -1,11 +1,11 @@
 import json
 import http.client
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Tuple
 
 from .secrets import load_secrets, get_provider_key
 
 
-def chat_completion(messages: List[Dict[str, str]], model: str, max_tokens: Optional[int] = None, temperature: float = 0.0, seed: Optional[int] = None) -> str:
+def chat_completion(messages: List[Dict[str, str]], model: str, max_tokens: Optional[int] = None, temperature: float = 0.0, seed: Optional[int] = None) -> Tuple[str, Dict[str, Any]]:
     secrets = load_secrets()
     key = get_provider_key(secrets, "openai")
     if not key:
@@ -68,8 +68,13 @@ def chat_completion(messages: List[Dict[str, str]], model: str, max_tokens: Opti
 
         # Extract text
         resp_obj = data.get("response") or data
+        meta: Dict[str, Any] = {
+            "raw_response": data,
+            "finish_reason": None,
+            "usage": None,
+        }
         if isinstance(resp_obj, dict) and resp_obj.get("output_text"):
-            return resp_obj["output_text"]
+            return resp_obj["output_text"], meta
         # Fallback: stitch from output/content blocks
         texts: List[str] = []
         output = resp_obj.get("output") or []
@@ -81,7 +86,7 @@ def chat_completion(messages: List[Dict[str, str]], model: str, max_tokens: Opti
                     if t:
                         texts.append(str(t))
         if texts:
-            return "\n".join(texts).strip()
+            return "\n".join(texts).strip(), meta
         # Absolute fallback: previous schema
         choices = data.get("choices")
         if choices:
@@ -93,8 +98,8 @@ def chat_completion(messages: List[Dict[str, str]], model: str, max_tokens: Opti
                     if res:
                         res += "\n"
                     res += (ch["text"] or "").strip()
-            return res
-        return str(data)
+            return res, meta
+        return str(data), meta
 
     # Default: Chat Completions API
     call: Dict[str, Any] = {
@@ -118,6 +123,11 @@ def chat_completion(messages: List[Dict[str, str]], model: str, max_tokens: Opti
             if res:
                 res += "\n"
             res += ch["text"].strip()
-    return res
+    meta: Dict[str, Any] = {
+        "raw_response": data,
+        "finish_reason": (data.get("choices", [{}])[0] or {}).get("finish_reason"),
+        "usage": data.get("usage"),
+    }
+    return res, meta
 
 

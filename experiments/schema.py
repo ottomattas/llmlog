@@ -63,6 +63,23 @@ class RunConfig(BaseModel):
     resume: bool = True
     save_prompt: bool = False
     save_response: bool = True
+    # When true, writes a parallel <base>.responses.jsonl file with full text and raw metadata
+    save_full_responses_file: bool = False
+
+    # Unified outputs configuration (preferred)
+    class OutputsResults(BaseModel):
+        enabled: bool = True
+
+    class OutputsProvenance(BaseModel):
+        enabled: bool = False
+        include_prompt: bool = True
+        include_raw_response: bool = True
+
+    class Outputs(BaseModel):
+        results: 'RunConfig.OutputsResults' = Field(default_factory=lambda: RunConfig.OutputsResults())
+        provenance: 'RunConfig.OutputsProvenance' = Field(default_factory=lambda: RunConfig.OutputsProvenance())
+
+    outputs: Outputs = Field(default_factory=lambda: RunConfig.Outputs())
 
 
 class ProblemMeta(BaseModel):
@@ -78,13 +95,21 @@ class ResultRow(BaseModel):
     meta: ProblemMeta = Field(default_factory=ProblemMeta)
     provider: Optional[str] = None
     model: Optional[str] = None
+    # Prompt fields
     prompt: Optional[str] = None
+    prompt_template: Optional[str] = None
+    # Provider response fields
     completion_text: Optional[str] = None
+    normalized_text: Optional[str] = None
+    raw_response: Optional[Any] = None
+    finish_reason: Optional[str] = None
+    usage: Optional[Dict[str, Any]] = None
     parsed_answer: Optional[int] = None  # 0=yes/contradiction, 1=no/satisfiable, 2=unclear
     correct: Optional[bool] = None
     timing_ms: Optional[int] = None
     seed: Optional[int] = None
     temperature: Optional[float] = None
     error: Optional[str] = None
+    error_class: Optional[str] = None
 
 

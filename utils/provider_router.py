@@ -5,21 +5,24 @@ from .anthropic_client import chat_completion as anthropic_chat
 from .google_client import chat_completion as gemini_chat
 
 
-def run_chat(provider: str, model: str, prompt: str, sysprompt: Optional[str] = None, max_tokens: Optional[int] = None, temperature: float = 0.0, seed: Optional[int] = None) -> str:
+def run_chat(provider: str, model: str, prompt: str, sysprompt: Optional[str] = None, max_tokens: Optional[int] = None, temperature: float = 0.0, seed: Optional[int] = None) -> dict:
     provider = provider.lower()
     if provider == "anthropic":
         # System prompt gets merged into user prompt for Claude simple path
         full_prompt = f"{sysprompt}\n{prompt}" if sysprompt else prompt
-        return anthropic_chat(prompt=full_prompt, model=model, max_tokens=max_tokens, temperature=temperature)
+        text, meta = anthropic_chat(prompt=full_prompt, model=model, max_tokens=max_tokens, temperature=temperature)
+        return {"text": text, **meta}
     elif provider in ("google", "gemini"):
         full_prompt = f"{sysprompt}\n{prompt}" if sysprompt else prompt
-        return gemini_chat(prompt=full_prompt, model=model, max_tokens=max_tokens, temperature=temperature)
+        text, meta = gemini_chat(prompt=full_prompt, model=model, max_tokens=max_tokens, temperature=temperature)
+        return {"text": text, **meta}
     elif provider == "openai":
         messages: List[Dict[str, str]] = []
         if sysprompt:
             messages.append({"role": "system", "content": sysprompt})
         messages.append({"role": "user", "content": prompt})
-        return openai_chat(messages=messages, model=model, max_tokens=max_tokens, temperature=temperature, seed=seed)
+        text, meta = openai_chat(messages=messages, model=model, max_tokens=max_tokens, temperature=temperature, seed=seed)
+        return {"text": text, **meta}
     else:
         raise NotImplementedError(f"Provider not supported: {provider}")
 

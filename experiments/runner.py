@@ -192,6 +192,14 @@ def run_targets_lockstep(
             continue
         outpath = _build_outpath(cfg, t, t.model, run_id)
         key_to_outpath[k] = outpath
+        # Determine outputs settings (prefer unified outputs, fallback to legacy flags)
+        write_results = cfg.outputs.results.enabled
+        provenance_enabled = cfg.outputs.provenance.enabled
+        provenance_include_prompt = cfg.outputs.provenance.include_prompt
+        # Optionally prepare a parallel responses (provenance) file path
+        if provenance_enabled:
+            base, ext = os.path.splitext(outpath)
+            key_to_outpath[k + "::responses"] = (base + ".provenance.jsonl" if ext else outpath + ".provenance.jsonl")
         processed_ids = set()
         if cfg.resume and os.path.exists(outpath):
             try:
@@ -304,10 +312,11 @@ def run_targets_lockstep(
                 err_msg = None
                 text = ""
                 dur_ms: Optional[int] = None
+                meta: Dict[str, Any] = {}
                 while True:
                     try:
                         start = time.time()
-                        res_text = run_chat(
+                        res = run_chat(
                             provider=t.provider,
                             model=t.model,
                             prompt=prompt,
@@ -318,19 +327,21 @@ def run_targets_lockstep(
                         )
                         dur_ms = int((time.time() - start) * 1000)
                         err_msg = None
-                        text = res_text
+                        text = res.get("text") or ""
+                        meta = {k: v for k, v in res.items() if k != "text"}
                         break
                     except Exception as e:
                         attempts += 1
                         err_msg = str(e)
                         max_attempts = (cfg.concurrency.retry.max_attempts if cfg.concurrency and cfg.concurrency.retry else 3)
                         backoff = (cfg.concurrency.retry.backoff_seconds if cfg.concurrency and cfg.concurrency.retry else [2, 5, 10])
+                        # Fast-fail for non-retriable? Keep generic for now
                         if attempts >= max_attempts:
                             text = ""
                             break
                         wait_s = backoff[min(attempts - 1, len(backoff) - 1)]
                         time.sleep(wait_s)
-                return {"text": text, "dur_ms": dur_ms, "err": err_msg}
+                return {"text": text, "dur_ms": dur_ms, "err": err_msg, "meta": meta}
 
             with ThreadPoolExecutor(max_workers=max_workers) as executor:
                 future_to_key = {}
@@ -346,8 +357,11 @@ def run_targets_lockstep(
                     text = result["text"]
                     dur_ms = result["dur_ms"]
                     err_msg = result["err"]
+                    resp_meta = result.get("meta") or {}
 
+                    # Parse and derive normalized token from parsed result
                     parsed = parse_output(text, cfg.parse) if (not err_msg) else 2
+                    norm = ("yes" if parsed == 0 else ("no" if parsed == 1 else None))
                     gt = None
                     try:
                         satflag = int(problem[4])
@@ -355,29 +369,74 @@ def run_targets_lockstep(
                     except Exception:
                         gt = None
 
-                    meta = ProblemMeta(
+                    problem_meta = ProblemMeta(
                         maxvars=problem[1] if len(problem) > 1 else None,
                         maxlen=problem[2] if len(problem) > 2 else None,
                         horn=problem[3] if len(problem) > 3 else None,
                         satflag=problem[4] if len(problem) > 4 else None,
                         proof=problem[6] if len(problem) > 6 else None,
                     )
+                    # Map a compact error_class
+                    def classify_error(msg: Optional[str]) -> Optional[str]:
+                        if not msg:
+                            return None
+                        m = msg.lower()
+                        if "429" in m or "too many requests" in m or "rate limit" in m:
+                            return "rate_limit"
+                        if "overloaded" in m or "529" in m:
+                            return "overloaded"
+                        if "usage limits" in m or "quota" in m:
+                            return "quota"
+                        if "timeout" in m:
+                            return "timeout"
+                        return "error"
+
                     row = ResultRow(
                         id=pid,
-                        meta=meta,
+                        meta=problem_meta,
                         provider=t.provider,
                         model=t.model,
-                        prompt=prompt if cfg.save_prompt else None,
-                        completion_text=text if (cfg.save_response and not err_msg) else None,
+                        prompt=None,
+                        prompt_template=None,
+                        completion_text=(norm if (norm is not None) else (text if (cfg.save_response and not err_msg) else None)),
+                        normalized_text=norm,
+                        raw_response=resp_meta.get("raw_response"),
+                        finish_reason=resp_meta.get("finish_reason"),
+                        usage=resp_meta.get("usage"),
                         parsed_answer=parsed,
                         correct=gt,
                         timing_ms=dur_ms,
                         seed=t.seed if t.seed is not None else cfg.seed,
                         temperature=t.temperature if t.temperature is not None else cfg.temperature,
                         error=err_msg,
+                        error_class=classify_error(err_msg),
                     )
-                    with open(key_to_outpath[k], "a") as of:
-                        of.write(row.model_dump_json() + "\n")
+                    # Write minimal results row for statistical analysis
+                    if write_results:
+                        minimal = {
+                            "id": row.id,
+                            "meta": row.meta.model_dump(),
+                            "parsed_answer": row.parsed_answer,
+                        }
+                        with open(key_to_outpath[k], "a") as of:
+                            of.write(json.dumps(minimal) + "\n")
+                    # Write full responses if enabled
+                    if provenance_enabled:
+                        full_out = {
+                            "id": pid,
+                            "provider": t.provider,
+                            "model": t.model,
+                            "prompt": prompt if provenance_include_prompt else None,
+                            "prompt_template": cfg.prompt.template,
+                            "full_text": text,
+                            "raw_response": resp_meta.get("raw_response"),
+                            "finish_reason": resp_meta.get("finish_reason"),
+                            "usage": resp_meta.get("usage"),
+                            "timing_ms": dur_ms,
+                            "error": err_msg,
+                        }
+                        with open(key_to_outpath[k + "::responses"], "a") as rf:
+                            rf.write(json.dumps(full_out) + "\n")
 
                     # Update stats
                     s = stats[k]
@@ -473,6 +532,16 @@ def run_target(
                 rid = run_id or time.strftime("%Y%m%d-%H%M%S")
                 outpath = outpath.replace("${run}", rid)
         ensure_dir(outpath)
+        # Determine outputs settings (prefer unified outputs, fallback to legacy flags)
+        results_include_prompt = cfg.outputs.results.include_prompt
+        provenance_enabled = cfg.outputs.provenance.enabled
+        provenance_include_prompt = cfg.outputs.provenance.include_prompt
+
+        responses_path = None
+        if provenance_enabled:
+            base, ext = os.path.splitext(outpath)
+            responses_path = (base + ".provenance.jsonl" if ext else outpath + ".provenance.jsonl")
+            ensure_dir(responses_path)
 
         # resume support: append mode, naive duplicate avoidance via counting lines
         processed_ids = set()
@@ -514,14 +583,16 @@ def run_target(
                     text = ""
                     dur_ms = 0
                     err_msg = None
+                    resp_meta: Dict[str, Any] = {}
                 else:
                     attempts = 0
                     err_msg = None
                     text = ""
+                    resp_meta: Dict[str, Any] = {}
                     while True:
                         try:
                             start = time.time()
-                            text = run_chat(
+                            res = run_chat(
                                 provider=target.provider,
                                 model=model,
                                 prompt=prompt,
@@ -532,6 +603,8 @@ def run_target(
                             )
                             dur_ms = int((time.time() - start) * 1000)
                             err_msg = None
+                            text = res.get("text") or ""
+                            resp_meta = {k: v for k, v in res.items() if k != "text"}
                             break
                         except Exception as e:
                             attempts += 1
@@ -547,6 +620,7 @@ def run_target(
                             time.sleep(wait_s)
 
                 parsed = parse_output(text, cfg.parse) if (not dry_run and not err_msg) else 2
+                norm = ("yes" if parsed == 0 else ("no" if parsed == 1 else None))
                 gt = None
                 try:
                     satflag = int(problem[4])
@@ -554,28 +628,71 @@ def run_target(
                 except Exception:
                     gt = None
 
-                meta = ProblemMeta(
+                problem_meta = ProblemMeta(
                     maxvars=problem[1] if len(problem) > 1 else None,
                     maxlen=problem[2] if len(problem) > 2 else None,
                     horn=problem[3] if len(problem) > 3 else None,
                     satflag=problem[4] if len(problem) > 4 else None,
                     proof=problem[6] if len(problem) > 6 else None,
                 )
+                def classify_error(msg: Optional[str]) -> Optional[str]:
+                    if not msg:
+                        return None
+                    m = msg.lower()
+                    if "429" in m or "too many requests" in m or "rate limit" in m:
+                        return "rate_limit"
+                    if "overloaded" in m or "529" in m:
+                        return "overloaded"
+                    if "usage limits" in m or "quota" in m:
+                        return "quota"
+                    if "timeout" in m:
+                        return "timeout"
+                    return "error"
+
                 row = ResultRow(
                     id=pid,
-                    meta=meta,
+                    meta=problem_meta,
                     provider=target.provider,
                     model=model,
-                    prompt=prompt if cfg.save_prompt else None,
-                    completion_text=text if (cfg.save_response and not err_msg) else None,
+                    prompt=prompt if results_include_prompt else None,
+                    prompt_template=cfg.prompt.template if results_include_prompt else None,
+                    completion_text=(norm if (norm is not None) else (text if (cfg.save_response and not err_msg) else None)),
+                    normalized_text=norm,
+                    raw_response=resp_meta.get("raw_response"),
+                    finish_reason=resp_meta.get("finish_reason"),
+                    usage=resp_meta.get("usage"),
                     parsed_answer=parsed,
                     correct=gt,
                     timing_ms=dur_ms,
                     seed=target.seed if target.seed is not None else cfg.seed,
                     temperature=target.temperature if target.temperature is not None else cfg.temperature,
                     error=err_msg,
+                    error_class=classify_error(err_msg),
                 )
-                of.write(row.model_dump_json() + "\n")
+                # Write minimal results row for statistical analysis
+                if write_results:
+                    minimal = {
+                        "id": row.id,
+                        "meta": row.meta.model_dump(),
+                        "parsed_answer": row.parsed_answer,
+                    }
+                    of.write(json.dumps(minimal) + "\n")
+                if provenance_enabled and responses_path:
+                    full_out = {
+                        "id": pid,
+                        "provider": target.provider,
+                        "model": model,
+                        "prompt": prompt if provenance_include_prompt else None,
+                        "prompt_template": cfg.prompt.template,
+                        "full_text": text,
+                        "raw_response": resp_meta.get("raw_response") if not dry_run else None,
+                        "finish_reason": resp_meta.get("finish_reason") if not dry_run else None,
+                        "usage": resp_meta.get("usage") if not dry_run else None,
+                        "timing_ms": dur_ms,
+                        "error": err_msg,
+                    }
+                    with open(responses_path, "a") as rf:
+                        rf.write(json.dumps(full_out) + "\n")
 
                 # Update stats
                 total_count += 1

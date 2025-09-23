@@ -84,7 +84,12 @@ concurrency:
 
 # Execution settings
 resume: true                 # resume from prior results when re-running
-save_prompt: false           # set true to store rendered prompt
-save_response: true          # store raw completion for inspection
 
-
+# Unified outputs (preferred)
+outputs:
+  results:
+    enabled: true
+  provenance:
+    enabled: false
+    include_prompt: false
+    include_raw_response: false

@@ -48,6 +48,10 @@ concurrency:
 
 # Execution settings
 resume: true
-save_prompt: false
-save_response: true
-
+outputs:
+  results:
+    enabled: true
+  provenance:
+    enabled: true
+    include_prompt: true
+    include_raw_response: true
