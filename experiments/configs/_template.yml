@@ -1,0 +1,77 @@
+# Reusable experiment template
+# How to use:
+# 1) Copy this file and rename it, or edit in-place (change `name:`)
+# 2) Prefer multi-targets via `targets:[]`. For single target, see commented example below
+# 3) Adjust input/output paths, prompt template, parser, and concurrency
+
+name: CHANGE_ME_experiment_name
+
+# Target selection
+# Prefer `targets`. For a single-target run, keep ONE item in this list.
+targets:
+  - provider: anthropic
+    model: claude-opus-4-1
+    temperature: 0
+    seed: 1234
+    max_tokens: 2000
+  - provider: google
+    model: gemini-2.5-flash  # or gemini-2.5-pro
+    temperature: 0
+    seed: 1234
+    max_tokens: 2000
+  - provider: openai
+    model: gpt-5             # Responses API
+    temperature: 0
+    seed: 1234
+    max_tokens: 2000
+
+# Alternative: SINGLE-TARGET configuration (uncomment these and remove `targets:` above)
+# provider: openai
+# model: gpt-5
+# temperature: 0
+# seed: 1234
+# max_tokens: 2000
+
+# Input dataset and outputs
+input_file: data/problems_dist20_v1.js       # e.g., data/problems_dist20_v1.js or _legacy/exp8/problems_dist20_v1.js
+# Choose one output style:
+# - Nested pattern (recommended for multi-targets):
+output_pattern: experiments/runs/${name}/${provider}/${model}/results.jsonl
+# - Flat pattern (alternative):
+# output_pattern: experiments/runs/${name}/${provider}_${model}.jsonl
+# - Single file (for single-target runs):
+# output_file: experiments/runs/${name}/results.jsonl
+
+# Filters
+filters:
+  horn_only: true             # set to true for horn-only filtering
+  skip_rows: 1                # skip header row if present
+  limit_rows: null            # set a number for quick tests
+
+# Prompt configuration
+prompt:
+  template: prompts/exp8_if_then_yesno.j2    # change to your template
+  style: horn_if_then                        # horn_if_then | cnf_v1 | cnf_v2 (omit to use horn_if_then default)
+  variables: {}
+
+# Parser configuration
+parse:
+  type: yes_no               # yes_no | contradiction
+  yes_tokens: ["yes"]
+  no_tokens: ["no"]
+
+# Concurrency and retry settings
+concurrency:
+  workers: 4                 # per-target item workers
+  targets_workers: 2         # how many targets processed concurrently (currently not enforced by runner)
+  rate_limit_per_min: 120    # per-target rate limit (currently not enforced by runner)
+  retry:
+    max_attempts: 3
+    backoff_seconds: [2, 5, 10]
+
+# Execution settings
+resume: true                 # resume from prior results when re-running
+save_prompt: false           # set true to store rendered prompt
+save_response: true          # store raw completion for inspection
+
+
