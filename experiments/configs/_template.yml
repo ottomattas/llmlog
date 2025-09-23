@@ -75,6 +75,7 @@ parse:
 # Concurrency and retry settings
 concurrency:
   workers: 4                 # per-target item workers
+  lockstep: true             # lockstep processing of targets
   targets_workers: 2         # how many targets processed concurrently (currently not enforced by runner)
   rate_limit_per_min: 120    # per-target rate limit (currently not enforced by runner)
   retry:

@@ -10,6 +10,7 @@ class RetrySettings(BaseModel):
 class ConcurrencySettings(BaseModel):
     workers: int = 4
     targets_workers: int = 1
+    lockstep: bool = False
     rate_limit_per_min: Optional[int] = None
     retry: RetrySettings = Field(default_factory=RetrySettings)
 

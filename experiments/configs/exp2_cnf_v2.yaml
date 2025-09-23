@@ -38,6 +38,7 @@ parse:
 # Concurrency and retry settings
 concurrency:
   workers: 4
+  lockstep: true
   rate_limit_per_min: 120
   retry:
     max_attempts: 3

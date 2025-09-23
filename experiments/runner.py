@@ -8,6 +8,7 @@ import time
 from typing import Any, Dict, Iterable, Iterator, List, Optional
 
 import yaml
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Support running both as a module (python -m experiments.runner)
 # and as a script (python experiments/runner.py)
@@ -124,6 +125,313 @@ def read_text(path: str) -> str:
 def ensure_dir(path: str) -> None:
     os.makedirs(os.path.dirname(path), exist_ok=True)
 
+
+def _build_outpath(cfg: RunConfig, target: SingleTarget, model: str, run_id: Optional[str]) -> str:
+    if cfg.output_pattern:
+        outpath = cfg.output_pattern
+        outpath = (
+            outpath.replace("${name}", cfg.name)
+            .replace("${provider}", target.provider)
+            .replace("${model}", model)
+        )
+        if "${run}" in outpath:
+            rid = run_id or time.strftime("%Y%m%d-%H%M%S")
+            outpath = outpath.replace("${run}", rid)
+    else:
+        outpath = (cfg.output_file or f"experiments/runs/{cfg.name}/results.jsonl").replace("${name}", cfg.name)
+        if "${run}" in outpath:
+            rid = run_id or time.strftime("%Y%m%d-%H%M%S")
+            outpath = outpath.replace("${run}", rid)
+    ensure_dir(outpath)
+    return outpath
+
+
+def run_targets_lockstep(
+    cfg: RunConfig,
+    targets: List[SingleTarget],
+    only_providers: Optional[List[str]] = None,
+    model_overrides: Optional[Dict[str, List[str]]] = None,
+    dry_run: bool = False,
+    run_id: Optional[str] = None,
+) -> None:
+    # Read and filter problems once
+    rows_iter = read_jsonl_rows(cfg.input_file)
+    rows_iter = apply_filters(rows_iter, cfg)
+    problems = list(rows_iter)
+
+    tmpl = read_text(cfg.prompt.template)
+
+    # Expand targets x models taking overrides into account and apply provider filter
+    expanded: List[SingleTarget]
+    expanded = []
+    for t in targets:
+        if only_providers and t.provider.lower() not in [p.lower() for p in only_providers]:
+            continue
+        models: List[str]
+        if model_overrides and t.provider in model_overrides:
+            models = model_overrides[t.provider]
+        else:
+            models = [t.model]
+        for m in models:
+            expanded.append(SingleTarget(provider=t.provider, model=m, temperature=t.temperature, seed=t.seed, max_tokens=t.max_tokens))
+
+    if not expanded:
+        return
+
+    # Prepare per-(provider,model) outpaths, processed ids, and stats
+    key_to_outpath: Dict[str, str] = {}
+    key_to_processed: Dict[str, set] = {}
+    stats: Dict[str, Dict[str, Any]] = {}
+
+    def key_for(t: SingleTarget) -> str:
+        return f"{t.provider}::{t.model}"
+
+    for t in expanded:
+        k = key_for(t)
+        if k in key_to_outpath:
+            continue
+        outpath = _build_outpath(cfg, t, t.model, run_id)
+        key_to_outpath[k] = outpath
+        processed_ids = set()
+        if cfg.resume and os.path.exists(outpath):
+            try:
+                with open(outpath, "r") as rf:
+                    for line in rf:
+                        try:
+                            obj = json.loads(line)
+                            processed_ids.add(obj.get("id"))
+                        except Exception:
+                            continue
+            except Exception:
+                pass
+        key_to_processed[k] = processed_ids
+        stats[k] = {
+            "total": 0,
+            "correct": 0,
+            "unclear": 0,
+            "sat_total": 0,
+            "sat_correct": 0,
+            "unsat_total": 0,
+            "unsat_correct": 0,
+            "timing_sum": 0,
+            "timing_count": 0,
+            "provider": t.provider,
+            "model": t.model,
+        }
+
+    sysprompt = None
+
+    # Per-problem lockstep
+    for idx, problem in enumerate(problems, start=1):
+        pid = problem[0] if isinstance(problem, list) and len(problem) > 0 else idx
+        prompt = render_prompt(problem, tmpl, cfg.prompt.style)
+
+        # Build task list for keys that still need this pid
+        tasks: List[Dict[str, Any]] = []
+        for t in expanded:
+            k = key_for(t)
+            if pid in key_to_processed[k]:
+                continue
+            tasks.append({"target": t, "key": k})
+
+        # If dry-run: write placeholder rows immediately (no API calls)
+        if dry_run:
+            for t in expanded:
+                k = key_for(t)
+                if pid in key_to_processed[k]:
+                    continue
+                parsed = 2
+                gt = None
+                try:
+                    satflag = int(problem[4])
+                    gt = (parsed == satflag)
+                except Exception:
+                    gt = None
+                meta = ProblemMeta(
+                    maxvars=problem[1] if len(problem) > 1 else None,
+                    maxlen=problem[2] if len(problem) > 2 else None,
+                    horn=problem[3] if len(problem) > 3 else None,
+                    satflag=problem[4] if len(problem) > 4 else None,
+                    proof=problem[6] if len(problem) > 6 else None,
+                )
+                row = ResultRow(
+                    id=pid,
+                    meta=meta,
+                    provider=t.provider,
+                    model=t.model,
+                    prompt=prompt if cfg.save_prompt else None,
+                    completion_text=None,
+                    parsed_answer=parsed,
+                    correct=gt,
+                    timing_ms=0,
+                    seed=t.seed if t.seed is not None else cfg.seed,
+                    temperature=t.temperature if t.temperature is not None else cfg.temperature,
+                    error=None,
+                )
+                with open(key_to_outpath[k], "a") as of:
+                    of.write(row.model_dump_json() + "\n")
+                # Update stats
+                s = stats[k]
+                s["total"] += 1
+                if row.correct:
+                    s["correct"] += 1
+                if row.parsed_answer == 2:
+                    s["unclear"] += 1
+                try:
+                    sf = int(problem[4])
+                    if sf == 1:
+                        s["sat_total"] += 1
+                        if row.correct:
+                            s["sat_correct"] += 1
+                    elif sf == 0:
+                        s["unsat_total"] += 1
+                        if row.correct:
+                            s["unsat_correct"] += 1
+                except Exception:
+                    pass
+                s["timing_sum"] += 0
+                # no timing_count increment for 0? Keep consistent with run_target using ints only
+                s["timing_count"] += 1
+            continue
+
+        # Execute in parallel for this problem
+        if tasks:
+            max_workers = cfg.concurrency.workers if (cfg.concurrency and cfg.concurrency.workers) else len(tasks)
+            max_workers = max(1, min(max_workers, len(tasks)))
+
+            def call_one(t: SingleTarget) -> Dict[str, Any]:
+                attempts = 0
+                err_msg = None
+                text = ""
+                dur_ms: Optional[int] = None
+                while True:
+                    try:
+                        start = time.time()
+                        res_text = run_chat(
+                            provider=t.provider,
+                            model=t.model,
+                            prompt=prompt,
+                            sysprompt=sysprompt,
+                            max_tokens=t.max_tokens or cfg.max_tokens,
+                            temperature=t.temperature if t.temperature is not None else (cfg.temperature or 0.0),
+                            seed=t.seed if t.seed is not None else cfg.seed,
+                        )
+                        dur_ms = int((time.time() - start) * 1000)
+                        err_msg = None
+                        text = res_text
+                        break
+                    except Exception as e:
+                        attempts += 1
+                        err_msg = str(e)
+                        max_attempts = (cfg.concurrency.retry.max_attempts if cfg.concurrency and cfg.concurrency.retry else 3)
+                        backoff = (cfg.concurrency.retry.backoff_seconds if cfg.concurrency and cfg.concurrency.retry else [2, 5, 10])
+                        if attempts >= max_attempts:
+                            text = ""
+                            break
+                        wait_s = backoff[min(attempts - 1, len(backoff) - 1)]
+                        time.sleep(wait_s)
+                return {"text": text, "dur_ms": dur_ms, "err": err_msg}
+
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                future_to_key = {}
+                for item in tasks:
+                    t = item["target"]
+                    k = item["key"]
+                    future = executor.submit(call_one, t)
+                    future_to_key[future] = (t, k)
+
+                for fut in as_completed(future_to_key):
+                    t, k = future_to_key[fut]
+                    result = fut.result()
+                    text = result["text"]
+                    dur_ms = result["dur_ms"]
+                    err_msg = result["err"]
+
+                    parsed = parse_output(text, cfg.parse) if (not err_msg) else 2
+                    gt = None
+                    try:
+                        satflag = int(problem[4])
+                        gt = (parsed == satflag)
+                    except Exception:
+                        gt = None
+
+                    meta = ProblemMeta(
+                        maxvars=problem[1] if len(problem) > 1 else None,
+                        maxlen=problem[2] if len(problem) > 2 else None,
+                        horn=problem[3] if len(problem) > 3 else None,
+                        satflag=problem[4] if len(problem) > 4 else None,
+                        proof=problem[6] if len(problem) > 6 else None,
+                    )
+                    row = ResultRow(
+                        id=pid,
+                        meta=meta,
+                        provider=t.provider,
+                        model=t.model,
+                        prompt=prompt if cfg.save_prompt else None,
+                        completion_text=text if (cfg.save_response and not err_msg) else None,
+                        parsed_answer=parsed,
+                        correct=gt,
+                        timing_ms=dur_ms,
+                        seed=t.seed if t.seed is not None else cfg.seed,
+                        temperature=t.temperature if t.temperature is not None else cfg.temperature,
+                        error=err_msg,
+                    )
+                    with open(key_to_outpath[k], "a") as of:
+                        of.write(row.model_dump_json() + "\n")
+
+                    # Update stats
+                    s = stats[k]
+                    s["total"] += 1
+                    if row.correct:
+                        s["correct"] += 1
+                    if row.parsed_answer == 2:
+                        s["unclear"] += 1
+                    try:
+                        sf = int(problem[4])
+                        if sf == 1:
+                            s["sat_total"] += 1
+                            if row.correct:
+                                s["sat_correct"] += 1
+                        elif sf == 0:
+                            s["unsat_total"] += 1
+                            if row.correct:
+                                s["unsat_correct"] += 1
+                    except Exception:
+                        pass
+                    if isinstance(row.timing_ms, int):
+                        s["timing_sum"] += row.timing_ms
+                        s["timing_count"] += 1
+
+    # Write per-target summaries
+    for k, outpath in key_to_outpath.items():
+        try:
+            base, ext = os.path.splitext(outpath)
+            summary_path = base + ".summary.json" if ext else outpath + ".summary.json"
+            ensure_dir(summary_path)
+            s = stats[k]
+            avg_timing = (s["timing_sum"] / s["timing_count"]) if s["timing_count"] > 0 else None
+            summary = {
+                "name": cfg.name,
+                "provider": s["provider"],
+                "model": s["model"],
+                "run": run_id,
+                "total": s["total"],
+                "correct": s["correct"],
+                "accuracy": (s["correct"] / s["total"]) if s["total"] > 0 else None,
+                "unclear": s["unclear"],
+                "sat_total": s["sat_total"],
+                "sat_correct": s["sat_correct"],
+                "sat_accuracy": (s["sat_correct"] / s["sat_total"]) if s["sat_total"] > 0 else None,
+                "unsat_total": s["unsat_total"],
+                "unsat_correct": s["unsat_correct"],
+                "unsat_accuracy": (s["unsat_correct"] / s["unsat_total"]) if s["unsat_total"] > 0 else None,
+                "avg_timing_ms": avg_timing,
+                "timestamp": int(time.time()),
+            }
+            with open(summary_path, "w") as sf:
+                json.dump(summary, sf, indent=2)
+        except Exception:
+            pass
 
 def run_target(
     cfg: RunConfig,
@@ -367,8 +675,38 @@ def main() -> None:
             raise RuntimeError("Config must include either (provider, model) or targets[]")
         targets = [SingleTarget(provider=cfg.provider, model=cfg.model, temperature=cfg.temperature or 0.0, seed=cfg.seed, max_tokens=cfg.max_tokens)]
 
-    for t in targets:
-        run_target(cfg, t, only_providers=only_providers, model_overrides=model_overrides, dry_run=args.dry_run, run_id=args.run)
+    # Lockstep vs original per-target mode
+    if cfg.concurrency and getattr(cfg.concurrency, "lockstep", False):
+        run_targets_lockstep(
+            cfg,
+            targets,
+            only_providers=only_providers,
+            model_overrides=model_overrides,
+            dry_run=args.dry_run,
+            run_id=args.run,
+        )
+    else:
+        # Run targets concurrently using targets_workers
+        max_workers = cfg.concurrency.targets_workers if cfg.concurrency and cfg.concurrency.targets_workers else 1
+        if max_workers <= 1 or len(targets) <= 1:
+            for t in targets:
+                run_target(cfg, t, only_providers=only_providers, model_overrides=model_overrides, dry_run=args.dry_run, run_id=args.run)
+        else:
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                futures = [
+                    executor.submit(
+                        run_target,
+                        cfg,
+                        t,
+                        only_providers,
+                        model_overrides,
+                        args.dry_run,
+                        args.run,
+                    )
+                    for t in targets
+                ]
+                for _ in as_completed(futures):
+                    pass
 
 
 if __name__ == "__main__":
