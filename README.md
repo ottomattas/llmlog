@@ -34,6 +34,20 @@ ls experiments/plots
 
 That’s it. Edit YAML configs under `experiments/configs/` to switch experiments or add more targets.
 
+### Naming Scheme for Config Files
+- Pattern: `exp<N>_<domain>_<task>[_<variant>]`
+  - `<domain>`: `cnf` | `horn`
+  - `<task>`: `contradiction` | `yesno` | `cot`
+  - `<variant>` (optional): `linear` | `parents` | `v1` | `v2`
+- Examples:
+  - `exp3_cnf_cot_linear`
+  - `exp4_cnf_cot_parents`
+  - `exp5_horn_cot_linear`
+  - `exp6_horn_yesno`
+  - `exp8_horn_yesno`
+
+This keeps descriptors in a consistent order: domain first, then task, then variant.
+
 ### Goals
 - **Single runner, many configs**: No per-experiment code forks
 - **Prompt templating**: Jinja2 templates with per-run variables
