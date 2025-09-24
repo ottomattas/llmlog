@@ -40,46 +40,71 @@ targets:
     temperature: 0                     # Sampling temperature (0 for deterministic)
     seed: 1234                         # Optional seed for reproducibility
     max_tokens: 2000                   # Max output tokens
+    thinking:                          # Optional extended thinking (Anthropic: summarized thinking)
+      enabled: true
+      budget_tokens: 8192
   - provider: anthropic
     model: claude-sonnet-4-20250514
     temperature: 0
     seed: 1234
     max_tokens: 2000
+    thinking:
+      enabled: true
+      budget_tokens: 4096
   - provider: anthropic
     model: claude-3-5-haiku-20241022
     temperature: 0
     seed: 1234
     max_tokens: 2000
+    thinking:
+      enabled: false
   - provider: google
     model: gemini-2.5-pro
     temperature: 0
     seed: 1234
     max_tokens: 2000
+    thinking:                          # Gemini: thinkingConfig.thinkingBudget
+      enabled: true
+      gemini_budget_tokens: 4096
   - provider: google
     model: gemini-2.5-flash
     temperature: 0
     seed: 1234
     max_tokens: 2000
+    thinking:
+      enabled: false                   # We default to disabling thinking on Flash if not provided
   - provider: google
     model: gemini-2.5-flash-lite
     temperature: 0
     seed: 1234
     max_tokens: 2000
+    thinking:
+      enabled: false
   - provider: openai
     model: gpt-5-2025-08-07
     temperature: 0
     seed: 1234
     max_tokens: 2000
+    thinking:                          # OpenAI: Responses API reasoning
+      enabled: true
+      openai_reasoning:
+        effort: medium
   - provider: openai
     model: gpt-5-mini-2025-08-07
     temperature: 0
     seed: 1234
     max_tokens: 2000
+    thinking:
+      enabled: true
+      openai_reasoning:
+        effort: low
   - provider: openai
     model: gpt-5-nano-2025-08-07
     temperature: 0
     seed: 1234
     max_tokens: 2000
+    thinking:
+      enabled: false
 
 ## Input data
 input_file: data/problems_dist20_v1.js # Path to dataset (JSONL-like JS array lines)
@@ -138,6 +163,14 @@ concurrency:
 
 ## Execution
 resume: true                           # Resume from prior results when re-running
+
+# Optional global thinking defaults (applied to targets without per-target thinking)
+thinking:
+  enabled: false
+  budget_tokens: 2048                  # Anthropic default if applied
+  gemini_budget_tokens: 2048           # Gemini default if applied
+  openai_reasoning:
+    effort: medium
 
 ## CLI tips
 # - Limit rows quickly:            --limit 100

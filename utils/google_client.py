@@ -21,7 +21,7 @@ def _extract_text(data: Dict[str, Any]) -> str:
         return ""
 
 
-def chat_completion(prompt: str, model: str, max_tokens: Optional[int] = None, temperature: float = 0.0) -> Tuple[str, Dict[str, Any]]:
+def chat_completion(prompt: str, model: str, max_tokens: Optional[int] = None, temperature: float = 0.0, thinking: Optional[Dict[str, Any]] = None) -> Tuple[str, Dict[str, Any]]:
     secrets = load_secrets()
     # support both keys
     key = get_provider_key(secrets, "google") or get_provider_key(secrets, "gemini")
@@ -42,10 +42,20 @@ def chat_completion(prompt: str, model: str, max_tokens: Optional[int] = None, t
             "temperature": float(temperature or 0.0),
         },
     }
-    # For Gemini 2.5 Flash, disable thinking to ensure plain text output and reduce blanks
+    # Thinking settings per https://ai.google.dev/gemini-api/docs/thinking
+    # If thinking enabled, set thinkingConfig.thinkingBudget; otherwise disable for flash by default
     try:
-        if str(model).startswith("gemini-2.5-flash"):
-            body.setdefault("generationConfig", {})["thinkingConfig"] = {"thinkingBudget": 0}
+        gen_cfg = body.setdefault("generationConfig", {})
+        if thinking and thinking.get("enabled"):
+            budget = thinking.get("gemini_budget_tokens") or thinking.get("budget_tokens")
+            if budget is not None:
+                gen_cfg["thinkingConfig"] = {"thinkingBudget": int(budget)}
+            else:
+                # enable minimal thinking when enabled=True but no budget provided
+                gen_cfg["thinkingConfig"] = {"thinkingBudget": 1024}
+        else:
+            if str(model).startswith("gemini-2.5-flash"):
+                gen_cfg["thinkingConfig"] = {"thinkingBudget": 0}
     except Exception:
         pass
     if max_tokens is not None:

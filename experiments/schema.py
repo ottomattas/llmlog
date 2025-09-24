@@ -33,12 +33,25 @@ class FiltersConfig(BaseModel):
     limit_rows: Optional[int] = None
 
 
+class ThinkingOptions(BaseModel):
+    # Provider-agnostic thinking config
+    enabled: bool = False
+    # Anthropic: budget tokens for extended thinking
+    budget_tokens: Optional[int] = None
+    # Google Gemini: thinkingBudget (tokens) and optional type
+    gemini_budget_tokens: Optional[int] = None
+    gemini_type: Optional[str] = None  # e.g., "thinking"
+    # OpenAI: reasoning settings for Responses/Chat when supported
+    openai_reasoning: Optional[Dict[str, Any]] = None
+
+
 class SingleTarget(BaseModel):
     provider: str
     model: str
     temperature: float = 0.0
     seed: Optional[int] = None
     max_tokens: Optional[int] = None
+    thinking: Optional[ThinkingOptions] = None
 
 
 class RunConfig(BaseModel):
@@ -51,6 +64,7 @@ class RunConfig(BaseModel):
     seed: Optional[int] = None
     max_tokens: Optional[int] = None
     targets: Optional[List[SingleTarget]] = None
+    thinking: Optional[ThinkingOptions] = None  # default for all targets if not set per-target
 
     input_file: str
     output_file: Optional[str] = None

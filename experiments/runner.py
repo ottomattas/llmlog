@@ -173,7 +173,7 @@ def run_targets_lockstep(
         else:
             models = [t.model]
         for m in models:
-            expanded.append(SingleTarget(provider=t.provider, model=m, temperature=t.temperature, seed=t.seed, max_tokens=t.max_tokens))
+            expanded.append(SingleTarget(provider=t.provider, model=m, temperature=t.temperature, seed=t.seed, max_tokens=t.max_tokens, thinking=(t.thinking)))
 
     if not expanded:
         return
@@ -316,6 +316,15 @@ def run_targets_lockstep(
                 while True:
                     try:
                         start = time.time()
+                        # Prefer per-target thinking, fallback to global
+                        thinking_cfg = None
+                        try:
+                            if t.thinking is not None:
+                                thinking_cfg = t.thinking.model_dump(exclude_none=True)
+                            elif cfg.thinking is not None:
+                                thinking_cfg = cfg.thinking.model_dump(exclude_none=True)
+                        except Exception:
+                            thinking_cfg = None
                         res = run_chat(
                             provider=t.provider,
                             model=t.model,
@@ -324,6 +333,7 @@ def run_targets_lockstep(
                             max_tokens=t.max_tokens or cfg.max_tokens,
                             temperature=t.temperature if t.temperature is not None else (cfg.temperature or 0.0),
                             seed=t.seed if t.seed is not None else cfg.seed,
+                            thinking=thinking_cfg,
                         )
                         dur_ms = int((time.time() - start) * 1000)
                         err_msg = None
@@ -514,7 +524,7 @@ def run_target(
 
     tmpl = read_text(cfg.prompt.template)
 
-    for model in models:
+        for model in models:
         # decide output path
         if cfg.output_pattern:
             outpath = cfg.output_pattern
@@ -592,6 +602,15 @@ def run_target(
                     while True:
                         try:
                             start = time.time()
+                            # Prefer per-target thinking, fallback to global
+                            thinking_cfg = None
+                            try:
+                                if target.thinking is not None:
+                                    thinking_cfg = target.thinking.model_dump(exclude_none=True)
+                                elif cfg.thinking is not None:
+                                    thinking_cfg = cfg.thinking.model_dump(exclude_none=True)
+                            except Exception:
+                                thinking_cfg = None
                             res = run_chat(
                                 provider=target.provider,
                                 model=model,
@@ -600,6 +619,7 @@ def run_target(
                                 max_tokens=target.max_tokens or cfg.max_tokens,
                                 temperature=target.temperature if target.temperature is not None else (cfg.temperature or 0.0),
                                 seed=target.seed if target.seed is not None else cfg.seed,
+                                thinking=thinking_cfg,
                             )
                             dur_ms = int((time.time() - start) * 1000)
                             err_msg = None
