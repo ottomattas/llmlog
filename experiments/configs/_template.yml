@@ -22,10 +22,10 @@ name: CHANGE_ME_experiment_name
 # For a single-target run, keep ONE item in this list.
 targets:
   - provider: anthropic
-    model: claude-opus-4-1
-    temperature: 0
-    seed: 1234
-    max_tokens: 2000
+    model: claude-opus-4-1            # Model identifier for the provider
+    temperature: 0                    # Sampling temperature (0 for deterministic)
+    seed: 1234                        # Optional seed for reproducibility
+    max_tokens: 2000                  # Max output tokens
   - provider: google
     model: gemini-2.5-flash
     temperature: 0
@@ -41,16 +41,16 @@ targets:
     #   seed: 1234
     #   max_tokens: 2000
   - provider: openai
-    model: gpt-5             # Responses API
+    model: gpt-5
     temperature: 0
     seed: 1234
     max_tokens: 2000
 
 # Input dataset and outputs
-input_file: data/problems_dist20_v1.js       # e.g., data/problems_dist20_v1.js or _legacy/exp8/problems_dist20_v1.js
+input_file: data/problems_dist20_v1.js       # Path to dataset (JSONL-like JS array lines)
 # Choose one output style:
 # - Nested pattern (recommended for multi-targets):
-output_pattern: experiments/runs/${name}/${run}/${provider}/${model}/results.jsonl
+output_pattern: experiments/runs/${name}/${run}/${provider}/${model}/results.jsonl  # ${run} set via --run
 # - Flat pattern (alternative):
 # output_pattern: experiments/runs/${name}/${provider}_${model}.jsonl
 # - Single file (for single-target runs):
@@ -58,40 +58,40 @@ output_pattern: experiments/runs/${name}/${run}/${provider}/${model}/results.jso
 
 # Filters
 filters:
-  horn_only: true             # set to true for horn-only filtering
-  skip_rows: 1                # skip header row if present
-  limit_rows: null            # set a number for quick tests
+  horn_only: true             # Keep only horn problems
+  skip_rows: 1                # Skip a header row if present
+  limit_rows: null            # For quick tests; null processes all
 
 # Prompt configuration
 prompt:
-  template: prompts/exp8_if_then_yesno.j2    # change to your template
-  style: horn_if_then                        # horn_if_then | cnf_v1 | cnf_v2 (omit to use horn_if_then default)
-  variables: {}
+  template: prompts/exp8_if_then_yesno.j2    # Jinja2 template path
+  style: horn_if_then                        # horn_if_then | cnf_v1 | cnf_v2
+  variables: {}                              # Optional template vars
 
 # Parser configuration
 parse:
   type: yes_no               # yes_no | contradiction
-  yes_tokens: ["yes"]
-  no_tokens: ["no"]
+  yes_tokens: ["yes"]       # Extra tokens treated as yes
+  no_tokens: ["no"]        # Extra tokens treated as no
 
 # Concurrency and retry settings
 concurrency:
-  workers: 4                 # per-target item workers
-  lockstep: true             # lockstep processing of targets
-  targets_workers: 2         # how many targets processed concurrently (currently not enforced by runner)
-  rate_limit_per_min: 120    # per-target rate limit (currently not enforced by runner)
+  workers: 4                 # Per-problem fan-out workers
+  lockstep: true             # Evaluate same problem across targets concurrently
+  targets_workers: 2         # Max concurrent targets (not enforced yet)
+  rate_limit_per_min: 120    # Intended per-target limit (not enforced yet)
   retry:
-    max_attempts: 3
+    max_attempts: 3          # Retries for transient errors (429/overloaded)
     backoff_seconds: [2, 5, 10]
 
 # Execution settings
 resume: true                 # resume from prior results when re-running
 
-# Unified outputs (preferred)
+# Unified outputs
 outputs:
   results:
-    enabled: true
+    enabled: true            # When false, results.jsonl is not written
   provenance:
-    enabled: false
-    include_prompt: false
-    include_raw_response: false
+    enabled: true            # When false, results.provenance.jsonl is not written
+    include_prompt: true     # Include rendered prompt in provenance
+    include_raw_response: true  # Include provider raw payload in provenance
