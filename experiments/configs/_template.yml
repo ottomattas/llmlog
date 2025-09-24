@@ -1,20 +1,23 @@
 # Reusable Experiment Template
-# How to use
+## How to use
 # 1) Copy this file and rename it, or edit in-place (change `name:`).
 # 2) Define one or more targets via `targets:`.
 # 3) Adjust input/output paths, prompt template, parser, and concurrency.
 #
-# Sections overview
+## Sections overview
 # - Name
-# - Targets (or Single-target alternative)
-# - Data (input + filters)
-# - Outputs (paths + content controls)
-# - Prompt & parsing
+# - Target selection
+# - Input data
+# - Input filters
+# - Output data
+# - Output configuration
+# - Prompt
+# - Parsing
 # - Concurrency
 # - Execution
+# - CLI tips
 
-name: CHANGE_ME_experiment_name
-
+## Name
 # Recommended naming scheme
 # Use: exp<N>_<domain>_<task>[_<variant>]
 # - <domain>: cnf | horn
@@ -26,9 +29,22 @@ name: CHANGE_ME_experiment_name
 # - exp4_cnf_cot_parents
 # - exp5_horn_cot_linear
 # - exp6_horn_yesno
+name: CHANGE_ME_experiment_name
 
-# Target selection
-# For a single-target run, keep ONE item in this list.
+## Target selection
+# - For a single-target run, keep ONE item in this list.
+# - To run multiple models for the same provider, add another target entry
+# Examples (multiple models for the same provider)
+# - provider: google
+#   model: gemini-2.5-flash
+#   temperature: 0
+#   seed: 1234
+#   max_tokens: 2000
+# - provider: google
+#   model: gemini-2.5-pro
+#   temperature: 0
+#   seed: 1234
+#   max_tokens: 2000
 targets:
   - provider: anthropic
     model: claude-opus-4-1             # Model identifier for the provider
@@ -40,57 +56,25 @@ targets:
     temperature: 0
     seed: 1234
     max_tokens: 2000
-    # To run multiple models for the same provider, add another target entry
-    # with the same provider and a different model, e.g.:
-    # (uncomment to use)
-    #
-    # - provider: google
-    #   model: gemini-2.5-pro
-    #   temperature: 0
-    #   seed: 1234
-    #   max_tokens: 2000
   - provider: openai
     model: gpt-5
     temperature: 0
     seed: 1234
     max_tokens: 2000
 
-# Single-target alternative (commented example)
-# If you prefer not to use `targets:`, you can specify a single target at top level:
-# provider: openai
-# model: gpt-5
-# temperature: 0
-# seed: 1234
-# max_tokens: 2000
-
-# Data
+## Input data
 input_file: data/problems_dist20_v1.js # Path to dataset (JSONL-like JS array lines)
 
-# Filters
+## Input filters
 filters:
   horn_only: true                      # Keep only horn problems
   skip_rows: 1                         # Skip a header row if present
   limit_rows: null                     # For quick tests; null processes all
 
-# Outputs
+## Output data
 output_pattern: experiments/runs/${name}/${run}/${provider}/${model}/results.jsonl
-# - Flat pattern (alternative):
-# output_pattern: experiments/runs/${name}/${provider}_${model}.jsonl
-# - Single file (for single-target runs):
-# output_file: experiments/runs/${name}/results.jsonl
-#
-# Output path variables
-# - ${name}: value from `name:`
-# - ${provider}: target provider (e.g., openai)
-# - ${model}: target model (e.g., gpt-5)
-# - ${run}: optional run id; if present in the path and not provided via --run,
-#           a timestamp will be injected automatically
-#
-# Precedence
-# - When `output_pattern` is set, it is used.
-# - Otherwise `output_file` is used (or a default under experiments/runs/${name}/results.jsonl).
 
-# Outputs configuration
+## Output configuration
 outputs:
   results:
     enabled: true                      # When false, results.jsonl is not written
@@ -99,12 +83,13 @@ outputs:
     include_prompt: true               # Include rendered prompt in provenance
     include_raw_response: true         # Include provider raw payload in provenance
 
-# Prompt & parsing
+## Prompt
 prompt:
   template: prompts/exp6_horn_yesno.j2 # Jinja2 template path
   style: horn_if_then                  # One of: horn_if_then | cnf_v1 | cnf_v2
   variables: {}                        # Optional template vars
 
+## Parsing
 # Parser maps model text → parsed_answer used in stats:
 #   0 = YES/CONTRADICTION, 1 = NO/SATISFIABLE, 2 = UNCLEAR
 # For yes_no, we scan the text case-insensitively; first matching token wins.
@@ -115,7 +100,7 @@ parse:
   yes_tokens: ["yes"]                  # Extra tokens treated as yes (e.g., "yep", "affirmative")
   no_tokens: ["no"]                    # Extra tokens treated as no (e.g., "nope", "negative")
 
-# Concurrency and retry settings
+## Concurrency
 # Throttling guidance:
 # - Effective concurrency per problem = min(workers, number of targets)
 # - Set workers >= targets to run all targets in parallel (fastest)
@@ -130,12 +115,12 @@ concurrency:
   rate_limit_per_min: 120              # Reserved: intended per-target limit (not enforced yet)
   retry:
     max_attempts: 3                    # Retries for transient errors (429/overloaded)
-    backoff_seconds: [2, 5, 10]
+    backoff_seconds: [2, 5, 10]        # Per-attempt wait times (seconds); last value reused on further retries
 
-# Execution settings
+## Execution
 resume: true                           # Resume from prior results when re-running
 
-# CLI tips
+## CLI tips
 # - Limit rows quickly:            --limit 100
 # - Dry-run without API calls:     --dry-run
 # - Resume interrupted runs:       --resume
