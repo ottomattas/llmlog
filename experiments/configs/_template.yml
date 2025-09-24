@@ -42,9 +42,9 @@ name: CHANGE_ME_experiment_name
 # - Low/Budget (Fast): claude-3-5-haiku-20241022, gemini-2.5-flash-lite, gpt-5-nano-2025-08-07
 # Tokens for each thinking tier:
 # - This is informed by the mapping of low/medium/high reasoning effort to tokens in the compatibility documentation: https://ai.google.dev/gemini-api/docs/openai#thinking
-# - High effort (Flagship): 24,576
-# - Medium effort (Medium): 8,192
-# - Low/Budget (Fast): 
+# - High effort (Flagship): 24576
+# - Medium effort (Medium): 8192
+# - Low/Budget (Fast): 1024
 # Official documentation on thinking:
 # - Anthropic: https://docs.claude.com/en/docs/build-with-claude/extended-thinking
 # - Google: https://ai.google.dev/gemini-api/docs/thinking
@@ -61,73 +61,73 @@ targets:
     model: claude-opus-4-1-20250805    # Flagship
     temperature: 1                     # Anthropic: must be 1 when thinking enabled
     seed: 1234
-    max_tokens: 25088                  # > thinking.budget_tokens (24576 + buffer)
-    thinking:                          # Anthropic: summarized thinking
+    max_tokens: 30000
+    thinking:
       enabled: true
-      budget_tokens: 24576             # High effort ≈ 24,576
+      budget_tokens: 24576             # High effort
   - provider: anthropic
     model: claude-sonnet-4-20250514    # Medium
     temperature: 1                     # Anthropic: must be 1 when thinking enabled
     seed: 1234
-    max_tokens: 8704                   # > thinking.budget_tokens (8192 + buffer)
+    max_tokens: 10000
     thinking:
       enabled: true
-      budget_tokens: 8192              # Medium effort ≈ 8,192
+      budget_tokens: 8192              # Medium effort
   - provider: anthropic
-    model: claude-3-5-haiku-20241022
-    temperature: 0                     # Budget/Fast: thinking disabled
+    model: claude-3-5-haiku-20241022   # Budget/Fast
+    temperature: 0
     seed: 1234
-    max_tokens: 2000
+    max_tokens: 3000
     thinking:
-      enabled: false
+      enabled: false                   # Budget/Fast: reasoning disabled
   - provider: google
     model: gemini-2.5-pro              # Flagship
     temperature: 0
     seed: 1234
-    max_tokens: 3000
-    thinking:                          # Gemini: thinkingConfig.thinkingBudget
+    max_tokens: 30000
+    thinking:
       enabled: true
-      gemini_budget_tokens: 24576      # High effort ≈ 24,576
+      gemini_budget_tokens: 24576      # High effort
   - provider: google
     model: gemini-2.5-flash            # Medium
     temperature: 0
     seed: 1234
-    max_tokens: 2000
+    max_tokens: 10000
     thinking:
       enabled: true
-      gemini_budget_tokens: 8192       # Medium effort ≈ 8,192
+      gemini_budget_tokens: 8192       # Medium effort
   - provider: google
-    model: gemini-2.5-flash-lite
-    temperature: 0                     # Budget/Fast: thinking disabled
+    model: gemini-2.5-flash-lite       # Budget/Fast
+    temperature: 0
     seed: 1234
-    max_tokens: 2000
+    max_tokens: 3000
     thinking:
-      enabled: false
+      enabled: false                   # Budget/Fast: reasoning disabled
   - provider: openai
     model: gpt-5-2025-08-07            # Flagship
     temperature: 0
     seed: 1234
-    max_tokens: 3000
-    thinking:                          # OpenAI: Responses API reasoning
+    max_tokens: 30000
+    thinking:
       enabled: true
       openai_reasoning:
-        effort: high
+        effort: high                   # High effort
   - provider: openai
     model: gpt-5-mini-2025-08-07       # Medium
     temperature: 0
     seed: 1234
-    max_tokens: 2000
+    max_tokens: 10000
     thinking:
       enabled: true
       openai_reasoning:
-        effort: medium
+        effort: medium                 # Medium effort
   - provider: openai
-    model: gpt-5-nano-2025-08-07       # Budget/Fast: reasoning disabled
+    model: gpt-5-nano-2025-08-07       # Budget/Fast
     temperature: 0
     seed: 1234
-    max_tokens: 2000
+    max_tokens: 3000
     thinking:
-      enabled: false
+      enabled: false                   # Budget/Fast: reasoning disabled
 
 ## Input data
 input_file: data/problems_dist20_v1.js # Path to dataset (JSONL-like JS array lines)
