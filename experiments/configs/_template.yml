@@ -1,7 +1,7 @@
 # Reusable experiment template
 # How to use:
 # 1) Copy this file and rename it, or edit in-place (change `name:`)
-# 2) Prefer multi-targets via `targets:[]`. For single target, see commented example below
+# 2) Define target or targets via `targets:[]`.
 # 3) Adjust input/output paths, prompt template, parser, and concurrency
 
 name: CHANGE_ME_experiment_name
@@ -12,14 +12,14 @@ name: CHANGE_ME_experiment_name
 # - <task>: contradiction | yesno | cot
 # - <variant> (optional): linear | parents | v1 | v2
 # Examples:
+# - exp1_cnf_v1
 # - exp3_cnf_cot_linear
 # - exp4_cnf_cot_parents
 # - exp5_horn_cot_linear
 # - exp6_horn_yesno
-# - exp8_horn_yesno
 
 # Target selection
-# Prefer `targets`. For a single-target run, keep ONE item in this list.
+# For a single-target run, keep ONE item in this list.
 targets:
   - provider: anthropic
     model: claude-opus-4-1
@@ -27,22 +27,24 @@ targets:
     seed: 1234
     max_tokens: 2000
   - provider: google
-    model: gemini-2.5-flash  # or gemini-2.5-pro
+    model: gemini-2.5-flash
     temperature: 0
     seed: 1234
     max_tokens: 2000
+    # To run multiple models for the same provider, add another target entry
+    # with the same provider and a different model, e.g.:
+    # (uncomment to use)
+    #
+    # - provider: google
+    #   model: gemini-2.5-pro
+    #   temperature: 0
+    #   seed: 1234
+    #   max_tokens: 2000
   - provider: openai
     model: gpt-5             # Responses API
     temperature: 0
     seed: 1234
     max_tokens: 2000
-
-# Alternative: SINGLE-TARGET configuration (uncomment these and remove `targets:` above)
-# provider: openai
-# model: gpt-5
-# temperature: 0
-# seed: 1234
-# max_tokens: 2000
 
 # Input dataset and outputs
 input_file: data/problems_dist20_v1.js       # e.g., data/problems_dist20_v1.js or _legacy/exp8/problems_dist20_v1.js
