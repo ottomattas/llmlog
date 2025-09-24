@@ -238,7 +238,7 @@ def run_targets_lockstep(
 
         # Build task list for keys that still need this pid
         tasks: List[Dict[str, Any]] = []
-            for t in expanded:
+        for t in expanded:
             k = key_for(t)
             if pid in key_to_processed[k]:
                 continue
@@ -267,15 +267,15 @@ def run_targets_lockstep(
                 row = ResultRow(
                     id=pid,
                     meta=meta,
-                    provider=t.provider,
-                    model=t.model,
+                    provider=t.get("provider"),
+                    model=t.get("model"),
                     prompt=prompt if cfg.save_prompt else None,
                     completion_text=None,
                     parsed_answer=parsed,
                     correct=gt,
                     timing_ms=0,
-                    seed=t.seed if t.seed is not None else cfg.seed,
-                    temperature=t.temperature if t.temperature is not None else cfg.temperature,
+                    seed=(t.get("seed") if t.get("seed") is not None else cfg.seed),
+                    temperature=(t.get("temperature") if t.get("temperature") is not None else cfg.temperature),
                     error=None,
                 )
                 with open(key_to_outpath[k], "a") as of:
@@ -526,7 +526,7 @@ def run_target(
 
     tmpl = read_text(cfg.prompt.template)
 
-        for model in models:
+    for model in models:
         # decide output path
         if cfg.output_pattern:
             outpath = cfg.output_pattern
