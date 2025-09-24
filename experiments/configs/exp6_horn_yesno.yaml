@@ -1,6 +1,27 @@
+## How to use
+# 1) Copy or edit this file (ensure `name:` matches your run).
+# 2) Define one or more targets via `targets:`.
+# 3) Adjust input/output paths, prompt template, parser, and concurrency.
+
+## Sections overview
+# - Name
+# - Target selection
+# - Input data
+# - Input filters
+# - Output data
+# - Output configuration
+# - Prompt
+# - Parsing
+# - Concurrency
+# - Execution
+# - CLI tips
+
+## Name
 name: exp6_horn_yesno
 
-# Target selection (unified structure)
+## Target selection
+# - For a single-target run, keep ONE item in this list.
+# - To run multiple models for the same provider, add another target entry
 targets:
   - provider: anthropic
     model: claude-opus-4-1
@@ -18,40 +39,68 @@ targets:
     seed: 1234
     max_tokens: 2000
 
-# Input dataset and outputs
-input_file: data/problems_dist20_v1.js
-output_pattern: experiments/runs/${name}/${run}/${provider}/${model}/results.jsonl
+## Input data
+input_file: data/problems_dist20_v1.js # Path to dataset (JSONL-like JS array lines)
 
-# Filters
+## Input filters
 filters:
   horn_only: true
   skip_rows: 1
   limit_rows: 300
 
-# Prompt configuration
+## Output data
+output_pattern: experiments/runs/${name}/${run}/${provider}/${model}/results.jsonl
+
+## Output configuration
+outputs:
+  results:
+    enabled: true                      # When false, results.jsonl is not written
+  provenance:
+    enabled: true                      # When false, results.provenance.jsonl is not written
+    include_prompt: true               # Include rendered prompt in provenance
+    include_raw_response: true         # Include provider raw payload in provenance
+
+## Prompt
 prompt:
   template: prompts/exp6_horn_yesno.j2
   style: horn_if_then
+  variables: {}                        # Optional template vars
 
-# Parser configuration
+## Parsing
+# Parser maps model text → parsed_answer used in stats:
+#   0 = YES/CONTRADICTION, 1 = NO/SATISFIABLE, 2 = UNCLEAR
+# For yes_no, we scan the text case-insensitively; first matching token wins.
+# If no token matches, parsed_answer=2 and it's counted as UNCLEAR.
+# Results also include normalized_text derived from parsed_answer ("yes"/"no").
 parse:
-  type: yes_no
+  type: yes_no                         # One of: yes_no | contradiction
+  yes_tokens: ["yes"]                  # Extra tokens treated as yes (e.g., "yep", "affirmative")
+  no_tokens: ["no"]                    # Extra tokens treated as no (e.g., "nope", "negative")
 
-# Concurrency and retry settings
+## Concurrency
+# Throttling guidance:
+# - Effective concurrency per problem = min(workers, number of targets)
+# - Set workers >= targets to run all targets in parallel (fastest)
+# - Set workers < targets to throttle (reduces 429s/overload spikes, plays nicer with provider limits)
+# Examples:
+#   workers: 99   # "fast" variant: all targets parallel for each problem
+#   workers: 2    # "throttled" variant: at most two requests in flight per problem
 concurrency:
   workers: 4
   lockstep: true
+  targets_workers: 2                   # Reserved: cap concurrent provider/model groups (not enforced yet)
   rate_limit_per_min: 120
   retry:
     max_attempts: 3
-    backoff_seconds: [2, 5, 10]
+    backoff_seconds: [2, 5, 10]        # Per-attempt wait times (seconds); last value reused on further retries
 
-# Execution settings
+## Execution
 resume: true
-outputs:
-  results:
-    enabled: true
-  provenance:
-    enabled: true
-    include_prompt: true
-    include_raw_response: true
+
+## CLI tips
+# - Limit rows quickly:            --limit 100
+# - Dry-run without API calls:     --dry-run
+# - Resume interrupted runs:       --resume
+# - Restrict providers:            --only anthropic,openai
+# - Override models per provider:  --models google:gemini-2.5-pro,openai:gpt-5,
+# - Inject run id into ${run}:     --run demo-123
