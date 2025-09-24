@@ -1,17 +1,26 @@
-# Reusable experiment template
-# How to use:
-# 1) Copy this file and rename it, or edit in-place (change `name:`)
-# 2) Define target or targets via `targets:[]`.
-# 3) Adjust input/output paths, prompt template, parser, and concurrency
+# Reusable Experiment Template
+# How to use
+# 1) Copy this file and rename it, or edit in-place (change `name:`).
+# 2) Define one or more targets via `targets:`.
+# 3) Adjust input/output paths, prompt template, parser, and concurrency.
+#
+# Sections overview
+# - Name
+# - Targets (or Single-target alternative)
+# - Data (input + filters)
+# - Outputs (paths + content controls)
+# - Prompt & parsing
+# - Concurrency
+# - Execution
 
 name: CHANGE_ME_experiment_name
 
-# Naming scheme (recommended)
+# Recommended naming scheme
 # Use: exp<N>_<domain>_<task>[_<variant>]
 # - <domain>: cnf | horn
 # - <task>: contradiction | yesno | cot
 # - <variant> (optional): linear | parents | v1 | v2
-# Examples:
+# Examples
 # - exp1_cnf_v1
 # - exp3_cnf_cot_linear
 # - exp4_cnf_cot_parents
@@ -22,10 +31,10 @@ name: CHANGE_ME_experiment_name
 # For a single-target run, keep ONE item in this list.
 targets:
   - provider: anthropic
-    model: claude-opus-4-1            # Model identifier for the provider
-    temperature: 0                    # Sampling temperature (0 for deterministic)
-    seed: 1234                        # Optional seed for reproducibility
-    max_tokens: 2000                  # Max output tokens
+    model: claude-opus-4-1             # Model identifier for the provider
+    temperature: 0                     # Sampling temperature (0 for deterministic)
+    seed: 1234                         # Optional seed for reproducibility
+    max_tokens: 2000                   # Max output tokens
   - provider: google
     model: gemini-2.5-flash
     temperature: 0
@@ -46,64 +55,90 @@ targets:
     seed: 1234
     max_tokens: 2000
 
-# Input dataset and outputs
-input_file: data/problems_dist20_v1.js       # Path to dataset (JSONL-like JS array lines)
-# Choose one output style:
-# - Nested pattern (recommended for multi-targets):
-output_pattern: experiments/runs/${name}/${run}/${provider}/${model}/results.jsonl  # ${run} set via --run
+# Single-target alternative (commented example)
+# If you prefer not to use `targets:`, you can specify a single target at top level:
+# provider: openai
+# model: gpt-5
+# temperature: 0
+# seed: 1234
+# max_tokens: 2000
+
+# Data
+input_file: data/problems_dist20_v1.js # Path to dataset (JSONL-like JS array lines)
+
+# Filters
+filters:
+  horn_only: true                      # Keep only horn problems
+  skip_rows: 1                         # Skip a header row if present
+  limit_rows: null                     # For quick tests; null processes all
+
+# Outputs
+output_pattern: experiments/runs/${name}/${run}/${provider}/${model}/results.jsonl
 # - Flat pattern (alternative):
 # output_pattern: experiments/runs/${name}/${provider}_${model}.jsonl
 # - Single file (for single-target runs):
 # output_file: experiments/runs/${name}/results.jsonl
+#
+# Output path variables
+# - ${name}: value from `name:`
+# - ${provider}: target provider (e.g., openai)
+# - ${model}: target model (e.g., gpt-5)
+# - ${run}: optional run id; if present in the path and not provided via --run,
+#           a timestamp will be injected automatically
+#
+# Precedence
+# - When `output_pattern` is set, it is used.
+# - Otherwise `output_file` is used (or a default under experiments/runs/${name}/results.jsonl).
 
-# Filters
-filters:
-  horn_only: true             # Keep only horn problems
-  skip_rows: 1                # Skip a header row if present
-  limit_rows: null            # For quick tests; null processes all
+# Outputs configuration
+outputs:
+  results:
+    enabled: true                      # When false, results.jsonl is not written
+  provenance:
+    enabled: true                      # When false, results.provenance.jsonl is not written
+    include_prompt: true               # Include rendered prompt in provenance
+    include_raw_response: true         # Include provider raw payload in provenance
 
-# Prompt configuration
+# Prompt & parsing
 prompt:
-  template: prompts/exp8_if_then_yesno.j2    # Jinja2 template path
-  style: horn_if_then                        # horn_if_then | cnf_v1 | cnf_v2
-  variables: {}                              # Optional template vars
+  template: prompts/exp6_horn_yesno.j2 # Jinja2 template path
+  style: horn_if_then                  # One of: horn_if_then | cnf_v1 | cnf_v2
+  variables: {}                        # Optional template vars
 
-# Parser configuration
+# Parser maps model text → parsed_answer used in stats:
+#   0 = YES/CONTRADICTION, 1 = NO/SATISFIABLE, 2 = UNCLEAR
+# For yes_no, we scan the text case-insensitively; first matching token wins.
+# If no token matches, parsed_answer=2 and it's counted as UNCLEAR.
+# Results also include normalized_text derived from parsed_answer ("yes"/"no").
 parse:
-  # Parser maps model text → parsed_answer used in stats:
-  #   0 = YES/CONTRADICTION, 1 = NO/SATISFIABLE, 2 = UNCLEAR
-  # For yes_no, we scan the text case-insensitively; first matching token wins.
-  # If no token matches, parsed_answer=2 and it's counted as UNCLEAR.
-  # Results also include normalized_text derived from parsed_answer ("yes"/"no").
-  type: yes_no               # yes_no | contradiction
-  yes_tokens: ["yes"]       # Extra tokens treated as yes (e.g., "yep", "affirmative")
-  no_tokens: ["no"]        # Extra tokens treated as no (e.g., "nope", "negative")
+  type: yes_no                         # One of: yes_no | contradiction
+  yes_tokens: ["yes"]                  # Extra tokens treated as yes (e.g., "yep", "affirmative")
+  no_tokens: ["no"]                    # Extra tokens treated as no (e.g., "nope", "negative")
 
 # Concurrency and retry settings
+# Throttling guidance:
+# - Effective concurrency per problem = min(workers, number of targets)
+# - Set workers >= targets to run all targets in parallel (fastest)
+# - Set workers < targets to throttle (reduces 429s/overload spikes, plays nicer with provider limits)
+# Examples:
+#   workers: 99   # "fast" variant: all targets parallel for each problem
+#   workers: 2    # "throttled" variant: at most two requests in flight per problem
 concurrency:
-  workers: 4                 # Per-problem fan-out workers
-  lockstep: true             # Evaluate the same problem across targets concurrently (lockstep)
-  # Throttling guidance:
-  # - Effective concurrency per problem = min(workers, number of targets)
-  # - Set workers >= targets to run all targets in parallel (fastest)
-  # - Set workers < targets to throttle (reduces 429s/overload spikes, plays nicer with provider limits)
-  # Examples:
-  #   workers: 99   # "fast" variant: all targets parallel for each problem
-  #   workers: 2    # "throttled" variant: at most two requests in flight per problem
-  targets_workers: 2         # Reserved: cap concurrent provider/model groups (not enforced yet)
-  rate_limit_per_min: 120    # Reserved: intended per-target limit (not enforced yet)
+  workers: 4                           # Per-problem fan-out workers
+  lockstep: true                       # Evaluate the same problem across targets concurrently (lockstep)
+  targets_workers: 2                   # Reserved: cap concurrent provider/model groups (not enforced yet)
+  rate_limit_per_min: 120              # Reserved: intended per-target limit (not enforced yet)
   retry:
-    max_attempts: 3          # Retries for transient errors (429/overloaded)
+    max_attempts: 3                    # Retries for transient errors (429/overloaded)
     backoff_seconds: [2, 5, 10]
 
 # Execution settings
-resume: true                 # resume from prior results when re-running
+resume: true                           # Resume from prior results when re-running
 
-# Unified outputs
-outputs:
-  results:
-    enabled: true            # When false, results.jsonl is not written
-  provenance:
-    enabled: true            # When false, results.provenance.jsonl is not written
-    include_prompt: true     # Include rendered prompt in provenance
-    include_raw_response: true  # Include provider raw payload in provenance
+# CLI tips
+# - Limit rows quickly:            --limit 100
+# - Dry-run without API calls:     --dry-run
+# - Resume interrupted runs:       --resume
+# - Restrict providers:            --only anthropic,openai
+# - Override models per provider:  --models google:gemini-2.5-pro,openai:gpt-5,
+# - Inject run id into ${run}:     --run demo-123
