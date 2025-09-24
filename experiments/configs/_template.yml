@@ -70,9 +70,14 @@ prompt:
 
 # Parser configuration
 parse:
+  # Parser maps model text → parsed_answer used in stats:
+  #   0 = YES/CONTRADICTION, 1 = NO/SATISFIABLE, 2 = UNCLEAR
+  # For yes_no, we scan the text case-insensitively; first matching token wins.
+  # If no token matches, parsed_answer=2 and it's counted as UNCLEAR.
+  # Results also include normalized_text derived from parsed_answer ("yes"/"no").
   type: yes_no               # yes_no | contradiction
-  yes_tokens: ["yes"]       # Extra tokens treated as yes
-  no_tokens: ["no"]        # Extra tokens treated as no
+  yes_tokens: ["yes"]       # Extra tokens treated as yes (e.g., "yep", "affirmative")
+  no_tokens: ["no"]        # Extra tokens treated as no (e.g., "nope", "negative")
 
 # Concurrency and retry settings
 concurrency:
