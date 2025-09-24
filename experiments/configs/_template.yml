@@ -77,9 +77,16 @@ parse:
 # Concurrency and retry settings
 concurrency:
   workers: 4                 # Per-problem fan-out workers
-  lockstep: true             # Evaluate same problem across targets concurrently
-  targets_workers: 2         # Max concurrent targets (not enforced yet)
-  rate_limit_per_min: 120    # Intended per-target limit (not enforced yet)
+  lockstep: true             # Evaluate the same problem across targets concurrently (lockstep)
+  # Throttling guidance:
+  # - Effective concurrency per problem = min(workers, number of targets)
+  # - Set workers >= targets to run all targets in parallel (fastest)
+  # - Set workers < targets to throttle (reduces 429s/overload spikes, plays nicer with provider limits)
+  # Examples:
+  #   workers: 99   # "fast" variant: all targets parallel for each problem
+  #   workers: 2    # "throttled" variant: at most two requests in flight per problem
+  targets_workers: 2         # Reserved: cap concurrent provider/model groups (not enforced yet)
+  rate_limit_per_min: 120    # Reserved: intended per-target limit (not enforced yet)
   retry:
     max_attempts: 3          # Retries for transient errors (429/overloaded)
     backoff_seconds: [2, 5, 10]
