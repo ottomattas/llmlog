@@ -13,14 +13,14 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 # Support running both as a module (python -m experiments.runner)
 # and as a script (python experiments/runner.py)
 try:
-    from .schema import RunConfig, SingleTarget, ResultRow, ProblemMeta
+    from .schema import RunConfig, ResultRow, ProblemMeta
     from .filters import horn_only as filter_horn_only, skip as filter_skip, limit as filter_limit
     from .parsers import parse_yes_no, parse_contradiction
     from ..utils.provider_router import run_chat
 except Exception:
     # Fallback for script execution
     sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-    from experiments.schema import RunConfig, SingleTarget, ResultRow, ProblemMeta
+    from experiments.schema import RunConfig, ResultRow, ProblemMeta
     from experiments.filters import horn_only as filter_horn_only, skip as filter_skip, limit as filter_limit
     from experiments.parsers import parse_yes_no, parse_contradiction
     from utils.provider_router import run_chat
@@ -126,12 +126,12 @@ def ensure_dir(path: str) -> None:
     os.makedirs(os.path.dirname(path), exist_ok=True)
 
 
-def _build_outpath(cfg: RunConfig, target: SingleTarget, model: str, run_id: Optional[str]) -> str:
+def _build_outpath(cfg: RunConfig, target: Dict[str, Any], model: str, run_id: Optional[str]) -> str:
     if cfg.output_pattern:
         outpath = cfg.output_pattern
         outpath = (
             outpath.replace("${name}", cfg.name)
-            .replace("${provider}", target.provider)
+            .replace("${provider}", target.get("provider"))
             .replace("${model}", model)
         )
         if "${run}" in outpath:
@@ -148,7 +148,7 @@ def _build_outpath(cfg: RunConfig, target: SingleTarget, model: str, run_id: Opt
 
 def run_targets_lockstep(
     cfg: RunConfig,
-    targets: List[SingleTarget],
+    targets: List[Dict[str, Any]],
     only_providers: Optional[List[str]] = None,
     model_overrides: Optional[Dict[str, List[str]]] = None,
     dry_run: bool = False,
@@ -162,18 +162,20 @@ def run_targets_lockstep(
     tmpl = read_text(cfg.prompt.template)
 
     # Expand targets x models taking overrides into account and apply provider filter
-    expanded: List[SingleTarget]
+    expanded: List[Dict[str, Any]]
     expanded = []
     for t in targets:
-        if only_providers and t.provider.lower() not in [p.lower() for p in only_providers]:
+        if only_providers and t.get("provider", "").lower() not in [p.lower() for p in only_providers]:
             continue
         models: List[str]
-        if model_overrides and t.provider in model_overrides:
-            models = model_overrides[t.provider]
+        if model_overrides and t.get("provider") in model_overrides:
+            models = model_overrides[t.get("provider")]
         else:
-            models = [t.model]
+            models = [t.get("model")]
         for m in models:
-            expanded.append(SingleTarget(provider=t.provider, model=m, temperature=t.temperature, seed=t.seed, max_tokens=t.max_tokens, thinking=(t.thinking)))
+            nt = dict(t)
+            nt["model"] = m
+            expanded.append(nt)
 
     if not expanded:
         return
@@ -183,14 +185,14 @@ def run_targets_lockstep(
     key_to_processed: Dict[str, set] = {}
     stats: Dict[str, Dict[str, Any]] = {}
 
-    def key_for(t: SingleTarget) -> str:
-        return f"{t.provider}::{t.model}"
+    def key_for(t: Dict[str, Any]) -> str:
+        return f"{t.get('provider')}::{t.get('model')}"
 
     for t in expanded:
         k = key_for(t)
         if k in key_to_outpath:
             continue
-        outpath = _build_outpath(cfg, t, t.model, run_id)
+        outpath = _build_outpath(cfg, t, t.get("model"), run_id)
         key_to_outpath[k] = outpath
         # Determine outputs settings (prefer unified outputs, fallback to legacy flags)
         write_results = cfg.outputs.results.enabled
@@ -223,8 +225,8 @@ def run_targets_lockstep(
             "unsat_correct": 0,
             "timing_sum": 0,
             "timing_count": 0,
-            "provider": t.provider,
-            "model": t.model,
+            "provider": t.get("provider"),
+            "model": t.get("model"),
         }
 
     sysprompt = None
@@ -236,7 +238,7 @@ def run_targets_lockstep(
 
         # Build task list for keys that still need this pid
         tasks: List[Dict[str, Any]] = []
-        for t in expanded:
+            for t in expanded:
             k = key_for(t)
             if pid in key_to_processed[k]:
                 continue
@@ -307,7 +309,7 @@ def run_targets_lockstep(
             max_workers = cfg.concurrency.workers if (cfg.concurrency and cfg.concurrency.workers) else len(tasks)
             max_workers = max(1, min(max_workers, len(tasks)))
 
-            def call_one(t: SingleTarget) -> Dict[str, Any]:
+            def call_one(t: Dict[str, Any]) -> Dict[str, Any]:
                 attempts = 0
                 err_msg = None
                 text = ""
@@ -319,20 +321,20 @@ def run_targets_lockstep(
                         # Prefer per-target thinking, fallback to global
                         thinking_cfg = None
                         try:
-                            if t.thinking is not None:
-                                thinking_cfg = t.thinking.model_dump(exclude_none=True)
+                            if t.get("thinking") is not None:
+                                thinking_cfg = t.get("thinking")
                             elif cfg.thinking is not None:
                                 thinking_cfg = cfg.thinking.model_dump(exclude_none=True)
                         except Exception:
                             thinking_cfg = None
                         res = run_chat(
-                            provider=t.provider,
-                            model=t.model,
+                            provider=t.get("provider"),
+                            model=t.get("model"),
                             prompt=prompt,
                             sysprompt=sysprompt,
-                            max_tokens=t.max_tokens or cfg.max_tokens,
-                            temperature=t.temperature if t.temperature is not None else (cfg.temperature or 0.0),
-                            seed=t.seed if t.seed is not None else cfg.seed,
+                            max_tokens=(t.get("max_tokens") or cfg.max_tokens),
+                            temperature=(t.get("temperature") if t.get("temperature") is not None else (cfg.temperature or 0.0)),
+                            seed=(t.get("seed") if t.get("seed") is not None else cfg.seed),
                             thinking=thinking_cfg,
                         )
                         dur_ms = int((time.time() - start) * 1000)
@@ -404,8 +406,8 @@ def run_targets_lockstep(
                     row = ResultRow(
                         id=pid,
                         meta=problem_meta,
-                        provider=t.provider,
-                        model=t.model,
+                        provider=t.get("provider"),
+                        model=t.get("model"),
                         prompt=None,
                         prompt_template=None,
                         completion_text=(norm if (norm is not None) else (text if (cfg.save_response and not err_msg) else None)),
@@ -434,8 +436,8 @@ def run_targets_lockstep(
                     if provenance_enabled:
                         full_out = {
                             "id": pid,
-                            "provider": t.provider,
-                            "model": t.model,
+                            "provider": t.get("provider"),
+                            "model": t.get("model"),
                             "prompt": prompt if provenance_include_prompt else None,
                             "prompt_template": cfg.prompt.template,
                             "full_text": text,
@@ -504,19 +506,19 @@ def run_targets_lockstep(
 
 def run_target(
     cfg: RunConfig,
-    target: SingleTarget,
+    target: Dict[str, Any],
     only_providers: Optional[List[str]] = None,
     model_overrides: Optional[Dict[str, List[str]]] = None,
     dry_run: bool = False,
     run_id: Optional[str] = None,
 ) -> None:
-    if only_providers and target.provider.lower() not in [p.lower() for p in only_providers]:
+    if only_providers and target.get("provider", "").lower() not in [p.lower() for p in only_providers]:
         return
     models: List[str]
-    if model_overrides and target.provider in model_overrides:
-        models = model_overrides[target.provider]
+    if model_overrides and target.get("provider") in model_overrides:
+        models = model_overrides[target.get("provider")]
     else:
-        models = [target.model]
+        models = [target.get("model")]
 
     rows_iter = read_jsonl_rows(cfg.input_file)
     rows_iter = apply_filters(rows_iter, cfg)
@@ -530,7 +532,7 @@ def run_target(
             outpath = cfg.output_pattern
             outpath = (
                 outpath.replace("${name}", cfg.name)
-                .replace("${provider}", target.provider)
+                .replace("${provider}", target.get("provider"))
                 .replace("${model}", model)
             )
             if "${run}" in outpath:
@@ -605,20 +607,20 @@ def run_target(
                             # Prefer per-target thinking, fallback to global
                             thinking_cfg = None
                             try:
-                                if target.thinking is not None:
-                                    thinking_cfg = target.thinking.model_dump(exclude_none=True)
+                                if target.get("thinking") is not None:
+                                    thinking_cfg = target.get("thinking")
                                 elif cfg.thinking is not None:
                                     thinking_cfg = cfg.thinking.model_dump(exclude_none=True)
                             except Exception:
                                 thinking_cfg = None
                             res = run_chat(
-                                provider=target.provider,
+                                provider=target.get("provider"),
                                 model=model,
                                 prompt=prompt,
                                 sysprompt=sysprompt,
-                                max_tokens=target.max_tokens or cfg.max_tokens,
-                                temperature=target.temperature if target.temperature is not None else (cfg.temperature or 0.0),
-                                seed=target.seed if target.seed is not None else cfg.seed,
+                                max_tokens=(target.get("max_tokens") or cfg.max_tokens),
+                                temperature=(target.get("temperature") if target.get("temperature") is not None else (cfg.temperature or 0.0)),
+                                seed=(target.get("seed") if target.get("seed") is not None else cfg.seed),
                                 thinking=thinking_cfg,
                             )
                             dur_ms = int((time.time() - start) * 1000)
@@ -672,7 +674,7 @@ def run_target(
                 row = ResultRow(
                     id=pid,
                     meta=problem_meta,
-                    provider=target.provider,
+                    provider=target.get("provider"),
                     model=model,
                     prompt=prompt if results_include_prompt else None,
                     prompt_template=cfg.prompt.template if results_include_prompt else None,
@@ -684,8 +686,8 @@ def run_target(
                     parsed_answer=parsed,
                     correct=gt,
                     timing_ms=dur_ms,
-                    seed=target.seed if target.seed is not None else cfg.seed,
-                    temperature=target.temperature if target.temperature is not None else cfg.temperature,
+                    seed=(target.get("seed") if target.get("seed") is not None else cfg.seed),
+                    temperature=(target.get("temperature") if target.get("temperature") is not None else cfg.temperature),
                     error=err_msg,
                     error_class=classify_error(err_msg),
                 )
@@ -700,7 +702,7 @@ def run_target(
                 if provenance_enabled and responses_path:
                     full_out = {
                         "id": pid,
-                        "provider": target.provider,
+                        "provider": target.get("provider"),
                         "model": model,
                         "prompt": prompt if provenance_include_prompt else None,
                         "prompt_template": cfg.prompt.template,
@@ -744,7 +746,7 @@ def run_target(
             avg_timing = (timing_sum / timing_count) if timing_count > 0 else None
             summary = {
                 "name": cfg.name,
-                "provider": target.provider,
+                "provider": target.get("provider"),
                 "model": model,
                 "run": run_id,
                 "total": total_count,
@@ -804,13 +806,23 @@ def main() -> None:
             model_overrides.setdefault(prov, []).append(mod)
 
     # Build target list
-    targets: List[SingleTarget] = []
+    targets: List[Dict[str, Any]] = []
     if cfg.targets and len(cfg.targets) > 0:
-        targets = cfg.targets
+        # Ensure each target is a dict; apply defaults if missing
+        tmp: List[Dict[str, Any]] = []
+        for t in cfg.targets:
+            td = dict(t) if isinstance(t, dict) else t.model_dump()  # type: ignore[attr-defined]
+            # apply defaults
+            if td.get("temperature") is None and cfg.temperature is not None:
+                td["temperature"] = cfg.temperature
+            if td.get("seed") is None and cfg.seed is not None:
+                td["seed"] = cfg.seed
+            if td.get("max_tokens") is None and cfg.max_tokens is not None:
+                td["max_tokens"] = cfg.max_tokens
+            tmp.append(td)
+        targets = tmp
     else:
-        if not (cfg.provider and cfg.model):
-            raise RuntimeError("Config must include either (provider, model) or targets[]")
-        targets = [SingleTarget(provider=cfg.provider, model=cfg.model, temperature=cfg.temperature or 0.0, seed=cfg.seed, max_tokens=cfg.max_tokens)]
+        raise RuntimeError("Config must include targets[] with at least one item")
 
     # Lockstep vs original per-target mode
     if cfg.concurrency and getattr(cfg.concurrency, "lockstep", False):

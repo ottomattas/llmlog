@@ -45,25 +45,14 @@ class ThinkingOptions(BaseModel):
     openai_reasoning: Optional[Dict[str, Any]] = None
 
 
-class SingleTarget(BaseModel):
-    provider: str
-    model: str
-    temperature: float = 0.0
-    seed: Optional[int] = None
-    max_tokens: Optional[int] = None
-    thinking: Optional[ThinkingOptions] = None
-
-
 class RunConfig(BaseModel):
     name: str
 
-    # Either single-target or multitarget via `targets`
-    provider: Optional[str] = None
-    model: Optional[str] = None
-    temperature: Optional[float] = None
-    seed: Optional[int] = None
-    max_tokens: Optional[int] = None
-    targets: Optional[List[SingleTarget]] = None
+    # Always define targets[] in user config
+    temperature: Optional[float] = None  # default for targets when missing
+    seed: Optional[int] = None           # default for targets when missing
+    max_tokens: Optional[int] = None     # default for targets when missing
+    targets: List[Dict[str, Any]]
     thinking: Optional[ThinkingOptions] = None  # default for all targets if not set per-target
 
     input_file: str
