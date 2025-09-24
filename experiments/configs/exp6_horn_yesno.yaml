@@ -76,7 +76,7 @@ input_file: data/problems_dist20_v1.js # Path to dataset (JSONL-like JS array li
 filters:
   horn_only: true
   skip_rows: 1
-  limit_rows: 300
+  limit_rows: null
 
 ## Output data
 output_pattern: experiments/runs/${name}/${run}/${provider}/${model}/results.jsonl
@@ -116,13 +116,13 @@ parse:
 #   workers: 99   # "fast" variant: all targets parallel for each problem
 #   workers: 2    # "throttled" variant: at most two requests in flight per problem
 concurrency:
-  workers: 9
+  workers: 3
   lockstep: true
   targets_workers: 2                   # Reserved: cap concurrent provider/model groups (not enforced yet)
   rate_limit_per_min: 120
   retry:
-    max_attempts: 3
-    backoff_seconds: [2, 5, 10]        # Per-attempt wait times (seconds); last value reused on further retries
+    max_attempts: 5
+    backoff_seconds: [2, 5, 15, 30]        # Per-attempt wait times (seconds); last value reused on further retries
 
 ## Execution
 resume: true
