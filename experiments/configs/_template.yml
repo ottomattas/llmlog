@@ -34,16 +34,16 @@ name: CHANGE_ME_experiment_name
 ## Target selection
 # Thinking tiers for comparison:
 # - Flagship: highest thinking effort/budget
-# - Middle: moderate thinking effort/budget
+# - Medium: moderate thinking effort/budget
 # - Budget/Fast: thinking disabled
 # Models for each thinking tier:
 # - High effort (Flagship): claude-opus-4-1-20250805, gemini-2.5-pro, gpt-5-2025-08-07
-# - Middle effort (Middle): claude-sonnet-4-20250514, gemini-2.5-flash, gpt-5-mini-2025-08-07
+# - Medium effort (Medium): claude-sonnet-4-20250514, gemini-2.5-flash, gpt-5-mini-2025-08-07
 # - Low/Budget (Fast): claude-3-5-haiku-20241022, gemini-2.5-flash-lite, gpt-5-nano-2025-08-07
 # Tokens for each thinking tier:
 # - This is informed by the mapping of low/medium/high reasoning effort to tokens in the compatibility documentation: https://ai.google.dev/gemini-api/docs/openai#thinking
 # - High effort (Flagship): 24,576
-# - Middle effort (Middle): 8,192
+# - Medium effort (Medium): 8,192
 # - Low/Budget (Fast): 
 # Official documentation on thinking:
 # - Anthropic: https://docs.claude.com/en/docs/build-with-claude/extended-thinking
@@ -58,70 +58,71 @@ name: CHANGE_ME_experiment_name
 # - To run multiple models for the same provider, add another target entry
 targets:
   - provider: anthropic
-    model: claude-opus-4-1-20250805    # Model identifier for the provider
-    temperature: 0                     # Sampling temperature (0 for deterministic)
-    seed: 1234                         # Optional seed for reproducibility
-    max_tokens: 2000                   # Max output tokens
-    thinking:                          # Optional extended thinking (Anthropic: summarized thinking)
-      enabled: true
-      budget_tokens: 8192
-  - provider: anthropic
-    model: claude-sonnet-4-20250514
-    temperature: 0
+    model: claude-opus-4-1-20250805    # Flagship
+    temperature: 1                     # Anthropic: must be 1 when thinking enabled
     seed: 1234
-    max_tokens: 2000
+    max_tokens: 25088                  # > thinking.budget_tokens (24576 + buffer)
+    thinking:                          # Anthropic: summarized thinking
+      enabled: true
+      budget_tokens: 24576             # High effort ≈ 24,576
+  - provider: anthropic
+    model: claude-sonnet-4-20250514    # Medium
+    temperature: 1                     # Anthropic: must be 1 when thinking enabled
+    seed: 1234
+    max_tokens: 8704                   # > thinking.budget_tokens (8192 + buffer)
     thinking:
       enabled: true
-      budget_tokens: 4096
+      budget_tokens: 8192              # Medium effort ≈ 8,192
   - provider: anthropic
     model: claude-3-5-haiku-20241022
-    temperature: 0
+    temperature: 0                     # Budget/Fast: thinking disabled
     seed: 1234
     max_tokens: 2000
     thinking:
       enabled: false
   - provider: google
-    model: gemini-2.5-pro
+    model: gemini-2.5-pro              # Flagship
     temperature: 0
     seed: 1234
-    max_tokens: 2000
+    max_tokens: 3000
     thinking:                          # Gemini: thinkingConfig.thinkingBudget
       enabled: true
-      gemini_budget_tokens: 4096
+      gemini_budget_tokens: 24576      # High effort ≈ 24,576
   - provider: google
-    model: gemini-2.5-flash
+    model: gemini-2.5-flash            # Medium
     temperature: 0
     seed: 1234
     max_tokens: 2000
     thinking:
-      enabled: false                   # We default to disabling thinking on Flash if not provided
+      enabled: true
+      gemini_budget_tokens: 8192       # Medium effort ≈ 8,192
   - provider: google
     model: gemini-2.5-flash-lite
-    temperature: 0
+    temperature: 0                     # Budget/Fast: thinking disabled
     seed: 1234
     max_tokens: 2000
     thinking:
       enabled: false
   - provider: openai
-    model: gpt-5-2025-08-07
+    model: gpt-5-2025-08-07            # Flagship
+    temperature: 0
+    seed: 1234
+    max_tokens: 3000
+    thinking:                          # OpenAI: Responses API reasoning
+      enabled: true
+      openai_reasoning:
+        effort: high
+  - provider: openai
+    model: gpt-5-mini-2025-08-07       # Medium
     temperature: 0
     seed: 1234
     max_tokens: 2000
-    thinking:                          # OpenAI: Responses API reasoning
+    thinking:
       enabled: true
       openai_reasoning:
         effort: medium
   - provider: openai
-    model: gpt-5-mini-2025-08-07
-    temperature: 0
-    seed: 1234
-    max_tokens: 2000
-    thinking:
-      enabled: true
-      openai_reasoning:
-        effort: low
-  - provider: openai
-    model: gpt-5-nano-2025-08-07
+    model: gpt-5-nano-2025-08-07       # Budget/Fast: reasoning disabled
     temperature: 0
     seed: 1234
     max_tokens: 2000

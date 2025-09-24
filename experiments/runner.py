@@ -418,8 +418,8 @@ def run_targets_lockstep(
                         parsed_answer=parsed,
                         correct=gt,
                         timing_ms=dur_ms,
-                        seed=t.seed if t.seed is not None else cfg.seed,
-                        temperature=t.temperature if t.temperature is not None else cfg.temperature,
+                        seed=(t.get("seed") if t.get("seed") is not None else cfg.seed),
+                        temperature=(t.get("temperature") if t.get("temperature") is not None else cfg.temperature),
                         error=err_msg,
                         error_class=classify_error(err_msg),
                     )
