@@ -32,7 +32,29 @@
 name: CHANGE_ME_experiment_name
 
 ## Target selection
-# - For a single-target run, keep ONE item in this list.
+# Thinking tiers for comparison:
+# - Flagship: highest thinking effort/budget
+# - Middle: moderate thinking effort/budget
+# - Budget/Fast: thinking disabled
+# Models for each thinking tier:
+# - High effort (Flagship): claude-opus-4-1-20250805, gemini-2.5-pro, gpt-5-2025-08-07
+# - Middle effort (Middle): claude-sonnet-4-20250514, gemini-2.5-flash, gpt-5-mini-2025-08-07
+# - Low/Budget (Fast): claude-3-5-haiku-20241022, gemini-2.5-flash-lite, gpt-5-nano-2025-08-07
+# Tokens for each thinking tier:
+# - This is informed by the mapping of low/medium/high reasoning effort to tokens in the compatibility documentation: https://ai.google.dev/gemini-api/docs/openai#thinking
+# - High effort (Flagship): 24,576
+# - Middle effort (Middle): 8,192
+# - Low/Budget (Fast): 
+# Official documentation on thinking:
+# - Anthropic: https://docs.claude.com/en/docs/build-with-claude/extended-thinking
+# - Google: https://ai.google.dev/gemini-api/docs/thinking
+# - OpenAI: https://platform.openai.com/docs/guides/reasoning/advice-on-prompting#get-started-with-reasoning
+# Notes:
+# - Anthropic requires temperature=1 when thinking is enabled
+# - For Anthropic, max_tokens must be > thinking.budget_tokens
+# - For Google, thinking uses thinkingConfig.thinkingBudget
+# - For OpenAI, reasoning effort can be high/medium; disabled for budget tier
+# - For a single-target run, keep ONE item in this list
 # - To run multiple models for the same provider, add another target entry
 targets:
   - provider: anthropic
