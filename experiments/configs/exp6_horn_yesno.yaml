@@ -24,17 +24,47 @@ name: exp6_horn_yesno
 # - To run multiple models for the same provider, add another target entry
 targets:
   - provider: anthropic
-    model: claude-opus-4-1
+    model: claude-opus-4-1-20250805    # Model identifier for the provider
+    temperature: 0                     # Sampling temperature (0 for deterministic)
+    seed: 1234                         # Optional seed for reproducibility
+    max_tokens: 2000                   # Max output tokens
+  - provider: anthropic
+    model: claude-sonnet-4-20250514
+    temperature: 0
+    seed: 1234
+    max_tokens: 2000
+  - provider: anthropic
+    model: claude-3-5-haiku-20241022
     temperature: 0
     seed: 1234
     max_tokens: 2000
   - provider: google
-    model: gemini-2.5-flash  # or gemini-2.5-pro
+    model: gemini-2.5-pro
+    temperature: 0
+    seed: 1234
+    max_tokens: 2000
+  - provider: google
+    model: gemini-2.5-flash
+    temperature: 0
+    seed: 1234
+    max_tokens: 2000
+  - provider: google
+    model: gemini-2.5-flash-lite
     temperature: 0
     seed: 1234
     max_tokens: 2000
   - provider: openai
-    model: gpt-5             # Responses API
+    model: gpt-5-2025-08-07
+    temperature: 0
+    seed: 1234
+    max_tokens: 2000
+  - provider: openai
+    model: gpt-5-mini-2025-08-07
+    temperature: 0
+    seed: 1234
+    max_tokens: 2000
+  - provider: openai
+    model: gpt-5-nano-2025-08-07
     temperature: 0
     seed: 1234
     max_tokens: 2000
@@ -86,7 +116,7 @@ parse:
 #   workers: 99   # "fast" variant: all targets parallel for each problem
 #   workers: 2    # "throttled" variant: at most two requests in flight per problem
 concurrency:
-  workers: 4
+  workers: 9
   lockstep: true
   targets_workers: 2                   # Reserved: cap concurrent provider/model groups (not enforced yet)
   rate_limit_per_min: 120
