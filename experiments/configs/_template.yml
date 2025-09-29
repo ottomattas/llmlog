@@ -52,15 +52,20 @@ name: CHANGE_ME_experiment_name
 # Notes:
 # - Anthropic requires temperature=1 when thinking is enabled
 # - For Anthropic, max_tokens must be > thinking.budget_tokens
-# - For Google, thinking uses thinkingConfig.thinkingBudget
+# - For Google, thinking uses thinkingConfig.thinkingBudget (we use unified 'budget_tokens')
 # - For OpenAI, reasoning effort can be high/medium; disabled for budget tier
 # - For a single-target run, keep ONE item in this list
 # - To run multiple models for the same provider, add another target entry
 #
-# Gemini-specific toggles (client behavior implemented):
-# - gemini_budget_tokens: 0 → disables thinking on Flash / Flash Lite (for Pro it is converted to -1, dynamic)
-# - gemini_budget_tokens: -1 → enables dynamic thinking on Pro / Flash / Flash Lite
+# Gemini-specific toggles (client behavior implemented, via unified 'budget_tokens'):
+# - budget_tokens: 0 → disables thinking on Flash / Flash Lite (for Pro it is converted to -1, dynamic)
+# - budget_tokens: -1 → enables dynamic thinking on Pro / Flash / Flash Lite
 # - Positive budgets are clamped per model family (Pro: 128–32768; Flash: 0–24576; Flash Lite: 512–24576)
+# OpenAI reasoning (official):
+# - Only 'reasoning: { effort: low|medium|high }' is supported
+# - Defaults to medium when omitted; no numeric budgets
+# - Responses API preferred for reasoning models; Chat Completions supported with reduced features
+ 
 targets:
   - provider: anthropic
     model: claude-opus-4-1-20250805    # Flagship
@@ -92,7 +97,7 @@ targets:
     max_tokens: 30000
     thinking:
       enabled: true
-      gemini_budget_tokens: 24576      # High effort (cannot disable on Pro; 0 will be treated as -1 dynamic)
+      budget_tokens: 24576             # High effort (cannot disable on Pro; 0 → -1 dynamic)
   - provider: google
     model: gemini-2.5-flash            # Medium
     temperature: 0
@@ -100,7 +105,7 @@ targets:
     max_tokens: 10000
     thinking:
       enabled: true
-      gemini_budget_tokens: 8192       # Medium effort (set 0 to disable; -1 for dynamic)
+      budget_tokens: 8192              # Medium effort (set 0 to disable; -1 for dynamic)
   - provider: google
     model: gemini-2.5-flash-lite       # Budget/Fast
     temperature: 0
@@ -116,7 +121,7 @@ targets:
     thinking:
       enabled: true
       openai_reasoning:
-        effort: high                   # High effort
+        effort: high                   # High effort (official values: low|medium|high)
   - provider: openai
     model: gpt-5-mini-2025-08-07       # Medium
     temperature: 0
@@ -125,14 +130,14 @@ targets:
     thinking:
       enabled: true
       openai_reasoning:
-        effort: medium                 # Medium effort
+        effort: medium                 # Medium effort (official values)
   - provider: openai
     model: gpt-5-nano-2025-08-07       # Budget/Fast
     temperature: 0
     seed: 1234
     max_tokens: 3000
     thinking:
-      enabled: false                   # Budget/Fast: reasoning disabled
+      enabled: false                   # Budget/Fast: reasoning disabled (omit 'reasoning')
 
 ## Input data
 input_file: data/problems_dist20_v1.js # Path to dataset (JSONL-like JS array lines)
@@ -195,10 +200,8 @@ resume: true                           # Resume from prior results when re-runni
 # Optional global thinking defaults (applied to targets without per-target thinking)
 thinking:
   enabled: false
-  budget_tokens: 2048                  # Anthropic default if applied
-  gemini_budget_tokens: 2048           # Gemini default if applied
-  openai_reasoning:
-    effort: medium
+  budget_tokens: 2048                  # Default budget for providers that use budgets (Anthropic/Gemini)
+  effort: medium                       # Default reasoning effort for OpenAI (low|medium|high)
 
 ## CLI tips
 # - Limit rows quickly:            --limit 100

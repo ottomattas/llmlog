@@ -50,7 +50,8 @@ def chat_completion(prompt: str, model: str, max_tokens: Optional[int] = None, t
     try:
         gen_cfg = body.setdefault("generationConfig", {})
         if thinking and thinking.get("enabled"):
-            budget = thinking.get("gemini_budget_tokens") or thinking.get("budget_tokens")
+            # Unified key: 'budget_tokens'
+            budget = thinking.get("budget_tokens")
             # Normalize budget value
             if budget is not None:
                 b = int(budget)

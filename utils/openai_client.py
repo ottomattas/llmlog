@@ -63,15 +63,16 @@ def chat_completion(messages: List[Dict[str, str]], model: str, max_tokens: Opti
         # NOTE: Responses API may not accept 'seed' at top-level; omit to avoid 400
         if max_tokens is not None:
             payload["max_output_tokens"] = int(max_tokens)
-        # Reasoning/Thinking options for OpenAI Responses API
-        # Docs: https://platform.openai.com/docs/guides/reasoning/advice-on-prompting#get-started-with-reasoning
-        if thinking and thinking.get("enabled"):
-            # Allow custom openai_reasoning pass-through if provided
-            if thinking.get("openai_reasoning"):
-                payload["reasoning"] = thinking["openai_reasoning"]
-            else:
-                # Minimal enabling – models may accept {effort: 'medium'}
-                payload["reasoning"] = {"effort": "medium"}
+        # Reasoning options (official): only 'effort' accepted: low|medium|high
+        # If not provided, the API defaults to medium; we omit the field.
+        if thinking:
+            eff = None
+            try:
+                eff = thinking.get("effort") or thinking.get("reasoning_effort")
+            except Exception:
+                eff = None
+            if isinstance(eff, str) and eff.lower() in ("low", "medium", "high"):
+                payload["reasoning"] = {"effort": eff.lower()}
 
         data = _request("/v1/responses", payload)
 
@@ -120,10 +121,15 @@ def chat_completion(messages: List[Dict[str, str]], model: str, max_tokens: Opti
         call["seed"] = seed
     if max_tokens is not None:
         call["max_tokens"] = max_tokens
-    # Some chat models expose `reasoning` top-level; include if enabled
-    if thinking and thinking.get("enabled"):
-        if thinking.get("openai_reasoning"):
-            call["reasoning"] = thinking["openai_reasoning"]
+    # Some chat models expose `reasoning` top-level; include effort if provided
+    if thinking:
+        eff = None
+        try:
+            eff = thinking.get("effort") or thinking.get("reasoning_effort")
+        except Exception:
+            eff = None
+        if isinstance(eff, str) and eff.lower() in ("low", "medium", "high"):
+            call["reasoning"] = {"effort": eff.lower()}
 
     data = _request("/v1/chat/completions", call)
     if "choices" not in data:

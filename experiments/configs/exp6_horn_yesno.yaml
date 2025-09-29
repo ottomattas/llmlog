@@ -20,74 +20,81 @@
 name: exp6_horn_yesno
 
 ## Target selection
-# - For a single-target run, keep ONE item in this list.
+# Thinking tiers for comparison:
+# - Flagship: highest thinking effort/budget
+# - Middle: moderate thinking effort/budget
+# - Budget/Fast: thinking disabled
+# Notes:
+# - Anthropic requires temperature=1 when thinking is enabled
+# - For Anthropic, max_tokens must be > thinking.budget_tokens
+# - For Google, thinking uses thinkingConfig.thinkingBudget
+# - For OpenAI, reasoning effort can be high/medium; disabled for budget tier
+# - For a single-target run, keep ONE item in this list
 # - To run multiple models for the same provider, add another target entry
 targets:
   - provider: anthropic
-    model: claude-opus-4-1-20250805    # Model identifier for the provider
-    temperature: 0                     # Sampling temperature (0 for deterministic)
+    model: claude-opus-4-1-20250805    # Flagship
+    temperature: 1                     # Anthropic: must be 1 when thinking enabled
     seed: 1234                         # Optional seed for reproducibility
-    max_tokens: 2000                   # Max output tokens
+    max_tokens: 4096                   # > thinking.budget_tokens
     thinking:
       enabled: true
-      budget_tokens: 8192
+      budget_tokens: 3072              # High budget
   - provider: anthropic
-    model: claude-sonnet-4-20250514
-    temperature: 0
+    model: claude-sonnet-4-20250514    # Middle
+    temperature: 1                     # Anthropic: must be 1 when thinking enabled
     seed: 1234
-    max_tokens: 2000
+    max_tokens: 3072
     thinking:
       enabled: true
-      budget_tokens: 4096
+      budget_tokens: 1536              # Moderate budget
   - provider: anthropic
-    model: claude-3-5-haiku-20241022
+    model: claude-3-5-haiku-20241022   # Budget/Fast (no thinking)
     temperature: 0
     seed: 1234
     max_tokens: 2000
     thinking:
       enabled: false
   - provider: google
-    model: gemini-2.5-pro
+    model: gemini-2.5-pro              # Flagship
     temperature: 0
     seed: 1234
-    max_tokens: 2000
+    max_tokens: 3000
     thinking:
       enabled: true
-      gemini_budget_tokens: 4096
+      budget_tokens: 2048              # High budget for Gemini (Pro cannot disable; 0 → -1 dynamic)
   - provider: google
-    model: gemini-2.5-flash
+    model: gemini-2.5-flash            # Budget/Fast (no thinking)
     temperature: 0
     seed: 1234
     max_tokens: 2000
     thinking:
       enabled: false
   - provider: google
-    model: gemini-2.5-flash-lite
+    model: gemini-2.5-flash-lite       # Budget/Fast (no thinking)
     temperature: 0
     seed: 1234
     max_tokens: 2000
     thinking:
       enabled: false
   - provider: openai
-    model: gpt-5-2025-08-07
+    model: gpt-5-2025-08-07            # Flagship
+    temperature: 0
+    seed: 1234
+    max_tokens: 3000
+    thinking:
+      enabled: true
+      effort: high
+  - provider: openai
+    model: gpt-5-mini-2025-08-07       # Middle
     temperature: 0
     seed: 1234
     max_tokens: 2000
     thinking:
       enabled: true
-      openai_reasoning:
-        effort: medium
+      effort: medium
   - provider: openai
-    model: gpt-5-mini-2025-08-07
-    temperature: 0
-    seed: 1234
-    max_tokens: 2000
-    thinking:
-      enabled: true
-      openai_reasoning:
-        effort: low
-  - provider: openai
-    model: gpt-5-nano-2025-08-07
+    model: gpt-5-nano-2025-08-07       # Budget/Fast (no reasoning)
     temperature: 0
     seed: 1234
     max_tokens: 2000

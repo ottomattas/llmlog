@@ -38,11 +38,9 @@ class ThinkingOptions(BaseModel):
     enabled: bool = False
     # Anthropic: budget tokens for extended thinking
     budget_tokens: Optional[int] = None
-    # Google Gemini: thinkingBudget (tokens) and optional type
-    gemini_budget_tokens: Optional[int] = None
-    gemini_type: Optional[str] = None  # e.g., "thinking"
-    # OpenAI: reasoning settings for Responses/Chat when supported
-    openai_reasoning: Optional[Dict[str, Any]] = None
+    # Google Gemini: use unified 'budget_tokens'
+    # OpenAI: unified effort level for reasoning models (low|medium|high)
+    effort: Optional[str] = None
 
 
 class RunConfig(BaseModel):

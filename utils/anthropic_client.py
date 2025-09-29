@@ -15,8 +15,14 @@ def chat_completion(prompt: str, model: str, max_tokens: Optional[int] = 1000, t
         "max_tokens": max_tokens or 1000,
         "messages": [{"role": "user", "content": prompt}],
     }
-    if temperature is not None:
-        kwargs["temperature"] = float(temperature)
+    # Temperature handling: when extended thinking is enabled, Anthropic requires temperature semantics of 1
+    # (API errors if you set another value). We therefore ignore provided temperature when thinking is enabled.
+    if thinking and thinking.get("enabled"):
+        # omit temperature entirely or force to 1; prefer omitting to avoid conflicts
+        pass
+    else:
+        if temperature is not None:
+            kwargs["temperature"] = float(temperature)
     # Extended thinking per docs: https://docs.claude.com/en/docs/build-with-claude/extended-thinking
     # Accept generic thinking dict: {enabled: bool, budget_tokens: int}
     if thinking and thinking.get("enabled"):
@@ -24,6 +30,15 @@ def chat_completion(prompt: str, model: str, max_tokens: Optional[int] = 1000, t
         kwargs["thinking"] = {"type": "enabled"}
         if budget is not None:
             kwargs["thinking"]["budget_tokens"] = int(budget)
+            # Ensure Anthropic constraint: max_tokens must be greater than thinking.budget_tokens
+            try:
+                cur_max = int(kwargs.get("max_tokens") or 0)
+                b = int(budget)
+                if cur_max <= b:
+                    # bump max_tokens just above budget; choose a small buffer
+                    kwargs["max_tokens"] = b + 512
+            except Exception:
+                pass
     resp = client.messages.create(**kwargs)
     # Extract final text blocks; ignore thinking/redacted_thinking blocks
     text_parts = []
