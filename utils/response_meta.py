@@ -32,7 +32,19 @@ def normalize_meta(provider: str, model: str, meta: Dict[str, Any]) -> Dict[str,
         usage = meta.get("usage") or _safe_get(raw, "usage") or {}
         normalized["usage"]["input_tokens"] = usage.get("input_tokens")
         normalized["usage"]["output_tokens"] = usage.get("output_tokens")
-        # Anthropic does not expose reasoning tokens in standard API; leave None
+        # If extended thinking is present (thinking or redacted_thinking blocks),
+        # Anthropic bills thinking tokens as output tokens. Surface them as reasoning_tokens.
+        try:
+            blocks = raw.get("content") or []
+            has_thinking = False
+            for blk in blocks:
+                if isinstance(blk, dict) and blk.get("type") in ("thinking", "redacted_thinking"):
+                    has_thinking = True
+                    break
+            if has_thinking and usage.get("output_tokens") is not None:
+                normalized["usage"]["reasoning_tokens"] = usage.get("output_tokens")
+        except Exception:
+            pass
         return normalized
 
     # Google Gemini
