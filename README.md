@@ -315,6 +315,59 @@ Notes:
 - `effort` is ignored for Anthropic/Gemini; use `budget_tokens` instead.
 - The runner validates configs on startup and before each call (to catch CLI overrides).
 
+### Future Work / TODOs
+
+- Centralize request assembly
+  - One helper to build provider payloads from the unified config: messages (system/user), thinking (effort/budget), temperature/seed, and `max_tokens` mapping (OpenAI Responses vs Chat, etc.).
+  - Goal: remove per-client duplication and keep behavior uniform.
+
+- Normalize response metadata (single shape)
+  - Standardize: `{ provider, model, finish_reason, usage: { input_tokens, output_tokens, reasoning_tokens } }`.
+  - Map provider specifics:
+    - OpenAI: `output_tokens_details.reasoning_tokens` → `usage.reasoning_tokens`.
+    - Gemini: `usageMetadata.thoughtsTokenCount` → `usage.reasoning_tokens`.
+    - Anthropic: expose input/output tokens; set `reasoning_tokens` to `null` if not provided.
+
+- Consolidate error handling and retries
+  - One classifier for provider/HTTP errors → `{ error_class, retryable }` and shared backoff policy.
+  - Reduce scattered try/except and make retry behavior predictable.
+
+- Unify prompt/message construction
+  - Single helper to merge system+user for Anthropic/Gemini and to build Chat messages for OpenAI.
+  - Easier adoption of tools/function-calling later.
+
+- Tier presets (optional)
+  - `targets[].tier: flagship|medium|budget` → auto-fill recommended `thinking` and `max_tokens` per provider with overrides allowed.
+
+- Single path for max tokens semantics
+  - Convert unified `max_tokens` to provider-specific fields and document what counts (visible output vs thinking tokens).
+
+- Rate limiting and concurrency policy
+  - Central per-provider throttle (token bucket) to reduce 429s across clients; integrate with `concurrency` settings.
+
+- Provenance fidelity toggle
+  - One knob to include/exclude raw payloads, reasoning summaries, and timings; applied consistently across providers and both results/provenance files.
+
+- Structured logging/tracing
+  - Uniform logs for `request_id`, timing, attempts, validation outcome; optional JSON logs for later analysis.
+
+- Light test harness
+  - Golden tests per provider: validation failure cases, thinking tiers, message assembly, metadata normalization (using recorded/minimal fixtures).
+
+- CLI quality of life
+  - `--validate-only` to run config validation without API calls.
+  - `--print-prompts` to preview prompts per provider/model.
+  - Better error messages with suggested fixes (e.g., Anthropic `temperature=1`, Gemini ranges).
+
+- Caching (optional)
+  - Content-hash caching for identical requests to reduce cost during iterative runs.
+
+- Streaming and summaries (later)
+  - Add streaming support toggles and (where available) reasoning summaries capture behind the provenance knob.
+
+- Tools/function-calling (later)
+  - Shared function schema and return-shape normalization; Gemini thought signatures passthrough when tool use is enabled.
+
 ### Comparing Runs Over Time
 1) Configure your configs with an output pattern including `${run}`, for example:
 ```
