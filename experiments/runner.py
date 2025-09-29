@@ -591,7 +591,7 @@ def run_target(
 
     tmpl = read_text(cfg.prompt.template)
 
-        for model in models:
+    for model in models:
         # decide output path
         if cfg.output_pattern:
             outpath = cfg.output_pattern
