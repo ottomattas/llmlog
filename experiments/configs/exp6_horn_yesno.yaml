@@ -148,7 +148,7 @@ parse:
 #   workers: 99   # "fast" variant: all targets parallel for each problem
 #   workers: 2    # "throttled" variant: at most two requests in flight per problem
 concurrency:
-  workers: 3
+  workers: 9
   lockstep: true
   targets_workers: 2                   # Reserved: cap concurrent provider/model groups (not enforced yet)
   rate_limit_per_min: 120
