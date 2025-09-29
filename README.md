@@ -1,4 +1,4 @@
-## llmlog — New Config-Driven Experiment Framework
+c## llmlog — New Config-Driven Experiment Framework
 
 This repository hosts a new, unified framework for running logic-focused LLM experiments efficiently and reproducibly. The legacy one-off scripts (exp1–exp8) have been moved under `_legacy/` and remain intact. The new setup replaces copy‑pasted per-experiment code with a single runner configured via YAML, prompt templates, and pluggable parsing/filters.
 
@@ -315,6 +315,54 @@ Notes:
 - `effort` is ignored for Anthropic/Gemini; use `budget_tokens` instead.
 - The runner validates configs on startup and before each call (to catch CLI overrides).
 
+### Normalized Response Metadata
+
+All providers return a unified metadata shape from the router:
+
+```
+{
+  "provider": "anthropic|google|openai",
+  "model": "...",
+  "finish_reason": "..." | null,
+  "usage": {
+    "input_tokens": <int|null>,
+    "output_tokens": <int|null>,
+    "reasoning_tokens": <int|null>
+  },
+  "raw_response": { ... }
+}
+```
+
+Provider-specific mapping:
+- Anthropic: `usage.input_tokens`/`usage.output_tokens` populated from API usage. When extended thinking blocks are present, `reasoning_tokens` is surfaced heuristically as `output_tokens` (per billing model).
+- Gemini: `usageMetadata.promptTokenCount` → input; `candidatesTokenCount` → output; `thoughtsTokenCount` → reasoning.
+- OpenAI (Responses & Chat): `usage.input_tokens`/`output_tokens` populated; `output_tokens_details.reasoning_tokens` → reasoning.
+
+Provenance files include this normalized `usage` alongside `raw_response` for auditability.
+
+### Troubleshooting
+
+- HTTP 429/529 (rate limit/overloaded)
+  - Lower `concurrency.workers` (e.g., 9 → 6 → 3), increase retry backoff (e.g., `[2,5,15,30,60]`), keep `--resume` on.
+  - In lockstep, all targets wait for the cohort; see TODO section for planned lockstep failure policies.
+
+- Anthropic validation errors
+  - "temperature must be 1 when thinking is enabled": set `temperature: 1` for those targets.
+  - "max_tokens must be greater than thinking.budget_tokens": increase `max_tokens` or reduce `budget_tokens`.
+
+- Gemini thinking
+  - Pro: cannot disable; use `budget_tokens: -1` (dynamic) or a value in 128..32768.
+  - Flash: 0 disables; otherwise 0..24576. Flash-Lite: 0 disables; otherwise 512..24576.
+
+- OpenAI reasoning
+  - Only `thinking.effort: low|medium|high` supported. Prefer Responses API.
+
+- Incomplete due to token limits
+  - Increase `max_tokens` to leave buffer for reasoning tokens (OpenAI recommends ~25k tokens for early experiments).
+
+- Resume interrupted runs
+  - Use `--resume` and keep `${run}` in `output_pattern` to compare runs over time.
+
 ### Future Work / TODOs
 
 - Centralize request assembly
@@ -344,6 +392,11 @@ Notes:
 
 - Rate limiting and concurrency policy
   - Central per-provider throttle (token bucket) to reduce 429s across clients; integrate with `concurrency` settings.
+  - Lockstep failure handling (design): add `lockstep_failure_policy` with options:
+    - `pause`: when any target 429/529s after retries, pause the entire cohort, sleep (e.g., 120/300/600s), then retry the same problem for all targets; limited cycles, then abort
+    - `skip`: when any target terminal-fails, mark the problem as blocked for all targets (write minimal rows), then continue to keep cohorts aligned
+    - `abort`: stop the run immediately on terminal 429/529 for any target; re-run later with `--resume`
+  - Add `pause_cooldown_seconds` and `pause_cycles` knobs
 
 - Provenance fidelity toggle
   - One knob to include/exclude raw payloads, reasoning summaries, and timings; applied consistently across providers and both results/provenance files.
