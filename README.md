@@ -282,6 +282,39 @@ python -m experiments.plot_results
 Outputs PNG files under `experiments/plots/` (e.g., `overall.png`, `exp8_horn_yesno.png`).
 Provider series in plots are ordered alphabetically.
 
+### Thinking/Reasoning Configuration (Unified) and Validation
+
+We use a single, provider-agnostic schema for thinking/reasoning:
+
+```
+thinking:
+  enabled: true|false
+  budget_tokens: <int>        # Anthropic & Gemini only
+  effort: low|medium|high     # OpenAI only
+```
+
+Provider rules enforced by the runner (preflight validation):
+- Anthropic
+  - When `thinking.enabled: true`: set `temperature: 1`
+  - `budget_tokens >= 1024`
+  - `max_tokens > budget_tokens`
+  - Docs: https://docs.claude.com/en/docs/build-with-claude/extended-thinking
+- Google Gemini (2.5)
+  - Use `budget_tokens` for thinkingBudget
+  - Pro: cannot disable thinking; budget in [128, 32768] or `-1` for dynamic
+  - Flash: budget in [0, 24576] or `-1` for dynamic (0 disables)
+  - Flash-Lite: 0 disables, otherwise budget in [512, 24576] or `-1` for dynamic
+  - Docs: https://ai.google.dev/gemini-api/docs/thinking
+- OpenAI
+  - Reasoning effort only: `effort` in {low, medium, high}
+  - Prefer Responses API for reasoning models
+  - Docs: https://platform.openai.com/docs/guides/reasoning/advice-on-prompting#get-started-with-reasoning
+
+Notes:
+- `budget_tokens` is ignored for OpenAI; use `effort` instead.
+- `effort` is ignored for Anthropic/Gemini; use `budget_tokens` instead.
+- The runner validates configs on startup and before each call (to catch CLI overrides).
+
 ### Comparing Runs Over Time
 1) Configure your configs with an output pattern including `${run}`, for example:
 ```
