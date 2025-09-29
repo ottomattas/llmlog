@@ -1,0 +1,18 @@
+{
+  "name": "exp6_horn_yesno",
+  "provider": "anthropic",
+  "model": "claude-opus-4-1-20250805",
+  "run": "full-20250929-1349",
+  "total": 520,
+  "correct": 515,
+  "accuracy": 0.9903846153846154,
+  "unclear": 5,
+  "sat_total": 260,
+  "sat_correct": 257,
+  "sat_accuracy": 0.9884615384615385,
+  "unsat_total": 260,
+  "unsat_correct": 258,
+  "unsat_accuracy": 0.9923076923076923,
+  "avg_timing_ms": 23039.009708737864,
+  "timestamp": 1759160727
+}

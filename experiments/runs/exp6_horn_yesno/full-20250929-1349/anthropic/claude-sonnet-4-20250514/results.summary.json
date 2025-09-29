@@ -1,0 +1,18 @@
+{
+  "name": "exp6_horn_yesno",
+  "provider": "anthropic",
+  "model": "claude-sonnet-4-20250514",
+  "run": "full-20250929-1349",
+  "total": 520,
+  "correct": 514,
+  "accuracy": 0.9884615384615385,
+  "unclear": 5,
+  "sat_total": 260,
+  "sat_correct": 257,
+  "sat_accuracy": 0.9884615384615385,
+  "unsat_total": 260,
+  "unsat_correct": 257,
+  "unsat_accuracy": 0.9884615384615385,
+  "avg_timing_ms": 14509.271844660194,
+  "timestamp": 1759160727
+}

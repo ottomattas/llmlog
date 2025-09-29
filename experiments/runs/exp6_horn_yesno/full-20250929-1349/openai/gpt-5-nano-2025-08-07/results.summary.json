@@ -1,0 +1,18 @@
+{
+  "name": "exp6_horn_yesno",
+  "provider": "openai",
+  "model": "gpt-5-nano-2025-08-07",
+  "run": "full-20250929-1349",
+  "total": 520,
+  "correct": 421,
+  "accuracy": 0.8096153846153846,
+  "unclear": 97,
+  "sat_total": 260,
+  "sat_correct": 180,
+  "sat_accuracy": 0.6923076923076923,
+  "unsat_total": 260,
+  "unsat_correct": 241,
+  "unsat_accuracy": 0.926923076923077,
+  "avg_timing_ms": 8534.448076923078,
+  "timestamp": 1759160727
+}

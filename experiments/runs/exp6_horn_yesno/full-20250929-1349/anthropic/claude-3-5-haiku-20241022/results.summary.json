@@ -1,0 +1,18 @@
+{
+  "name": "exp6_horn_yesno",
+  "provider": "anthropic",
+  "model": "claude-3-5-haiku-20241022",
+  "run": "full-20250929-1349",
+  "total": 520,
+  "correct": 286,
+  "accuracy": 0.55,
+  "unclear": 7,
+  "sat_total": 260,
+  "sat_correct": 55,
+  "sat_accuracy": 0.21153846153846154,
+  "unsat_total": 260,
+  "unsat_correct": 231,
+  "unsat_accuracy": 0.8884615384615384,
+  "avg_timing_ms": 4521.1910331384015,
+  "timestamp": 1759160727
+}

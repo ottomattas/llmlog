@@ -1,0 +1,18 @@
+{
+  "name": "exp6_horn_yesno",
+  "provider": "google",
+  "model": "gemini-2.5-flash-lite",
+  "run": "full-20250929-1349",
+  "total": 520,
+  "correct": 413,
+  "accuracy": 0.7942307692307692,
+  "unclear": 66,
+  "sat_total": 260,
+  "sat_correct": 175,
+  "sat_accuracy": 0.6730769230769231,
+  "unsat_total": 260,
+  "unsat_correct": 238,
+  "unsat_accuracy": 0.9153846153846154,
+  "avg_timing_ms": 2280.0730769230768,
+  "timestamp": 1759160727
+}
