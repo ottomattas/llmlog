@@ -126,6 +126,63 @@ def ensure_dir(path: str) -> None:
     os.makedirs(os.path.dirname(path), exist_ok=True)
 
 
+def _validate_target_config(provider: str, model: Optional[str], temperature: Optional[float], max_tokens: Optional[int], thinking: Optional[Dict[str, Any]]) -> None:
+    p = (provider or "").lower()
+    m = (model or "").lower() if model else None
+    t = (thinking or {}) if thinking else {}
+    enabled = bool(t.get("enabled"))
+    # Anthropic
+    if p == "anthropic":
+        if enabled:
+            # temperature must be 1 when thinking is enabled
+            if temperature is not None and float(temperature) != 1.0:
+                raise RuntimeError("Anthropic: when thinking.enabled=true, temperature must be 1")
+            budget = t.get("budget_tokens")
+            if budget is None:
+                raise RuntimeError("Anthropic: thinking.enabled=true requires thinking.budget_tokens to be set (>=1024)")
+            try:
+                b = int(budget)
+            except Exception:
+                raise RuntimeError("Anthropic: thinking.budget_tokens must be an integer")
+            if b < 1024:
+                raise RuntimeError("Anthropic: thinking.budget_tokens must be >= 1024")
+            if max_tokens is None:
+                raise RuntimeError("Anthropic: max_tokens must be set and > thinking.budget_tokens when thinking.enabled=true")
+            if int(max_tokens) <= b:
+                raise RuntimeError("Anthropic: max_tokens must be greater than thinking.budget_tokens")
+    # Google Gemini
+    elif p in ("google", "gemini"):
+        budget = t.get("budget_tokens") if enabled else None
+        is_pro = bool(m and m.startswith("gemini-2.5-pro"))
+        is_flash = bool(m and m.startswith("gemini-2.5-flash") and not m.startswith("gemini-2.5-flash-lite"))
+        is_flash_lite = bool(m and m.startswith("gemini-2.5-flash-lite"))
+        if enabled:
+            if budget is None:
+                # allow missing budget; client will default minimally, but warn via validation to be explicit
+                raise RuntimeError("Gemini: set thinking.budget_tokens explicitly (use -1 for dynamic, 0 to disable on Flash/Flash-Lite, or a positive value within model range)")
+            try:
+                b = int(budget)
+            except Exception:
+                raise RuntimeError("Gemini: thinking.budget_tokens must be an integer (0, -1, or positive)")
+            if is_pro:
+                if b == 0:
+                    raise RuntimeError("Gemini Pro: thinking cannot be disabled. Use -1 for dynamic or a positive budget in 128..32768")
+                if b != -1 and not (128 <= b <= 32768):
+                    raise RuntimeError("Gemini Pro: thinking.budget_tokens must be -1 (dynamic) or within 128..32768")
+            elif is_flash:
+                if b != -1 and not (0 <= b <= 24576):
+                    raise RuntimeError("Gemini Flash: thinking.budget_tokens must be -1 (dynamic) or within 0..24576")
+            elif is_flash_lite:
+                # 0 disables; otherwise 512..24576
+                if b != 0 and b != -1 and not (512 <= b <= 24576):
+                    raise RuntimeError("Gemini Flash Lite: thinking.budget_tokens must be 0 (disable), -1 (dynamic), or within 512..24576")
+    # OpenAI
+    elif p == "openai":
+        if enabled:
+            eff = (t.get("effort") or t.get("reasoning_effort"))
+            if not isinstance(eff, str) or eff.lower() not in ("low", "medium", "high"):
+                raise RuntimeError("OpenAI: thinking.enabled=true requires thinking.effort in {low, medium, high}")
+
 def _build_outpath(cfg: RunConfig, target: Dict[str, Any], model: str, run_id: Optional[str]) -> str:
     if cfg.output_pattern:
         outpath = cfg.output_pattern
@@ -175,6 +232,14 @@ def run_targets_lockstep(
         for m in models:
             nt = dict(t)
             nt["model"] = m
+            # Validate per-target config before expanding
+            _validate_target_config(
+                provider=nt.get("provider"),
+                model=nt.get("model"),
+                temperature=nt.get("temperature"),
+                max_tokens=nt.get("max_tokens"),
+                thinking=nt.get("thinking"),
+            )
             expanded.append(nt)
 
     if not expanded:
@@ -526,7 +591,7 @@ def run_target(
 
     tmpl = read_text(cfg.prompt.template)
 
-    for model in models:
+        for model in models:
         # decide output path
         if cfg.output_pattern:
             outpath = cfg.output_pattern
@@ -604,6 +669,14 @@ def run_target(
                     while True:
                         try:
                             start = time.time()
+                            # Validate before each call as well (in case of CLI overrides)
+                            _validate_target_config(
+                                provider=target.get("provider"),
+                                model=model,
+                                temperature=target.get("temperature"),
+                                max_tokens=(target.get("max_tokens") or cfg.max_tokens),
+                                thinking=target.get("thinking"),
+                            )
                             # Prefer per-target thinking, fallback to global
                             thinking_cfg = None
                             try:
