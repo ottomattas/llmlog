@@ -1,0 +1,212 @@
+# Unified Experiment Template (fully documented)
+#
+# Purpose
+# - One template to configure any run supported by experiments.runner and experiments.schema
+# - Unifies: providers (Anthropic, Google Gemini, OpenAI), reasoning/thinking options, prompt styles,
+#   parsing modes, inputs, outputs, concurrency, resume and CLI overrides.
+#
+# How to use
+# 1) Copy this file and change `name:`.
+# 2) In `targets:`, specify one or more provider/model pairs. You may add many entries for A/B comparisons.
+# 3) Adjust input_file, outputs, prompt (template/style/variables), parse, and concurrency.
+# 4) Run:
+#    python -m experiments.runner --config experiments/configs/<your-config>.yaml --run demo-001
+#    Optional flags:  --limit 100  --dry-run  --resume  --only openai,google  --models google:gemini-2.5-pro
+#
+# Notes on outputs
+# - Minimal results written to results.jsonl include: { id, meta, parsed_answer } (compact for fast aggregation)
+# - Full provenance written to results.provenance.jsonl (if enabled) includes prompt, raw provider payload, usage, timing.
+# - A per-target summary JSON is also written next to results files.
+#
+# Parsing semantics
+# - parsed_answer values: 0 = YES/CONTRADICTION, 1 = NO/SATISFIABLE, 2 = UNCLEAR
+# - yes_no parser: token-based scan for yes/no; configurable tokens lists
+# - contradiction parser: expects last word in output to signal contradiction|satisfiable|unknown
+#
+# Prompt styles (see experiments.runner.render_prompt)
+# - horn_if_then: renders facts and if-then rules; expects Horn structure
+# - cnf_v1: renders disjunctive clauses using "pN is true/false"
+# - cnf_v2: renders disjunctive clauses using compact "pN" and "not(pN)"
+#
+# Provider thinking/reasoning (validated by runner):
+# - Anthropic: thinking.enabled=true requires temperature=1 and max_tokens > thinking.budget_tokens (>=1024)
+# - Google Gemini: unified 'thinking.budget_tokens' used; 0 disables on Flash/Lite, -1 enables dynamic budgets
+# - OpenAI: set thinking.effort in {low, medium, high} when enabled
+#
+name: CHANGE_ME_unified_experiment
+
+# Optional global defaults applied to targets when their fields are omitted
+# temperature: 0.0
+# seed: 1234
+# max_tokens: 3000
+# thinking:    # applies to targets lacking their own thinking config
+#   enabled: false
+#   budget_tokens: 2048   # Anthropic/Gemini
+#   effort: medium        # OpenAI
+
+# Define one or more provider/model targets; each entry may override temperature/seed/max_tokens/thinking
+# You can remove tiers you don't need; keep just one for single-target runs
+# These examples illustrate Flagship/Medium/Budget thinking tiers across providers
+# As providers define "reasoning" effort differently, we try to use a unified config for all providers (read more: https://ai.google.dev/gemini-api/docs/openai#thinking).
+# IMPORTANT: Ensure the per-provider constraints are satisfied (see validation rules above)
+
+targets:
+  # Anthropic (Claude)
+  - provider: anthropic
+    model: claude-sonnet-4-5-20250929
+    temperature: 1                      # Required when thinking.enabled=true
+    seed: 1234
+    max_tokens: 30000                   # Must be > thinking.budget_tokens
+    thinking:
+      enabled: true
+      budget_tokens: 24576             # High effort
+
+  - provider: anthropic
+    model: claude-opus-4-1-20250805
+    temperature: 1
+    seed: 1234
+    max_tokens: 10000
+    thinking:
+      enabled: true
+      budget_tokens: 8192              # Medium effort
+
+  - provider: anthropic
+    model: claude-3-5-haiku-20241022
+    temperature: 0
+    seed: 1234
+    max_tokens: 3000
+    thinking:
+      enabled: false                   # Budget/Fast: reasoning disabled
+
+  # Google Gemini
+  - provider: google
+    model: gemini-2.5-pro
+    temperature: 0
+    seed: 1234
+    max_tokens: 30000
+    thinking:
+      enabled: true
+      budget_tokens: 24576             # High effort (Pro cannot disable; set -1 for dynamic)
+
+  - provider: google
+    model: gemini-2.5-flash
+    temperature: 0
+    seed: 1234
+    max_tokens: 10000
+    thinking:
+      enabled: true
+      budget_tokens: 8192              # Medium effort; set 0 to disable; -1 dynamic
+
+  - provider: google
+    model: gemini-2.5-flash-lite
+    temperature: 0
+    seed: 1234
+    max_tokens: 3000
+    thinking:
+      enabled: false                   # Budget/Fast; also OK to set enabled:true + budget_tokens: 0
+
+  # OpenAI (GPT-5 family)
+  - provider: openai
+    model: gpt-5-pro-2025-10-06
+    temperature: 0
+    seed: 1234
+    max_tokens: 30000
+    thinking:
+      enabled: true
+      effort: high                     # {low|medium|high}
+
+  - provider: openai
+    model: gpt-5-2025-08-07
+    temperature: 0
+    seed: 1234
+    max_tokens: 10000
+    thinking:
+      enabled: true
+      effort: medium                  # {low|medium|high}
+
+  - provider: openai
+    model: gpt-5-mini-2025-08-07
+    temperature: 0
+    seed: 1234
+    max_tokens: 3000
+    thinking:
+      enabled: true
+      effort: low                      # {low|medium|high}
+
+  - provider: openai
+    model: gpt-5-nano-2025-08-07
+    temperature: 0
+    seed: 1234
+    max_tokens: 3000
+    thinking:
+      enabled: false                   # Budget/Fast
+
+# Input dataset (JSONL-like, one JS array per line). See experiments/generate_dataset.py to build new datasets
+input_file: data/problems_dist20_v1.js
+
+# Filters applied before running
+filters:
+  horn_only: false                      # true → keep only Horn problems
+  skip_rows: 1                          # skip a header row if present
+  limit_rows: null                      # set to an integer for quick tests
+
+# Output path strategy. Use ${name}, ${provider}, ${model}, and optional ${run}
+# If you prefer a single file path, set output_file instead of output_pattern.
+output_pattern: experiments/runs/${name}/${run}/${provider}/${model}/results.jsonl
+# output_file: experiments/runs/${name}/results.jsonl
+
+# Outputs configuration (preferred). Minimal results are always compact; provenance adds rich details
+outputs:
+  results:
+    enabled: true
+  provenance:
+    enabled: true
+    include_prompt: true
+    include_raw_response: true
+
+# Prompt rendering configuration
+# style must be one of: horn_if_then | cnf_v1 | cnf_v2
+# template must point to a .j2 file under prompts/
+# variables can pass extra Jinja vars if your template uses them (currently not used by runner)
+prompt:
+  template: prompts/template_unified.j2
+  style: horn_if_then
+  variables: {}
+
+# Parser configuration
+# type: yes_no | contradiction
+# yes_no: configure additional yes/no tokens if models use variants (e.g., "affirmative", "negative")
+# contradiction: the last word should be contradiction/satisfiable/unknown, see prompts examples
+parse:
+  type: yes_no
+  yes_tokens: ["yes"]
+  no_tokens: ["no"]
+
+# Concurrency controls per-problem fan-out and retry policy
+# lockstep=true evaluates each problem across targets concurrently (good for A/B comparisons)
+# workers caps in-flight requests for the current problem; set >= number of targets for full fan-out
+concurrency:
+  workers: 10
+  lockstep: true
+  targets_workers: 2                   # cap concurrent target groups across the whole run
+  rate_limit_per_min: 120              # reserved (not enforced by runner yet)
+  retry:
+    max_attempts: 3
+    backoff_seconds: [2, 5, 10]
+
+# Execution toggles
+resume: true                            # resume appending to existing outputs, skipping already-processed ids
+
+# Optional global defaults for thinking (applied to any target missing 'thinking')
+# thinking:
+#   enabled: false
+#   budget_tokens: 2048
+#   effort: medium
+
+# CLI tips
+# - Limit rows quickly:            --limit 100
+# - Dry-run only (no API calls):   --dry-run
+# - Resume interrupted runs:       --resume
+# - Restrict providers:            --only anthropic,openai
+# - Override models per provider:  --models google:gemini-2.5-pro,openai:gpt-5-2025-08-07
+# - Inject run id into ${run}:     --run demo-123
