@@ -169,7 +169,7 @@ outputs:
 # template must point to a .j2 file under prompts/
 # variables can pass extra Jinja vars if your template uses them (currently not used by runner)
 prompt:
-  template: prompts/template_unified.j2
+  template: prompts/_template_unified.j2
   style: horn_if_then
   variables: {}
 
