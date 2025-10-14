@@ -16,6 +16,8 @@ def main() -> None:
     ap.add_argument("--horn", dest="horn", choices=["only","mixed"], default=None, help="Horn-only or mixed problems")
     ap.add_argument("--percase", dest="percase", type=int, default=None, help="Problems per case (even number)")
     ap.add_argument("--seed", dest="seed", type=int, default=None, help="Random seed")
+    ap.add_argument("--workers", dest="workers", type=int, default=None, help="Parallel worker processes for case generation")
+    ap.add_argument("--no-proof", dest="no_proof", action="store_true", help="Skip resolution proof construction (faster)")
     args = ap.parse_args()
 
     out = Path(args.output)
@@ -32,6 +34,10 @@ def main() -> None:
         cmd += ["--percase", str(args.percase)]
     if args.seed is not None:
         cmd += ["--seed", str(args.seed)]
+    if args.workers is not None:
+        cmd += ["--workers", str(args.workers)]
+    if args.no_proof:
+        cmd += ["--no-proof"]
     with out.open("w") as f:
         proc = subprocess.run(cmd, stdout=f, stderr=subprocess.PIPE, text=True)
     if proc.returncode != 0:
