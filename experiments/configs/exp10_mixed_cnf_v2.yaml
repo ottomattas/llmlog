@@ -1,0 +1,109 @@
+name: exp10_mixed_cnf_v2
+
+targets:
+  - provider: anthropic
+    model: claude-sonnet-4-5-20250929
+    temperature: 1
+    seed: 1234
+    max_tokens: 30000
+    thinking:
+      enabled: true
+      budget_tokens: 24576
+  - provider: anthropic
+    model: claude-opus-4-1-20250805
+    temperature: 1
+    seed: 1234
+    max_tokens: 10000
+    thinking:
+      enabled: true
+      budget_tokens: 8192
+  - provider: anthropic
+    model: claude-3-5-haiku-20241022
+    temperature: 0
+    seed: 1234
+    max_tokens: 3000
+    thinking:
+      enabled: false
+  - provider: google
+    model: gemini-2.5-pro
+    temperature: 0
+    seed: 1234
+    max_tokens: 30000
+    thinking:
+      enabled: true
+      budget_tokens: 24576
+  - provider: google
+    model: gemini-2.5-flash
+    temperature: 0
+    seed: 1234
+    max_tokens: 10000
+    thinking:
+      enabled: true
+      budget_tokens: 8192
+  - provider: google
+    model: gemini-2.5-flash-lite
+    temperature: 0
+    seed: 1234
+    max_tokens: 3000
+    thinking:
+      enabled: false
+  - provider: openai
+    model: gpt-5-pro-2025-10-06
+    temperature: 0
+    seed: 1234
+    max_tokens: 30000
+    thinking:
+      enabled: true
+      effort: high
+  - provider: openai
+    model: gpt-5-2025-08-07
+    temperature: 0
+    seed: 1234
+    max_tokens: 10000
+    thinking:
+      enabled: true
+      effort: medium
+  - provider: openai
+    model: gpt-5-mini-2025-08-07
+    temperature: 0
+    seed: 1234
+    max_tokens: 3000
+    thinking:
+      enabled: false
+
+input_file: data/problems_complex_mixed_vars10_20_len3_4_seed4242_workers1.js
+
+filters:
+  horn_only: false
+  skip_rows: 1
+  limit_rows: null
+
+output_pattern: experiments/runs/${name}/${run}/${provider}/${model}/results.jsonl
+
+outputs:
+  results:
+    enabled: true
+  provenance:
+    enabled: true
+    include_prompt: true
+    include_raw_response: true
+
+prompt:
+  template: prompts/exp2_cnf_v2_contradiction.j2
+  style: cnf_v2
+  variables: {}
+
+parse:
+  type: contradiction
+
+concurrency:
+  workers: 9
+  lockstep: true
+  targets_workers: 2
+  rate_limit_per_min: 120
+  retry:
+    max_attempts: 3
+    backoff_seconds: [2, 5, 10]
+
+resume: true
+

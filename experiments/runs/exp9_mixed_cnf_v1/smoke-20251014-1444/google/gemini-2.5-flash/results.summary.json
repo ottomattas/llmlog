@@ -1,0 +1,18 @@
+{
+  "name": "exp9_mixed_cnf_v1",
+  "provider": "google",
+  "model": "gemini-2.5-flash",
+  "run": "smoke-20251014-1444",
+  "total": 5,
+  "correct": 0,
+  "accuracy": 0.0,
+  "unclear": 5,
+  "sat_total": 3,
+  "sat_correct": 0,
+  "sat_accuracy": 0.0,
+  "unsat_total": 2,
+  "unsat_correct": 0,
+  "unsat_accuracy": 0.0,
+  "avg_timing_ms": 38337.8,
+  "timestamp": 1760443212
+}
