@@ -221,6 +221,9 @@ def run_targets_lockstep(
     # Expand targets x models taking overrides into account and apply provider filter
     expanded: List[Dict[str, Any]]
     expanded = []
+    # Deduplicate per (provider, model) when overrides are supplied or when configs contain
+    # multiple entries for the same provider tier; otherwise we may run the same model multiple times.
+    seen_provider_model: set[str] = set()
     for t in targets:
         if only_providers and t.get("provider", "").lower() not in [p.lower() for p in only_providers]:
             continue
@@ -232,6 +235,10 @@ def run_targets_lockstep(
         for m in models:
             nt = dict(t)
             nt["model"] = m
+            k = f"{nt.get('provider')}::{m}"
+            if k in seen_provider_model:
+                continue
+            seen_provider_model.add(k)
             # Validate per-target config before expanding
             _validate_target_config(
                 provider=nt.get("provider"),
