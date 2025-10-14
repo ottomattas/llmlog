@@ -181,8 +181,7 @@ def main():
     print(f"Warning: max vars beyond {max_supported_vars} are not supported by truth table; filtering.", file=sys.stderr)
     varnr_range=[v for v in varnr_range if v<=max_supported_vars]
 
-  problems=[]
-  # Build cases
+  # Build cases (deterministic order)
   cases=[]
   case_index=0
   for varnr in varnr_range:
@@ -192,111 +191,50 @@ def main():
         cases.append((case_index,varnr,cllen,hornflag,ratio,probs_for_onecase,args.seed,args.no_proof))
         case_index+=1
 
-  # Generate per case (optionally parallel)
-  all_case_results=[]
+  # Stream: print header then process each case and emit rows immediately
+  fline='''["id","maxvarnr","maxlen","mustbehorn","issatisfiable","problem","'''
+  fline+=''' "proof_of_inconsistency_or_satisfying_valuation","units_derived_by_horn_clauses"]'''
+  print(fline)
+
+  prob_id=0
+
+  def emit_case(results):
+    nonlocal prob_id
+    for prob in results:
+      prob_id+=1
+      prob[0]=prob_id
+      print(prob)
+      # basic sanity checks (kept from legacy)
+      for cl in prob[5]:
+        fullneg=True
+        for v in cl:
+          if v>0:
+            fullneg=False
+            break
+        if fullneg: break
+      for cl in prob[5]:
+        fullpos=True
+        for v in cl:
+          if v<0:
+            fullpos=False
+            break
+        if fullpos: break
+      if prob[4]==0 and not (fullpos and fullneg):
+        return False
+    return True
+
   if args.workers and args.workers>1:
     with ProcessPoolExecutor(max_workers=args.workers) as ex:
       for res in ex.map(_generate_case, cases):
-        all_case_results.append(res)
+        ok=emit_case(res)
+        if not ok:
+          return
   else:
     for c in cases:
-      all_case_results.append(_generate_case(c))
-
-  # Flatten in case order and reindex ids
-  for case_problems in all_case_results:
-    for p in case_problems:
-      problems.append(p)
-  # maxvars: [general_ratio,horn_ratio]
-  goodratios={
-    2: [1.9,1.3],
-    3: [4.0,2.0],
-    4: [[0,0,0,3.2,4.4,5.6,6.4,6.9,6.7,7.6],3.1],
-    5: [[0,0,0,3.3,5.5,7.7,9.4,10.8,11.6,12.4,12.9,13.9,14.1],4.6]
-  }
-  probnr=0
-  for varnr in varnr_range:
-    for cllen in cl_len_range:
-      for hornflag in horn_flags:
-        ratios=goodratios[cllen]
-        if hornflag: ratios=ratios[1]
-        else: ratios=ratios[0]
-        #print("ratios",ratios)
-        if type(ratios)==list:
-          if varnr>=len(ratios): ratio=ratios[-1]
-          else: ratio=ratios[varnr] 
-        else:
-          ratio=ratios       
-        # we get a list [truecount,falsecount,true_problems,false_problems]  
-        #print("probs_for_onecase,varnr,cllen,ratio,hornflag",probs_for_onecase,varnr,cllen,ratio,hornflag)
-        problst=make_balanced_prop_problem_list(probs_for_onecase,varnr,cllen,ratio,hornflag)
-        #print("problst",problst)
-        # interleave problems from the list, add proof/model and metainfo
-        truelist=problst[2]
-        falselist=problst[3]
-        choosefrom=True       
-        while True:
-          if not truelist and not falselist: break
-          if choosefrom==True:
-            if truelist:
-              # true problem 
-              prob=truelist[0]
-              truelist=truelist[1:]  
-              res=truth_table_solve(prob) 
-              proof=[]
-              for el in res[0]:
-                proof.append(int(el))              
-          else:
-            if falselist: 
-              # false problem 
-              prob=falselist[0]
-              falselist=falselist[1:]  
-              res=solve_prop_problem(prob)          
-              proof=makeproof(res,allcls)                
-          # build a problem with proof and metainfo    
-          probnr+=1            
-          if hornflag: horn=1
-          else: horn=0
-          if choosefrom: truth=1
-          else: truth=0
-          horn_solve_res=resolve_res=solve_prop_horn_problem(prob)
-          newprob=[probnr,varnr,cllen,horn,truth,prob,proof,horn_solve_res]
-          problems.append(newprob)
-          choosefrom= not choosefrom
-  simpcount=0  
-  fline="""["id","maxvarnr","maxlen","mustbehorn","issatisfiable","problem","""
-  fline+=""" "proof_of_inconsistency_or_satisfying_valuation","units_derived_by_horn_clauses"]"""
-  print(fline)
-  # Reassign sequential ids starting at 1
-  prob_id=0
-  for prob in problems:
-    prob_id+=1
-    prob[0]=prob_id
-    print (prob)
-
-    for cl in prob[5]:   
-      fullneg=True
-      for v in cl:
-        if v>0: 
-          fullneg=False
-          break
-      if fullneg: break  
-    for cl in prob[5]:   
-      fullpos=True
-      for v in cl:
-        if v<0: 
-          fullpos=False
-          break
-      if fullpos: break  
-    #print(prob[4],len(prob[5][0]),fullneg,"\n")      
-    #print(prob[4],fullpos and fullneg,"\n") 
-    #if prob[4]==1 and (len(prob[5][0])!=1 or not fullneg):
-    if prob[4]==0 and not (fullpos and fullneg):
-      #print("****","\n")
-      return
-    if not (fullpos and fullneg):
-    #if not fullneg:
-      simpcount+=1
-  #print("simpcount",simpcount)    
+      res=_generate_case(c)
+      ok=emit_case(res)
+      if not ok:
+        return
 
 
 def testing_main():  
