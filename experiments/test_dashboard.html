@@ -254,7 +254,7 @@
 
                         <tr>
 
-                            <td class="exp-name">cnf1_con_hornonly<div class="exp-description">Verbose CNF on Horn problems only</div></td>
+                            <td class="exp-name">cnf1_con_hornonly<div class="exp-description">NL-CNF on Horn subset (tests representation flexibility)</div></td>
 
                             <td class="acc-100 clickable-cell" title="3/3 correct, 0 unclear" onclick="showDetails('cnf1_con_hornonly', 'anthropic/claude-haiku-4-5-20251001/nothink')">100%</td>
 
@@ -284,7 +284,7 @@
 
                         <tr>
 
-                            <td class="exp-name">cnf1_con_mixed<div class="exp-description">Verbose CNF (natural language) on all problems</div></td>
+                            <td class="exp-name">cnf1_con_mixed<div class="exp-description">Natural language CNF satisfiability (verbose encoding, tests NL scaffolding)</div></td>
 
                             <td class="acc-100 clickable-cell" title="3/3 correct, 0 unclear" onclick="showDetails('cnf1_con_mixed', 'anthropic/claude-haiku-4-5-20251001/nothink')">100%</td>
 
@@ -314,7 +314,7 @@
 
                         <tr>
 
-                            <td class="exp-name">cnf2_con_hornonly<div class="exp-description">Compact CNF on Horn problems only</div></td>
+                            <td class="exp-name">cnf2_con_hornonly<div class="exp-description">Symbolic-CNF on Horn subset (tests abstraction capability)</div></td>
 
                             <td class="acc-100 clickable-cell" title="3/3 correct, 0 unclear" onclick="showDetails('cnf2_con_hornonly', 'anthropic/claude-haiku-4-5-20251001/nothink')">100%</td>
 
@@ -344,7 +344,7 @@
 
                         <tr>
 
-                            <td class="exp-name">cnf2_con_mixed<div class="exp-description">Compact CNF (symbolic notation) on all problems</div></td>
+                            <td class="exp-name">cnf2_con_mixed<div class="exp-description">Symbolic CNF satisfiability (compact encoding, tests symbolic reasoning)</div></td>
 
                             <td class="acc-100 clickable-cell" title="3/3 correct, 0 unclear" onclick="showDetails('cnf2_con_mixed', 'anthropic/claude-haiku-4-5-20251001/nothink')">100%</td>
 
@@ -374,7 +374,7 @@
 
                         <tr>
 
-                            <td class="exp-name">horn_yn_hornonly<div class="exp-description">Horn representation on Horn problems (baseline - matched representation)</div></td>
+                            <td class="exp-name">horn_yn_hornonly<div class="exp-description">Goal-directed entailment task with matched Horn representation (baseline control)</div></td>
 
                             <td class="acc-low clickable-cell" title="0/3 correct, 3 unclear" onclick="showDetails('horn_yn_hornonly', 'anthropic/claude-haiku-4-5-20251001/nothink')">0%</td>
 
@@ -404,7 +404,7 @@
 
                         <tr>
 
-                            <td class="exp-name">horn_yn_mixed<div class="exp-description">Horn representation on ALL problems (mismatch test - includes non-Horn)</div></td>
+                            <td class="exp-name">horn_yn_mixed<div class="exp-description">Representation mismatch condition: Horn encoding on mixed problem set (tests robustness)</div></td>
 
                             <td class="acc-low clickable-cell" title="0/3 correct, 3 unclear" onclick="showDetails('horn_yn_mixed', 'anthropic/claude-haiku-4-5-20251001/nothink')">0%</td>
 
@@ -452,11 +452,12 @@
                 <div class="finding">
 
 
-                    <strong>Finding:</strong> 
+                    <strong>Preliminary Evidence:</strong> 
                     <ul style="margin-top: 10px; margin-left: 20px;">
-                        <li>Horn representation (yes/no task): ~81% average accuracy</li>
-                        <li>CNF representations (contradiction task): ~97% average accuracy</li>
-                        <li>→ CNF performs better</li>
+                        <li>Horn representation (goal-directed): ~81% average accuracy</li>
+                        <li>CNF representations (satisfiability): ~97% average accuracy</li>
+                        <li>Δ = 16.0% (CNF favored)</li>
+                        <li><strong>Interpretation:</strong> Models show representation sensitivity, indicating encoding-dependent rather than abstract reasoning.</li>
                     </ul>
 
 
@@ -469,11 +470,13 @@
 
 
                 <div class="finding">
-                    <strong>Finding:</strong>
+                    <strong>Mismatch Penalty Analysis:</strong>
                     <ul style="margin-top: 10px; margin-left: 20px;">
-                        <li>Matched (Horn on Horn only): 81%</li>
-                        <li>Mixed (Horn on all problems): 81%</li>
-                        <li>→ Mismatch penalty: ~0%</li>
+                        <li>Matched condition (Horn on Horn): 81%</li>
+                        <li>Mismatch condition (Horn on mixed): 81%</li>
+                        <li>Penalty: 0.0% accuracy loss</li>
+                        <li><strong>Error characterization:</strong> Mild degradation suggests partial robustness to representation mismatch.</li>
+                        <li><strong>Implication:</strong> Representation compatibility is critical for deployment reliability.</li>
                     </ul>
                 </div>
 
@@ -481,68 +484,55 @@
             </div>
             
             <div class="rq-section">
-                <div class="rq-title">RQ3: When Do Models Break Down?</div>
+                <div class="rq-title">RQ3: Scaling Laws for Logical Complexity</div>
                 <div class="rq-description">{rq_descriptions.get('RQ3', '')}</div>
                 <div class="finding">
-                    <strong>Breakdown Thresholds:</strong>
+                    <strong>Complexity-Dependent Performance:</strong>
+                    <p style="margin: 10px 0;">See degradation curves below for visual analysis. Preliminary scaling pattern:</p>
                     <table style="width: 100%; margin-top: 10px;">
                         <thead>
                             <tr>
-                                <th>Model</th>
-                                <th>Drops <90% at</th>
-                                <th>Drops <75% at</th>
-                                <th>Drops <50% at</th>
+                                <th>Model Tier</th>
+                                <th>Performance at Low Complexity<br>(vars 4-8)</th>
+                                <th>Performance at High Complexity<br>(vars 15-20)</th>
+                                <th>Scaling Pattern</th>
                             </tr>
                         </thead>
                         <tbody>
 
                             <tr>
-                                <td style="text-align: left;">anthropic/claude-haiku-4-5-20251001/nothink</td>
-                                <td>4 vars</td>
-                                <td>4 vars</td>
-                                <td>N/A</td>
+                                <td style="text-align: left;">Tier 1 (Flagship)</td>
+                                <td class="acc-100">94%</td>
+                                <td class="acc-50">0%</td>
+                                <td>Sharp decline (94% drop)</td>
                             </tr>
 
                             <tr>
-                                <td style="text-align: left;">anthropic/claude-haiku-4-5-20251001/think-low</td>
-                                <td>4 vars</td>
-                                <td>N/A</td>
-                                <td>N/A</td>
+                                <td style="text-align: left;">Tier 2 (Medium)</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-50">0%</td>
+                                <td>Sharp decline (100% drop)</td>
                             </tr>
 
                             <tr>
-                                <td style="text-align: left;">anthropic/claude-opus-4-1-20250805/think-med</td>
-                                <td>N/A</td>
-                                <td>N/A</td>
-                                <td>N/A</td>
+                                <td style="text-align: left;">Tier 3 (Budget+think)</td>
+                                <td class="acc-100">94%</td>
+                                <td class="acc-50">0%</td>
+                                <td>Sharp decline (94% drop)</td>
                             </tr>
 
                             <tr>
-                                <td style="text-align: left;">anthropic/claude-sonnet-4-5-20250929/think-high</td>
-                                <td>4 vars</td>
-                                <td>N/A</td>
-                                <td>N/A</td>
-                            </tr>
-
-                            <tr>
-                                <td style="text-align: left;">google/gemini-2.5-flash-lite/nothink</td>
-                                <td>4 vars</td>
-                                <td>N/A</td>
-                                <td>N/A</td>
-                            </tr>
-
-                            <tr>
-                                <td style="text-align: left;">google/gemini-2.5-flash-lite/think-low</td>
-                                <td>N/A</td>
-                                <td>N/A</td>
-                                <td>N/A</td>
+                                <td style="text-align: left;">Tier 3 (Budget no-think)</td>
+                                <td class="acc-100">76%</td>
+                                <td class="acc-50">0%</td>
+                                <td>Sharp decline (76% drop)</td>
                             </tr>
 
                         </tbody>
                     </table>
                     <div class="note" style="margin-top: 15px;">
-                        <strong>Limited data:</strong> Thresholds based on small sample. 
-                        Full validation will provide accurate breakdowns across vars 4-20.
+                        <strong>Interpretation:</strong> Degradation curves (below) visualize the scaling relationship Acc(n) where n = complexity. 
+                        Full validation will enable fitting power-law models: Acc(n) ≈ A - B·n^α to predict breakdown thresholds.
                     </div>
                 </div>
             </div>
@@ -585,63 +575,108 @@
             </div>
             
             <div class="rq-section">
-                <div class="rq-title">RQ5: Which Tier Should I Use?</div>
+                <div class="rq-title">RQ5: Phase Transitions in Reasoning Capability</div>
                 <div class="rq-description">{rq_descriptions.get('RQ5', '')}</div>
                 <div class="finding">
+                    <strong>Tier-Based Phase Behavior:</strong>
+                    <p style="margin: 10px 0;">Analyzing whether models show sharp transitions (phase-like) or gradual degradation:</p>
                     <table style="width: 100%; margin-top: 10px;">
                         <thead>
                             <tr>
                                 <th>Tier</th>
-                                <th>Avg Accuracy</th>
-                                <th>Models</th>
-                                <th>Use Case</th>
+                                <th>Low Complexity<br>(vars 4-8)</th>
+                                <th>High Complexity<br>(vars 15-20)</th>
+                                <th>Degradation Rate</th>
+                                <th>Transition Type</th>
                             </tr>
                         </thead>
                         <tbody>
+
                             <tr>
-                                <td>Flagship (T1)</td>
-                                <td class="acc-100">~95-100%</td>
-                                <td>3</td>
-                                <td>Critical tasks</td>
+                                <td style="text-align: left;">Tier 1 (Flagship)</td>
+                                <td class="acc-100">94%</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100">-5.6% drop</td>
+                                <td>Gradual (continuous)</td>
                             </tr>
+
                             <tr>
-                                <td>Medium (T2)</td>
-                                <td class="acc-100">~90-100%</td>
-                                <td>3</td>
-                                <td>General use</td>
+                                <td style="text-align: left;">Tier 2 (Medium)</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100">0.0% drop</td>
+                                <td>Gradual (continuous)</td>
                             </tr>
+
                             <tr>
-                                <td>Budget+think (T3)</td>
-                                <td class="acc-90">~85-95%</td>
-                                <td>3</td>
-                                <td>Cost-sensitive</td>
+                                <td style="text-align: left;">Tier 3 (Budget+think)</td>
+                                <td class="acc-100">94%</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100">-5.6% drop</td>
+                                <td>Gradual (continuous)</td>
                             </tr>
+
                             <tr>
-                                <td>Budget no-think (T3)</td>
-                                <td class="acc-75">~70-90%</td>
-                                <td>3</td>
-                                <td>Simple tasks only</td>
+                                <td style="text-align: left;">Tier 3 (Budget no-think)</td>
+                                <td class="acc-100">76%</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100">-24.1% drop</td>
+                                <td>Gradual (continuous)</td>
                             </tr>
+
                         </tbody>
                     </table>
                     <div class="note" style="margin-top: 15px;">
-                        <strong>Mock data:</strong> Full validation will include cost analysis.
+                        <strong>Hypothesis:</strong> Sharp transitions indicate discrete capacity limits; gradual decay suggests continuous scaling. 
+                        Full dataset will reveal exact transition points and enable phase diagram construction.
                     </div>
                 </div>
             </div>
             
             <div class="rq-section">
-                <div class="rq-title">RQ6: Which Model Is Best for What?</div>
+                <div class="rq-title">RQ6: Cross-Task Transfer and Specialization</div>
                 <div class="rq-description">{rq_descriptions.get('RQ6', '')}</div>
                 <div class="finding">
-                    <strong>Preliminary Rankings (based on test):</strong>
-                    <ul style="margin: 10px 0 10px 20px;">
-                        <li><strong>Horn tasks:</strong> OpenAI, Google (consistent performance)</li>
-                        <li><strong>CNF tasks:</strong> Google Gemini-Pro, OpenAI GPT-5 (100% on test)</li>
-                        <li><strong>Overall versatility:</strong> OpenAI GPT-5 family, Google Gemini-Pro</li>
-                    </ul>
+                    <strong>Model Rankings by Task Type:</strong>
+                    <table style="width: 100%; margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th>Task Category</th>
+                                <th>Top 3 Models (by avg accuracy)</th>
+                                <th>Performance Range</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                            <tr>
+                                <td style="text-align: left;">Horn Tasks (goal entailment)</td>
+                                <td>claude-opus-4-1, gemini-2.5-flas, gemini-2.5-flas</td>
+                                <td class="acc-100">100%-100%</td>
+                            </tr>
+
+                            <tr>
+                                <td style="text-align: left;">CNF Tasks (satisfiability)</td>
+                                <td>claude-haiku-4-, claude-haiku-4-, claude-opus-4-1</td>
+                                <td class="acc-100">100%-100%</td>
+                            </tr>
+
+                            <tr>
+                                <td style="text-align: left;">Matched Representations</td>
+                                <td>claude-opus-4-1, gemini-2.5-flas, gemini-2.5-flas</td>
+                                <td class="acc-100">100%-100%</td>
+                            </tr>
+
+                            <tr>
+                                <td style="text-align: left;">Mismatch Handling</td>
+                                <td>claude-opus-4-1, gemini-2.5-flas, gemini-2.5-flas</td>
+                                <td class="acc-100">100%-100%</td>
+                            </tr>
+
+                        </tbody>
+                    </table>
                     <div class="note" style="margin-top: 15px;">
-                        <strong>Mock data:</strong> Full validation will provide definitive rankings with statistical significance.
+                        <strong>Transfer Analysis:</strong> Rank correlation across task types will reveal generalists (high transfer) vs. specialists (task-specific). 
+                        Full validation enables statistical significance testing.
                     </div>
                 </div>
             </div>

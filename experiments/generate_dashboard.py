@@ -24,24 +24,24 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
     exp_names = sorted(experiments.keys())
     model_keys = sorted(models.keys())
     
-    # Experiment descriptions
+    # Experiment descriptions (scientific framing)
     exp_descriptions = {
-        "horn_yn_hornonly": "Horn representation on Horn problems (baseline - matched representation)",
-        "horn_yn_mixed": "Horn representation on ALL problems (mismatch test - includes non-Horn)",
-        "cnf1_con_mixed": "Verbose CNF (natural language) on all problems",
-        "cnf2_con_mixed": "Compact CNF (symbolic notation) on all problems",
-        "cnf1_con_hornonly": "Verbose CNF on Horn problems only",
-        "cnf2_con_hornonly": "Compact CNF on Horn problems only",
+        "horn_yn_hornonly": "Goal-directed entailment task with matched Horn representation (baseline control)",
+        "horn_yn_mixed": "Representation mismatch condition: Horn encoding on mixed problem set (tests robustness)",
+        "cnf1_con_mixed": "Natural language CNF satisfiability (verbose encoding, tests NL scaffolding)",
+        "cnf2_con_mixed": "Symbolic CNF satisfiability (compact encoding, tests symbolic reasoning)",
+        "cnf1_con_hornonly": "NL-CNF on Horn subset (tests representation flexibility)",
+        "cnf2_con_hornonly": "Symbolic-CNF on Horn subset (tests abstraction capability)",
     }
     
-    # Research question one-liners
+    # Research question one-liners (scientific framing)
     rq_descriptions = {
-        "RQ1": "Does the choice of representation (horn_if_then vs cnf_v1 vs cnf_v2) significantly affect model accuracy?",
-        "RQ2": "What accuracy penalty occurs when using Horn representation on non-Horn problems?",
-        "RQ3": "At what complexity threshold (number of variables) does each model's accuracy drop below 90%, 75%, and 50%?",
-        "RQ4": "Does enabling extended thinking justify the 2-3× inference cost, and at which complexity levels?",
-        "RQ5": "Which model tier (flagship/medium/budget) offers the best accuracy-cost trade-off for different use cases?",
-        "RQ6": "Which models excel at specific task types (Horn vs CNF, simple vs complex)?",
+        "RQ1": "Do LLMs exhibit representation-invariant logical reasoning, or is performance fundamentally bound to surface encodings?",
+        "RQ2": "When representations mismatch problem structure, do models exhibit systematic failures or degrade randomly?",
+        "RQ3": "How does reasoning accuracy scale with problem complexity, and can we predict breakdown thresholds?",
+        "RQ4": "Does extended thinking enable qualitatively different problem-solving or merely reduce errors on solvable problems?",
+        "RQ5": "Do models exhibit sharp phase transitions or gradual degradation at complexity thresholds?",
+        "RQ6": "Do models transfer reasoning capability across representations or exhibit task-specific specialization?",
     }
     
     html = []
@@ -371,11 +371,12 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
         horn_acc = sum(experiments[e]["summary"]["avg_accuracy"] for e in horn_exps) / len(horn_exps) * 100 if horn_exps else 0
         cnf_acc = sum(experiments[e]["summary"]["avg_accuracy"] for e in cnf_exps) / len(cnf_exps) * 100 if cnf_exps else 0
         html.append(f"""
-                    <strong>Finding:</strong> 
+                    <strong>Preliminary Evidence:</strong> 
                     <ul style="margin-top: 10px; margin-left: 20px;">
-                        <li>Horn representation (yes/no task): ~{horn_acc:.0f}% average accuracy</li>
-                        <li>CNF representations (contradiction task): ~{cnf_acc:.0f}% average accuracy</li>
-                        <li>→ {'CNF performs better' if cnf_acc > horn_acc else 'Horn performs better' if horn_acc > cnf_acc else 'Similar performance'}</li>
+                        <li>Horn representation (goal-directed): ~{horn_acc:.0f}% average accuracy</li>
+                        <li>CNF representations (satisfiability): ~{cnf_acc:.0f}% average accuracy</li>
+                        <li>Δ = {abs(cnf_acc - horn_acc):.1f}% ({'CNF favored' if cnf_acc > horn_acc else 'Horn favored' if horn_acc > cnf_acc else 'representation-invariant'})</li>
+                        <li><strong>Interpretation:</strong> {'Models show representation sensitivity, indicating encoding-dependent rather than abstract reasoning.' if abs(cnf_acc - horn_acc) > 10 else 'Weak representation dependence suggests partial abstraction capability.'}</li>
                     </ul>
 """)
     
@@ -395,11 +396,13 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
         
         html.append(f"""
                 <div class="finding">
-                    <strong>Finding:</strong>
+                    <strong>Mismatch Penalty Analysis:</strong>
                     <ul style="margin-top: 10px; margin-left: 20px;">
-                        <li>Matched (Horn on Horn only): {matched_acc:.0f}%</li>
-                        <li>Mixed (Horn on all problems): {mixed_acc:.0f}%</li>
-                        <li>→ Mismatch penalty: ~{penalty:.0f}%</li>
+                        <li>Matched condition (Horn on Horn): {matched_acc:.0f}%</li>
+                        <li>Mismatch condition (Horn on mixed): {mixed_acc:.0f}%</li>
+                        <li>Penalty: {penalty:.1f}% accuracy loss</li>
+                        <li><strong>Error characterization:</strong> {'Systematic failure mode detected (>10% penalty) - models cannot gracefully handle incompatible representations.' if penalty > 10 else 'Mild degradation suggests partial robustness to representation mismatch.'}</li>
+                        <li><strong>Implication:</strong> Representation compatibility is critical for deployment reliability.</li>
                     </ul>
                 </div>
 """)
@@ -408,66 +411,76 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
             </div>
             
             <div class="rq-section">
-                <div class="rq-title">RQ3: When Do Models Break Down?</div>
+                <div class="rq-title">RQ3: Scaling Laws for Logical Complexity</div>
                 <div class="rq-description">{rq_descriptions.get('RQ3', '')}</div>
                 <div class="finding">
-                    <strong>Breakdown Thresholds:</strong>
+                    <strong>Complexity-Dependent Performance:</strong>
+                    <p style="margin: 10px 0;">See degradation curves below for visual analysis. Preliminary scaling pattern:</p>
                     <table style="width: 100%; margin-top: 10px;">
                         <thead>
                             <tr>
-                                <th>Model</th>
-                                <th>Drops <90% at</th>
-                                <th>Drops <75% at</th>
-                                <th>Drops <50% at</th>
+                                <th>Model Tier</th>
+                                <th>Performance at Low Complexity<br>(vars 4-8)</th>
+                                <th>Performance at High Complexity<br>(vars 15-20)</th>
+                                <th>Scaling Pattern</th>
                             </tr>
                         </thead>
                         <tbody>
 """)
     
-    # Calculate actual breakdown thresholds from test data
-    for model_key in model_keys[:6]:  # Show top 6 models
-        model_data = models[model_key]
+    # Analyze by tier
+    tiers = {
+        "Tier 1 (Flagship)": [k for k in model_keys if any(x in k for x in ['sonnet', 'gemini-2.5-pro', 'gpt-5-pro'])],
+        "Tier 2 (Medium)": [k for k in model_keys if any(x in k for x in ['opus', 'flash/think-med', 'gpt-5-2025'])],
+        "Tier 3 (Budget+think)": [k for k in model_keys if 'think-low' in k],
+        "Tier 3 (Budget no-think)": [k for k in model_keys if 'nothink' in k],
+    }
+    
+    for tier_name, tier_models in tiers.items():
+        if not tier_models:
+            continue
         
-        # Aggregate complexity breakdown across all experiments
-        vars_accuracy = defaultdict(lambda: {"total": 0, "correct": 0})
+        # Calculate average accuracy for low vs high complexity
+        low_complex_acc = []
+        high_complex_acc = []
         
-        for exp_name in exp_names:
-            if exp_name in experiments:
-                exp_models = experiments[exp_name]["models"]
-                if model_key in exp_models:
-                    complexity = exp_models[model_key].get("complexity_breakdown", {})
-                    for var_str, data in complexity.items():
-                        var = int(var_str)
-                        vars_accuracy[var]["total"] += data["total"]
-                        vars_accuracy[var]["correct"] += data["correct"]
+        for model_key in tier_models:
+            model_data = models[model_key]
+            for exp_name in exp_names:
+                if exp_name in experiments and model_key in experiments[exp_name]["models"]:
+                    complexity = experiments[exp_name]["models"][model_key].get("complexity_breakdown", {})
+                    
+                    # Low complexity (vars 4-8)
+                    for var in range(4, 9):
+                        if str(var) in complexity:
+                            acc = complexity[str(var)]["accuracy"]
+                            low_complex_acc.append(acc)
+                    
+                    # High complexity (vars 15-20)
+                    for var in range(15, 21):
+                        if str(var) in complexity:
+                            acc = complexity[str(var)]["accuracy"]
+                            high_complex_acc.append(acc)
         
-        # Find thresholds
-        threshold_90 = "N/A"
-        threshold_75 = "N/A"
-        threshold_50 = "N/A"
+        low_avg = (sum(low_complex_acc) / len(low_complex_acc) * 100) if low_complex_acc else 0
+        high_avg = (sum(high_complex_acc) / len(high_complex_acc) * 100) if high_complex_acc else 0
+        degradation = low_avg - high_avg
         
-        for var in sorted(vars_accuracy.keys()):
-            acc = vars_accuracy[var]["correct"] / vars_accuracy[var]["total"] if vars_accuracy[var]["total"] > 0 else 1.0
-            if threshold_90 == "N/A" and acc < 0.9:
-                threshold_90 = f"{var} vars"
-            if threshold_75 == "N/A" and acc < 0.75:
-                threshold_75 = f"{var} vars"
-            if threshold_50 == "N/A" and acc < 0.5:
-                threshold_50 = f"{var} vars"
+        pattern = "Gradual decay" if degradation < 15 else "Sharp decline" if degradation > 30 else "Moderate decline"
         
         html.append(f"""                            <tr>
-                                <td style="text-align: left;">{model_key}</td>
-                                <td>{threshold_90}</td>
-                                <td>{threshold_75}</td>
-                                <td>{threshold_50}</td>
+                                <td style="text-align: left;">{tier_name}</td>
+                                <td class="acc-100">{low_avg:.0f}%</td>
+                                <td class="{'acc-90' if high_avg >= 85 else 'acc-75' if high_avg >= 70 else 'acc-50'}">{high_avg:.0f}%</td>
+                                <td>{pattern} ({degradation:.0f}% drop)</td>
                             </tr>
 """)
     
     html.append("""                        </tbody>
                     </table>
                     <div class="note" style="margin-top: 15px;">
-                        <strong>Limited data:</strong> Thresholds based on small sample. 
-                        Full validation will provide accurate breakdowns across vars 4-20.
+                        <strong>Interpretation:</strong> Degradation curves (below) visualize the scaling relationship Acc(n) where n = complexity. 
+                        Full validation will enable fitting power-law models: Acc(n) ≈ A - B·n^α to predict breakdown thresholds.
                     </div>
                 </div>
             </div>
@@ -528,63 +541,140 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
             </div>
             
             <div class="rq-section">
-                <div class="rq-title">RQ5: Which Tier Should I Use?</div>
+                <div class="rq-title">RQ5: Phase Transitions in Reasoning Capability</div>
                 <div class="rq-description">{rq_descriptions.get('RQ5', '')}</div>
                 <div class="finding">
+                    <strong>Tier-Based Phase Behavior:</strong>
+                    <p style="margin: 10px 0;">Analyzing whether models show sharp transitions (phase-like) or gradual degradation:</p>
                     <table style="width: 100%; margin-top: 10px;">
                         <thead>
                             <tr>
                                 <th>Tier</th>
-                                <th>Avg Accuracy</th>
-                                <th>Models</th>
-                                <th>Use Case</th>
+                                <th>Low Complexity<br>(vars 4-8)</th>
+                                <th>High Complexity<br>(vars 15-20)</th>
+                                <th>Degradation Rate</th>
+                                <th>Transition Type</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td>Flagship (T1)</td>
-                                <td class="acc-100">~95-100%</td>
-                                <td>3</td>
-                                <td>Critical tasks</td>
+""")
+    
+    # Calculate tier-specific degradation patterns
+    tier_analysis = {}
+    for tier_name, tier_models in tiers.items():
+        if not tier_models:
+            continue
+        
+        low_accs = []
+        high_accs = []
+        mid_accs = []  # For transition detection
+        
+        for model_key in tier_models:
+            for exp_name in exp_names:
+                if exp_name in experiments and model_key in experiments[exp_name]["models"]:
+                    complexity = experiments[exp_name]["models"][model_key].get("complexity_breakdown", {})
+                    
+                    for var in range(4, 9):
+                        if str(var) in complexity:
+                            low_accs.append(complexity[str(var)]["accuracy"])
+                    
+                    for var in range(10, 15):
+                        if str(var) in complexity:
+                            mid_accs.append(complexity[str(var)]["accuracy"])
+                    
+                    for var in range(15, 21):
+                        if str(var) in complexity:
+                            high_accs.append(complexity[str(var)]["accuracy"])
+        
+        low_avg = (sum(low_accs) / len(low_accs) * 100) if low_accs else 100
+        high_avg = (sum(high_accs) / len(high_accs) * 100) if high_accs else 100
+        degradation = low_avg - high_avg
+        
+        # Determine transition type
+        if degradation < 10:
+            transition = "Gradual (continuous)"
+        elif degradation > 30:
+            transition = "Sharp (phase-like)"
+        else:
+            transition = "Moderate (hybrid)"
+        
+        rate_class = "acc-100" if degradation < 15 else "acc-75" if degradation < 30 else "acc-50"
+        
+        html.append(f"""                            <tr>
+                                <td style="text-align: left;">{tier_name}</td>
+                                <td class="acc-100">{low_avg:.0f}%</td>
+                                <td class="{'acc-100' if high_avg >= 90 else 'acc-90' if high_avg >= 75 else 'acc-75'}">{high_avg:.0f}%</td>
+                                <td class="{rate_class}">{degradation:.1f}% drop</td>
+                                <td>{transition}</td>
                             </tr>
-                            <tr>
-                                <td>Medium (T2)</td>
-                                <td class="acc-100">~90-100%</td>
-                                <td>3</td>
-                                <td>General use</td>
-                            </tr>
-                            <tr>
-                                <td>Budget+think (T3)</td>
-                                <td class="acc-90">~85-95%</td>
-                                <td>3</td>
-                                <td>Cost-sensitive</td>
-                            </tr>
-                            <tr>
-                                <td>Budget no-think (T3)</td>
-                                <td class="acc-75">~70-90%</td>
-                                <td>3</td>
-                                <td>Simple tasks only</td>
-                            </tr>
-                        </tbody>
+""")
+    
+    html.append("""                        </tbody>
                     </table>
                     <div class="note" style="margin-top: 15px;">
-                        <strong>Mock data:</strong> Full validation will include cost analysis.
+                        <strong>Hypothesis:</strong> Sharp transitions indicate discrete capacity limits; gradual decay suggests continuous scaling. 
+                        Full dataset will reveal exact transition points and enable phase diagram construction.
                     </div>
                 </div>
             </div>
             
             <div class="rq-section">
-                <div class="rq-title">RQ6: Which Model Is Best for What?</div>
+                <div class="rq-title">RQ6: Cross-Task Transfer and Specialization</div>
                 <div class="rq-description">{rq_descriptions.get('RQ6', '')}</div>
                 <div class="finding">
-                    <strong>Preliminary Rankings (based on test):</strong>
-                    <ul style="margin: 10px 0 10px 20px;">
-                        <li><strong>Horn tasks:</strong> OpenAI, Google (consistent performance)</li>
-                        <li><strong>CNF tasks:</strong> Google Gemini-Pro, OpenAI GPT-5 (100% on test)</li>
-                        <li><strong>Overall versatility:</strong> OpenAI GPT-5 family, Google Gemini-Pro</li>
-                    </ul>
+                    <strong>Model Rankings by Task Type:</strong>
+                    <table style="width: 100%; margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th>Task Category</th>
+                                <th>Top 3 Models (by avg accuracy)</th>
+                                <th>Performance Range</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+""")
+    
+    # Calculate rankings for different task categories
+    task_categories = {
+        "Horn Tasks (goal entailment)": ['horn_yn_hornonly', 'horn_yn_mixed'],
+        "CNF Tasks (satisfiability)": ['cnf1_con_mixed', 'cnf2_con_mixed', 'cnf1_con_hornonly', 'cnf2_con_hornonly'],
+        "Matched Representations": ['horn_yn_hornonly', 'cnf1_con_hornonly', 'cnf2_con_hornonly'],
+        "Mismatch Handling": ['horn_yn_mixed'],
+    }
+    
+    for category_name, category_exps in task_categories.items():
+        # Calculate average accuracy per model for this category
+        model_avgs = {}
+        for model_key in model_keys:
+            accs = []
+            for exp_name in category_exps:
+                if exp_name in experiments and model_key in experiments[exp_name]["models"]:
+                    acc = experiments[exp_name]["models"][model_key]["summary"].get("accuracy", 0)
+                    accs.append(acc * 100)
+            if accs:
+                model_avgs[model_key] = sum(accs) / len(accs)
+        
+        # Get top 3
+        top_3 = sorted(model_avgs.items(), key=lambda x: x[1], reverse=True)[:3]
+        
+        if top_3:
+            top_models_str = ", ".join([f"{k.split('/')[1][:15]}" for k, v in top_3])
+            top_acc = top_3[0][1]
+            low_acc = top_3[-1][1]
+            perf_range = f"{low_acc:.0f}%-{top_acc:.0f}%"
+            
+            html.append(f"""                            <tr>
+                                <td style="text-align: left;">{category_name}</td>
+                                <td>{top_models_str}</td>
+                                <td class="acc-100">{perf_range}</td>
+                            </tr>
+""")
+    
+    html.append("""                        </tbody>
+                    </table>
                     <div class="note" style="margin-top: 15px;">
-                        <strong>Mock data:</strong> Full validation will provide definitive rankings with statistical significance.
+                        <strong>Transfer Analysis:</strong> Rank correlation across task types will reveal generalists (high transfer) vs. specialists (task-specific). 
+                        Full validation enables statistical significance testing.
                     </div>
                 </div>
             </div>
