@@ -1,49 +1,141 @@
-# Experiments Configs: Representation vs Task
+# Experiment Configurations
 
-This folder holds experiment YAML configs for `experiments/runner.py` using the schema in `experiments/schema.py`.
-The key mental model:
+This folder contains 6 YAML configuration files for the experimental suite.
 
-- Representation (a.k.a. encoding): how the logic problem is rendered in text for the model
-  - `horn_if_then`: facts and single-head implications (Horn clauses)
-  - `cnf_v1`: verbose CNF with natural-language “pN is true/false … or …”
-  - `cnf_v2`: compact CNF with symbolic `pN` and `not(pN)` joined by `or`
+---
 
-- Task (a.k.a. label scheme): what we ask the model to answer and how we parse it
-  - `yes_no`: does the knowledge entail the goal? (for Horn, “is p0 derivable?”)
-    - parsed answers: `yes` → 0, `no` → 1, otherwise 2 (unclear)
-  - `contradiction`: is the set contradictory (unsatisfiable) or not?
-    - expected last token: `contradiction` → 0, `satisfiable`/`unknown` → 1, otherwise 2 (unclear)
+## All 6 Experiments
 
-Why keep multiple representations?
-- Different encodings change how models reason (ablation). You can compare accuracy, calibration and robustness across:
-  - Goal-directed Horn derivation (`horn_if_then` + `yes_no`)
-  - CNF satisfiability framed verbosely (`cnf_v1`) or compactly (`cnf_v2`) with `contradiction` task
-- Token efficiency vs readability: `cnf_v2` is compact; `cnf_v1` is more NL-like; Horn is goal-centric and often short-output.
+| # | Config File | Representation | Task | Filter | Problems | Purpose |
+|---|-------------|----------------|------|--------|----------|---------|
+| 1 | `horn_yn_hornonly.yaml` | horn_if_then | yes_no | horn_only | 272 | Baseline: Horn on Horn |
+| 2 | `horn_yn_mixed.yaml` | horn_if_then | yes_no | all | 544 | Mismatch: Horn on all |
+| 3 | `cnf1_con_mixed.yaml` | cnf_v1 | contradiction | all | 544 | Verbose CNF on all |
+| 4 | `cnf2_con_mixed.yaml` | cnf_v2 | contradiction | all | 544 | Compact CNF on all |
+| 5 | `cnf1_con_hornonly.yaml` | cnf_v1 | contradiction | horn_only | 272 | Verbose CNF on Horn |
+| 6 | `cnf2_con_hornonly.yaml` | cnf_v2 | contradiction | horn_only | 272 | Compact CNF on Horn |
 
-Config fields (selected)
-- `targets[]`: provider/model pairs (+ per-target `temperature`, `seed`, `max_tokens`, optional `thinking`)
-  - Anthropic with thinking: `temperature=1` and `max_tokens > thinking.budget_tokens (>=1024)`
-  - Google Gemini thinking: `thinking.budget_tokens` uses `-1` (dynamic), `0` (disable on Flash/Lite), or a positive range per family
-  - OpenAI reasoning: `thinking.effort` in `{low, medium, high}`
-- `input_file`: dataset path (JSONL-like JS arrays per line)
-- `filters`: `horn_only`, `skip_rows`, `limit_rows`
-- `outputs`: minimal `results.jsonl` and optional rich `*.provenance.jsonl`
-- `prompt`: `template`, `representation` (in code: `style`), and optional `variables`
-- `parse`: `task` (in code: `type`) with token lists for `yes_no`
-- `concurrency`: `workers`, `lockstep`, `retry` policy
-- `resume`: append and skip already processed ids
+---
 
-Recommended pairings
-- `horn_if_then` + `yes_no` (derive p0?)
-- `cnf_v1` or `cnf_v2` + `contradiction` (unsat vs satisfiable/unknown)
+## Key Features
 
-CLI tips
-- Limit rows: `--limit 100`
-- Dry run (no API calls): `--dry-run`
-- Restrict providers: `--only anthropic,openai`
-- Override models per provider: `--models google:gemini-2.5-pro,openai:gpt-5`
-- Inject run id: `--run demo-123`
+### Same 12 Models Across All Experiments
 
-Files of interest
-- `_template_unified.yaml`: comprehensive example with comments
-- Other `exp*.yaml`: historical or specialized runs you can mirror.
+All configs include identical model configurations for fair comparison:
+- **Tier 1**: Sonnet-4.5, Gemini-Pro, GPT-5-Pro (high thinking)
+- **Tier 2**: Opus-4, Flash, GPT-5 (medium thinking)
+- **Tier 3**: Haiku+, Flash-Lite+, Mini (low thinking)
+- **Tier 3**: Haiku, Flash-, Nano (no thinking)
+
+### Current Dataset
+
+All configs point to validation dataset:
+```yaml
+input_file: data/problems_validation_vars4-20_len2-5_percase4_seed42424.js
+```
+
+After validation, update to production:
+```yaml
+input_file: data/problems_production_vars4-20_len2-5_percase40_seed42424.js
+```
+
+---
+
+## Representations
+
+### horn_if_then
+Renders as facts and if-then rules:
+```
+p1.
+if p2 and p3 then p4.
+```
+- Used in: Experiments 1-2
+- Task: yes_no (is p0 derivable?)
+
+### cnf_v1 (Verbose)
+Natural language CNF:
+```
+p1 is true or p2 is false.
+```
+- Used in: Experiments 3, 5
+- Task: contradiction
+
+### cnf_v2 (Compact)
+Symbolic CNF:
+```
+p1 or not(p2).
+```
+- Used in: Experiments 4, 6
+- Task: contradiction
+
+---
+
+## Important Notes
+
+### ⚠️ Variable and Length Constraints
+
+The problem generator has limitations:
+- **Vars 1-3**: Cause generation issues (infinite loops)
+- **Lengths 1**: Unit clauses cause infinite loops
+- **High complexity**: Vars 18-20 + length 5 + mixed hangs
+
+**Solution**: Use **vars 4-20, lengths 2-5** (current setup)
+
+### Anthropic Temperature Requirement
+
+Anthropic models with `thinking.enabled=true` require `temperature: 1`:
+- Sonnet-4.5, Opus-4, Haiku (with thinking): `temperature: 1`
+- Haiku (without thinking): `temperature: 0`
+
+All configs are already configured correctly.
+
+---
+
+## Testing Configs
+
+### Quick Test (No API Calls)
+```bash
+python -m experiments.runner \
+  --config experiments/configs/horn_yn_hornonly.yaml \
+  --limit 5 \
+  --dry-run
+```
+
+### Small Real Test
+```bash
+python -m experiments.runner \
+  --config experiments/configs/horn_yn_hornonly.yaml \
+  --limit 10 \
+  --only anthropic \
+  --resume \
+  --run test_001
+```
+
+### Run All 6 Experiments
+```bash
+for config in experiments/configs/horn_*.yaml experiments/configs/cnf*.yaml; do
+  python -m experiments.runner --config "$config" --resume --run validation_001
+done
+```
+
+---
+
+## Switching to Production Dataset
+
+When ready for production run:
+
+```bash
+# Update all 6 configs at once
+sed -i.bak 's|problems_validation_vars4-20_len2-5_percase4_|problems_production_vars4-20_len2-5_percase40_|g' \
+  experiments/configs/horn_*.yaml experiments/configs/cnf*.yaml
+
+# Remove backups
+rm experiments/configs/*.bak
+
+# Verify changes
+grep "^input_file:" experiments/configs/horn_*.yaml experiments/configs/cnf*.yaml
+```
+
+---
+
+**See parent README.md for full documentation links and workflow overview.**

@@ -15,14 +15,14 @@ This document describes the design for a unified analysis dashboard that will co
 **Datasets**:
 
 1. **Validation Dataset** (for initial testing):
-   - Variables: 1-20, Clause length: 2-5
-   - **5 per case** → **800 problems** total
+   - Variables: 4-20, Clause length: 2-5
+   - **5 per case** → **544 problems** total
    - Purpose: Validate configs, get initial results, discuss with supervisors
    - Cost: ~$150-$250, Time: ~8-12 hours
 
 2. **Production Dataset** (for publication):
-   - Variables: 1-20, Clause length: 2-5
-   - **40 per case** → **6,400 problems** total
+   - Variables: 4-20, Clause length: 2-5
+   - **40 per case** → **5,440 problems** total
    - Purpose: Publication-quality statistics, robust analysis
    - Balance: 4,000 Horn + 4,000 non-Horn, 4,000 Sat + 4,000 Unsat
    - Granularity: 400 problems per variable level
@@ -611,7 +611,7 @@ python -m experiments.export_results \
 ```bash
 # 1. Generate new problem dataset
 python -m experiments.makeproblems \
-  --vars 1-20 \
+  --vars 4-20 \
   --len 2-5 \
   --count 2000 \
   --seed 4242 \
