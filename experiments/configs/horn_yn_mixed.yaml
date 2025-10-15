@@ -1,0 +1,168 @@
+# Experiment 2: Horn representation on ALL problems (mismatch test)
+# Purpose: Test what happens when Horn repr is applied to non-Horn problems
+# Representation: horn_if_then (facts and if-then rules)
+# Task: yes_no (is p0 derivable?)
+# Filter: horn_only=false (all 1000 validation, 8000 production problems)
+# Expected: Should work on Horn, likely fail or give errors on non-Horn
+
+name: horn_yn_mixed
+
+# All 12 models (IDENTICAL across all experiments)
+targets:
+  # Tier 1: Flagship models with high thinking
+  - provider: anthropic
+    model: claude-sonnet-4-5-20250929
+    temperature: 1
+    seed: 1234
+    max_tokens: 30000
+    thinking:
+      enabled: true
+      budget_tokens: 24576
+
+  - provider: google
+    model: gemini-2.5-pro
+    temperature: 0
+    seed: 1234
+    max_tokens: 30000
+    thinking:
+      enabled: true
+      budget_tokens: 24576
+
+  - provider: openai
+    model: gpt-5-pro-2025-10-06
+    temperature: 0
+    seed: 1234
+    max_tokens: 30000
+    thinking:
+      enabled: true
+      effort: high
+
+  # Tier 2: Medium models with medium thinking
+  - provider: anthropic
+    model: claude-opus-4-1-20250805
+    temperature: 1
+    seed: 1234
+    max_tokens: 10000
+    thinking:
+      enabled: true
+      budget_tokens: 8192
+
+  - provider: google
+    model: gemini-2.5-flash
+    temperature: 0
+    seed: 1234
+    max_tokens: 10000
+    thinking:
+      enabled: true
+      budget_tokens: 8192
+
+  - provider: openai
+    model: gpt-5-2025-08-07
+    temperature: 0
+    seed: 1234
+    max_tokens: 10000
+    thinking:
+      enabled: true
+      effort: medium
+
+  # Tier 3: Budget models with low thinking
+  - provider: anthropic
+    model: claude-haiku-4-5-20251001
+    temperature: 1              # Anthropic requires temp=1 when thinking enabled
+    seed: 1234
+    max_tokens: 3000
+    thinking:
+      enabled: true
+      budget_tokens: 1024
+
+  - provider: google
+    model: gemini-2.5-flash-lite
+    temperature: 0
+    seed: 1234
+    max_tokens: 3000
+    thinking:
+      enabled: true
+      budget_tokens: 1024
+
+  - provider: openai
+    model: gpt-5-mini-2025-08-07
+    temperature: 0
+    seed: 1234
+    max_tokens: 3000
+    thinking:
+      enabled: true
+      effort: low
+
+  # Tier 3: Budget models with NO thinking
+  - provider: anthropic
+    model: claude-haiku-4-5-20251001
+    temperature: 0
+    seed: 1234
+    max_tokens: 3000
+    thinking:
+      enabled: false
+
+  - provider: google
+    model: gemini-2.5-flash
+    temperature: 0
+    seed: 1234
+    max_tokens: 3000
+    thinking:
+      enabled: false
+
+  - provider: openai
+    model: gpt-5-nano-2025-08-07
+    temperature: 0
+    seed: 1234
+    max_tokens: 3000
+    thinking:
+      enabled: false
+
+# Input dataset - START WITH VALIDATION
+input_file: data/problems_validation_vars1-20_len2-5_percase5_seed42424.js
+# After validation success, switch to:
+# input_file: data/problems_production_vars1-20_len2-5_percase40_seed42424.js
+
+# Filters
+filters:
+  horn_only: false        # Use ALL problems (including non-Horn!)
+  skip_rows: 1
+  limit_rows: null
+
+# Output paths
+output_pattern: experiments/runs/${name}/${run}/${provider}/${model}/results.jsonl
+
+# Outputs configuration
+outputs:
+  results:
+    enabled: true
+  provenance:
+    enabled: true
+    include_prompt: true
+    include_raw_response: true
+
+# Prompt configuration
+prompt:
+  template: prompts/_template_unified.j2
+  style: horn_if_then      # Horn repr on non-Horn = mismatch!
+  variables: {}
+
+# Parser configuration
+parse:
+  type: yes_no
+  yes_tokens: ["yes"]
+  no_tokens: ["no"]
+
+# Concurrency
+concurrency:
+  workers: 12
+  lockstep: true
+  targets_workers: 3
+  rate_limit_per_min: 120
+  retry:
+    max_attempts: 3
+    backoff_seconds: [2, 5, 10]
+
+# Execution
+resume: true
+
