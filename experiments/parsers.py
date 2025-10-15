@@ -24,7 +24,8 @@ def parse_yes_no(text: str, yes_tokens: List[str] = None, no_tokens: List[str] =
 def parse_contradiction(text: str) -> int:
     if not text:
         return 2
-    t = text.replace("\n", "").replace("\r", "").replace(",", " ").replace(":", " ").replace("*", " ").replace("'", " ")
+    # Remove punctuation to isolate words
+    t = text.replace("\n", "").replace("\r", "").replace(",", " ").replace(":", " ").replace("*", " ").replace("'", " ").replace(".", " ")
     t = t.strip().lower()
     parts = [p for p in t.split(" ") if p]
     if not parts:
