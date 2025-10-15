@@ -192,8 +192,8 @@ def main():
         case_index+=1
 
   # Stream: print header then process each case and emit rows immediately
-  fline='''["id","maxvarnr","maxlen","mustbehorn","issatisfiable","problem","'''
-  fline+=''' "proof_of_inconsistency_or_satisfying_valuation","units_derived_by_horn_clauses"]'''
+  fline='["id","maxvarnr","maxlen","mustbehorn","issatisfiable","problem",'
+  fline+='"proof_of_inconsistency_or_satisfying_valuation","units_derived_by_horn_clauses"]'
   print(fline)
 
   prob_id=0
