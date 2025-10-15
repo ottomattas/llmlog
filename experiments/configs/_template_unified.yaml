@@ -204,9 +204,9 @@ parse:
 # lockstep=true evaluates each problem across targets concurrently (good for A/B comparisons)
 # workers caps in-flight requests for the current problem; set >= number of targets for full fan-out
 concurrency:
-  workers: 10
+  workers: 12
   lockstep: true
-  targets_workers: 2                   # cap concurrent target groups across the whole run
+  targets_workers: 3                   # cap concurrent target groups across the whole run
   rate_limit_per_min: 120              # reserved (not enforced by runner yet)
   retry:
     max_attempts: 3
