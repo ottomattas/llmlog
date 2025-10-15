@@ -102,7 +102,7 @@ targets:
       enabled: false
 
   - provider: google
-    model: gemini-2.5-flash
+    model: gemini-2.5-flash-lite
     temperature: 0
     seed: 1234
     max_tokens: 3000
@@ -128,8 +128,8 @@ filters:
   skip_rows: 1
   limit_rows: null
 
-# Output paths
-output_pattern: experiments/runs/${name}/${run}/${provider}/${model}/results.jsonl
+# Output paths - includes ${thinking_mode} to distinguish same model with/without thinking
+output_pattern: experiments/runs/${name}/${run}/${provider}/${model}/${thinking_mode}/results.jsonl
 
 # Outputs configuration
 outputs:

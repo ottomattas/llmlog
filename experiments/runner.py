@@ -186,10 +186,31 @@ def _validate_target_config(provider: str, model: Optional[str], temperature: Op
 def _build_outpath(cfg: RunConfig, target: Dict[str, Any], model: str, run_id: Optional[str]) -> str:
     if cfg.output_pattern:
         outpath = cfg.output_pattern
+        
+        # Build thinking mode descriptor for unique paths
+        thinking_mode = "nothink"
+        thinking_cfg = target.get("thinking")
+        if thinking_cfg and thinking_cfg.get("enabled"):
+            # Determine thinking level
+            budget = thinking_cfg.get("budget_tokens")
+            effort = thinking_cfg.get("effort")
+            if budget:
+                if budget >= 20000:
+                    thinking_mode = "think-high"
+                elif budget >= 4000:
+                    thinking_mode = "think-med"
+                else:
+                    thinking_mode = "think-low"
+            elif effort:
+                thinking_mode = f"think-{effort}"
+            else:
+                thinking_mode = "think"
+        
         outpath = (
             outpath.replace("${name}", cfg.name)
             .replace("${provider}", target.get("provider"))
             .replace("${model}", model)
+            .replace("${thinking_mode}", thinking_mode)
         )
         if "${run}" in outpath:
             rid = run_id or time.strftime("%Y%m%d-%H%M%S")
@@ -221,8 +242,9 @@ def run_targets_lockstep(
     # Expand targets x models taking overrides into account and apply provider filter
     expanded: List[Dict[str, Any]]
     expanded = []
-    # Deduplicate per (provider, model) when overrides are supplied or when configs contain
+    # Deduplicate per (provider, model, thinking_config) when overrides are supplied or when configs contain
     # multiple entries for the same provider tier; otherwise we may run the same model multiple times.
+    # Include thinking config in dedup key to allow same model with different thinking settings.
     seen_provider_model: set[str] = set()
     for t in targets:
         if only_providers and t.get("provider", "").lower() not in [p.lower() for p in only_providers]:
@@ -235,7 +257,12 @@ def run_targets_lockstep(
         for m in models:
             nt = dict(t)
             nt["model"] = m
-            k = f"{nt.get('provider')}::{m}"
+            # Include thinking config in dedup key to allow same model with/without thinking
+            thinking_cfg = nt.get("thinking", {})
+            thinking_enabled = thinking_cfg.get("enabled", False) if thinking_cfg else False
+            thinking_budget = thinking_cfg.get("budget_tokens", 0) if thinking_cfg else 0
+            thinking_effort = thinking_cfg.get("effort", "") if thinking_cfg else ""
+            k = f"{nt.get('provider')}::{m}::think={thinking_enabled}::budget={thinking_budget}::effort={thinking_effort}"
             if k in seen_provider_model:
                 continue
             seen_provider_model.add(k)
@@ -258,7 +285,12 @@ def run_targets_lockstep(
     stats: Dict[str, Dict[str, Any]] = {}
 
     def key_for(t: Dict[str, Any]) -> str:
-        return f"{t.get('provider')}::{t.get('model')}"
+        # Include thinking config to distinguish same model with different settings
+        thinking_cfg = t.get("thinking", {})
+        thinking_enabled = thinking_cfg.get("enabled", False) if thinking_cfg else False
+        thinking_budget = thinking_cfg.get("budget_tokens", 0) if thinking_cfg else 0
+        thinking_effort = thinking_cfg.get("effort", "") if thinking_cfg else ""
+        return f"{t.get('provider')}::{t.get('model')}::think={thinking_enabled}::budget={thinking_budget}::effort={thinking_effort}"
 
     for t in expanded:
         k = key_for(t)
