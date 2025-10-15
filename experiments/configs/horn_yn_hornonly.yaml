@@ -118,7 +118,7 @@ targets:
       enabled: false
 
 # Input dataset - START WITH QUICK TEST
-input_file: data/problems_quicktest.js
+input_file: data/problems_validation_vars4-20_len2-5_percase4_seed42424.js
 # After quick test works, switch to:
 # input_file: data/problems_validation_vars1-20_len2-5_percase5_seed42424.js
 # After validation success, switch to:

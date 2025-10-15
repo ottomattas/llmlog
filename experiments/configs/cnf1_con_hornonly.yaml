@@ -118,7 +118,7 @@ targets:
       enabled: false
 
 # Input dataset - START WITH VALIDATION
-input_file: data/problems_validation_vars1-20_len2-5_percase5_seed42424.js
+input_file: data/problems_validation_vars4-20_len2-5_percase4_seed42424.js
 # After validation success, switch to:
 # input_file: data/problems_production_vars1-20_len2-5_percase40_seed42424.js
 
