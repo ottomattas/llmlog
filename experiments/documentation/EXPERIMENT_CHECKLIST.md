@@ -15,15 +15,15 @@ source venv/bin/activate
 # Generate VALIDATION dataset (takes ~8-15 minutes)
 python experiments/makeproblems.py \
   --vars 1-20 \
-  --clens 1-5 \
+  --clens 2-5 \
   --horn mixed \
   --percase 5 \
   --seed 42424 \
   --workers 4 \
-  > data/problems_validation_vars1-20_len1-5_percase5_seed42424.js
+  > data/problems_validation_vars1-20_len2-5_percase5_seed42424.js
 
 # Quick verification
-wc -l data/problems_validation_vars1-20_len1-5_percase5_seed42424.js
+wc -l data/problems_validation_vars1-20_len2-5_percase5_seed42424.js
 # Expected: 1001 lines (1000 problems + 1 header)
 ```
 
@@ -31,7 +31,7 @@ wc -l data/problems_validation_vars1-20_len1-5_percase5_seed42424.js
 - [ ] Dataset has 1001 lines (1000 problems + header)
 - [ ] Balanced Horn vs non-Horn (500 each)
 - [ ] Balanced Sat vs Unsat (500 each)
-- [ ] Variables range from 1-20 (50 per level)
+- [ ] Variables range from 1-20 (40 per level)
 - [ ] Clause lengths range from 1-5 (200 per level)
 
 #### Option B: Production Dataset (After Validation Success)
@@ -40,15 +40,15 @@ wc -l data/problems_validation_vars1-20_len1-5_percase5_seed42424.js
 # Generate PRODUCTION dataset (takes ~60-120 minutes)
 python experiments/makeproblems.py \
   --vars 1-20 \
-  --clens 1-5 \
+  --clens 2-5 \
   --horn mixed \
   --percase 40 \
   --seed 42424 \
   --workers 4 \
-  > data/problems_production_vars1-20_len1-5_percase40_seed42424.js
+  > data/problems_production_vars1-20_len2-5_percase40_seed42424.js
 
 # Quick verification
-wc -l data/problems_production_vars1-20_len1-5_percase40_seed42424.js
+wc -l data/problems_production_vars1-20_len2-5_percase40_seed42424.js
 # Expected: 8001 lines (8000 problems + 1 header)
 ```
 
@@ -56,7 +56,7 @@ wc -l data/problems_production_vars1-20_len1-5_percase40_seed42424.js
 - [ ] Dataset has 8001 lines (8000 problems + header)
 - [ ] Balanced Horn vs non-Horn (4000 each)
 - [ ] Balanced Sat vs Unsat (4000 each)
-- [ ] Variables range from 1-20 (400 per level)
+- [ ] Variables range from 1-20 (320 per level)
 - [ ] Clause lengths range from 1-5 (1600 per level)
 
 ### 1.2 Create Experiment Configs
@@ -134,7 +134,7 @@ After configs work on 10 problems:
 ```bash
 # Point all configs to validation dataset
 # Edit each config file:
-input_file: data/problems_validation_vars1-20_len1-5_percase5_seed42424.js
+input_file: data/problems_validation_vars1-20_len2-5_percase5_seed42424.js
 
 # Run all 6 experiments on validation dataset
 for config in experiments/configs/horn_*.yaml experiments/configs/cnf*.yaml; do
@@ -224,7 +224,7 @@ With retry delays and rate limits: 66-96 hours (3-4 days)
 RUN_ID="validation_$(date +%Y%m%d)"
 
 # Ensure all configs point to validation dataset
-# input_file: data/problems_validation_vars1-20_len1-5_percase5_seed42424.js
+# input_file: data/problems_validation_vars1-20_len2-5_percase5_seed42424.js
 
 # Run all 6 experiments on validation dataset
 for config in experiments/configs/horn_*.yaml experiments/configs/cnf*.yaml; do
@@ -247,7 +247,7 @@ done
 RUN_ID="production_$(date +%Y%m%d)"
 
 # Update all configs to point to production dataset
-# input_file: data/problems_production_vars1-20_len1-5_percase40_seed42424.js
+# input_file: data/problems_production_vars1-20_len2-5_percase40_seed42424.js
 
 # Run all 6 experiments on production dataset
 for config in experiments/configs/horn_*.yaml experiments/configs/cnf*.yaml; do

@@ -30,15 +30,15 @@ source venv/bin/activate
 
 python experiments/makeproblems.py \
   --vars 1-20 \
-  --clens 1-5 \
+  --clens 2-5 \
   --horn mixed \
   --percase 5 \
   --seed 42424 \
   --workers 4 \
-  > data/problems_validation_vars1-20_len1-5_percase5_seed42424.js
+  > data/problems_validation_vars1-20_len2-5_percase5_seed42424.js
 ```
 
-**Result**: 1,000 problems, takes ~8-15 minutes
+**Result**: 800 problems, takes ~8-15 minutes
 
 ### Step 2: Run Validation Experiments
 
@@ -66,12 +66,12 @@ After analyzing validation results:
 # If good → Generate production dataset
 python experiments/makeproblems.py \
   --vars 1-20 \
-  --clens 1-5 \
+  --clens 2-5 \
   --horn mixed \
   --percase 40 \
   --seed 42424 \
   --workers 4 \
-  > data/problems_production_vars1-20_len1-5_percase40_seed42424.js
+  > data/problems_production_vars1-20_len2-5_percase40_seed42424.js
 
 # Run all experiments on production
 # (Update configs to point to production dataset first)
@@ -83,7 +83,7 @@ for config in experiments/configs/*.yaml; do
 done
 ```
 
-**Result**: 8,000 problems, 72 result files  
+**Result**: 6,400 problems, 72 result files  
 **Cost**: ~$2,400-$4,000, **Time**: ~3-4 days
 
 ---
@@ -135,7 +135,7 @@ done
 
 ### Generate Validation Dataset
 ```bash
-python experiments/makeproblems.py --vars 1-20 --clens 1-5 --horn mixed --percase 5 --seed 42424 --workers 4 > data/problems_validation_vars1-20_len1-5_percase5_seed42424.js
+python experiments/makeproblems.py --vars 1-20 --clens 2-5 --horn mixed --percase 5 --seed 42424 --workers 4 > data/problems_validation_vars1-20_len2-5_percase5_seed42424.js
 ```
 
 ### Test Single Config (10 problems)

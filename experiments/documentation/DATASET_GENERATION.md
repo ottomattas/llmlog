@@ -11,13 +11,13 @@ Based on DASHBOARD_DESIGN.md requirements, here's the dataset specification:
 - **Clause lengths**: 1-5 (5 levels) — from simple to complex clauses
 - **Horn vs Non-Horn**: Mixed (both types)
 - **Problems per case**: **40** (20 sat + 20 unsat, balanced)
-- **Total problems**: 20 vars × 5 lens × 2 types × 40 per = **8,000 problems**
+- **Total problems**: 20 vars × 5 lens × 2 types × 40 per = **6,400 problems**
 - **Seed**: 42424 (for reproducibility)
 - **Statistical rigor**: 400 samples per variable level for robust analysis
 
 **Validation Dataset** (for initial testing):
 - **Problems per case**: **5** (quick validation)
-- **Total problems**: 20 vars × 5 lens × 2 types × 5 per = **1,000 problems**
+- **Total problems**: 20 vars × 5 lens × 2 types × 5 per = **800 problems**
 - Same seed for consistency
 
 ### Why These Parameters?
@@ -29,9 +29,9 @@ Based on DASHBOARD_DESIGN.md requirements, here's the dataset specification:
    - 20 levels gives fine-grained degradation curves
    - Will clearly show where each model breaks down
 
-2. **Clause lengths 1-5**:
-   - Length 1: Unit clauses (trivial)
-   - Length 2: Simple binary clauses
+2. **Clause lengths 2-5**:
+   - Length 2-3: Binary and ternary clauses
+   - Length 2-3: Binary and ternary clauses
    - Length 3: Classic 3-SAT complexity
    - Length 4: Higher complexity
    - Length 5: Maximum interesting complexity
@@ -40,7 +40,7 @@ Based on DASHBOARD_DESIGN.md requirements, here's the dataset specification:
 3. **Mixed Horn/Non-Horn**:
    - Essential for RQ2 (representation mismatch)
    - Production: 4,000 Horn + 4,000 non-Horn
-   - Validation: 500 Horn + 500 non-Horn
+   - Validation: 400 Horn + 500 non-Horn
    - Perfectly balanced for fair comparison
 
 4. **40 problems per case (production)**:
@@ -67,15 +67,15 @@ source venv/bin/activate
 # Generate VALIDATION dataset first (takes ~8-15 minutes)
 python experiments/makeproblems.py \
   --vars 1-20 \
-  --clens 1-5 \
+  --clens 2-5 \
   --horn mixed \
   --percase 5 \
   --seed 42424 \
   --workers 4 \
-  > data/problems_validation_vars1-20_len1-5_percase5_seed42424.js
+  > data/problems_validation_vars1-20_len2-5_percase5_seed42424.js
 
 # Quick stats check
-wc -l data/problems_validation_vars1-20_len1-5_percase5_seed42424.js
+wc -l data/problems_validation_vars1-20_len2-5_percase5_seed42424.js
 # Expected: 1001 lines (1000 problems + 1 header)
 ```
 
@@ -92,15 +92,15 @@ wc -l data/problems_validation_vars1-20_len1-5_percase5_seed42424.js
 # Generate PRODUCTION dataset (takes ~60-120 minutes)
 python experiments/makeproblems.py \
   --vars 1-20 \
-  --clens 1-5 \
+  --clens 2-5 \
   --horn mixed \
   --percase 40 \
   --seed 42424 \
   --workers 4 \
-  > data/problems_production_vars1-20_len1-5_percase40_seed42424.js
+  > data/problems_production_vars1-20_len2-5_percase40_seed42424.js
 
 # Quick stats check
-wc -l data/problems_production_vars1-20_len1-5_percase40_seed42424.js
+wc -l data/problems_production_vars1-20_len2-5_percase40_seed42424.js
 # Expected: 8001 lines (8000 problems + 1 header)
 ```
 
@@ -163,7 +163,7 @@ python3 -c "
 import json
 
 # Change filename to match your dataset
-DATASET='data/problems_validation_vars1-20_len1-5_percase5_seed42424.js'
+DATASET='data/problems_validation_vars1-20_len2-5_percase5_seed42424.js'
 
 with open(DATASET) as f:
     lines = [l.strip() for l in f if l.strip()]
@@ -200,18 +200,18 @@ for k in sorted(len_dist.keys()):
 "
 
 # For PRODUCTION dataset, change DATASET variable above to:
-# DATASET='data/problems_production_vars1-20_len1-5_percase40_seed42424.js'
+# DATASET='data/problems_production_vars1-20_len2-5_percase40_seed42424.js'
 ```
 
 Or use this shorter verification:
 
 ```bash
 # Count lines
-wc -l data/problems_validation_vars1-20_len1-5_percase5_seed42424.js
+wc -l data/problems_validation_vars1-20_len2-5_percase5_seed42424.js
 # Expected: 1001 (validation) or 8001 (production)
 
 # Quick check of first few problems
-head -5 data/problems_validation_vars1-20_len1-5_percase5_seed42424.js
+head -5 data/problems_validation_vars1-20_len2-5_percase5_seed42424.js
 ```
 
 ```
@@ -222,17 +222,17 @@ Sat: 500
 Unsat: 500
 
 Vars distribution:
-  1: 50
+  1: 40
   2: 50
   ... (should be 50 per vars level)
-  20: 50
+  20: 40
 
 Lengths distribution:
-  1: 200
+  1: 160
   2: 200
   3: 200
   4: 200
-  5: 200
+  5: 160
 ```
 
 **Expected output for production dataset** (40 per case):
@@ -244,18 +244,18 @@ Sat: 4000
 Unsat: 4000
 
 Vars distribution:
-  1: 400
+  1: 320
   2: 400
   3: 400
   ... (should be 400 per vars level)
-  20: 400
+  20: 320
 
 Lengths distribution:
-  1: 1600
+  1: 1280
   2: 1600
   3: 1600
   4: 1600
-  5: 1600
+  5: 1280
 ```
 
 ---
@@ -281,8 +281,8 @@ Examples:
 
 With `--workers 4`:
 - 96 problems (quick test): ~2-3 minutes
-- 1,000 problems (validation): ~8-15 minutes
-- 8,000 problems (production): ~60-120 minutes (1-2 hours)
+- 800 problems (validation): ~8-15 minutes
+- 6,400 problems (production): ~60-120 minutes (1-2 hours)
 
 **Bottleneck**: Truth table solving for larger variable counts (17-20 vars)
 
@@ -296,13 +296,13 @@ With `--workers 4`:
    ```bash
    python experiments/makeproblems.py \
      --vars 1-20 \
-     --clens 1-5 \
+     --clens 2-5 \
      --horn mixed \
      --percase 20 \
      --seed 42424 \
      --workers 4 \
      --no-proof \
-     > data/problems_production_vars1-20_len1-5_seed42424_noproof.js
+     > data/problems_production_vars1-20_len2-5_seed42424_noproof.js
    ```
    This is **much faster** (2-3× speedup) but proofs won't be available for depth analysis.
    
@@ -351,13 +351,13 @@ After generating the dataset:
 | **Production** | 1-20 | 1-5 | **40** | **8,000** | **Publication quality** | **~$2,400-$4,000** |
 
 **Recommended workflow**:
-1. ✅ **Start with validation dataset** (5 per case, 1,000 problems)
+1. ✅ **Start with validation dataset** (5 per case, 800 problems)
    - Test all configs work correctly
    - Get initial accuracy estimates
    - Discuss results with supervisors
    - Cost: ~$150-$250, Time: ~8-12 hours
    
-2. ✅ **Move to production dataset** (40 per case, 8,000 problems)
+2. ✅ **Move to production dataset** (40 per case, 6,400 problems)
    - Publication-quality statistics
    - 400 samples per variable level
    - Robust degradation curves

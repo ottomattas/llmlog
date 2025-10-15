@@ -19,20 +19,20 @@ This document explains the recommended two-phase experimental workflow: **valida
 ```bash
 python experiments/makeproblems.py \
   --vars 1-20 \
-  --clens 1-5 \
+  --clens 2-5 \
   --horn mixed \
   --percase 5 \
   --seed 42424 \
   --workers 4 \
-  > data/problems_validation_vars1-20_len1-5_percase5_seed42424.js
+  > data/problems_validation_vars1-20_len2-5_percase5_seed42424.js
 
-# Result: 1,000 problems (50 per variable level)
+# Result: 800 problems (50 per variable level)
 ```
 
 ### Run All Experiments on Validation
 ```bash
 # Update all 6 configs to use validation dataset
-# input_file: data/problems_validation_vars1-20_len1-5_percase5_seed42424.js
+# input_file: data/problems_validation_vars1-20_len2-5_percase5_seed42424.js
 
 # Run
 for config in experiments/configs/*.yaml; do
@@ -97,20 +97,20 @@ python -m experiments.analyze_generic \
 # Generate overnight (1-2 hours)
 python experiments/makeproblems.py \
   --vars 1-20 \
-  --clens 1-5 \
+  --clens 2-5 \
   --horn mixed \
   --percase 40 \
   --seed 42424 \
   --workers 4 \
-  > data/problems_production_vars1-20_len1-5_percase40_seed42424.js
+  > data/problems_production_vars1-20_len2-5_percase40_seed42424.js
 
-# Result: 8,000 problems (400 per variable level)
+# Result: 6,400 problems (400 per variable level)
 ```
 
 ### Run All Experiments on Production
 ```bash
 # Update all 6 configs to use production dataset
-# input_file: data/problems_production_vars1-20_len1-5_percase40_seed42424.js
+# input_file: data/problems_production_vars1-20_len2-5_percase40_seed42424.js
 
 # Run (will take 3-4 days)
 RUN_ID="production_$(date +%Y%m%d)"
@@ -269,10 +269,10 @@ python -m experiments.runner \
 ### Generate Datasets
 ```bash
 # Validation (do this first!)
-python experiments/makeproblems.py --vars 1-20 --clens 1-5 --horn mixed --percase 5 --seed 42424 --workers 4 > data/problems_validation_vars1-20_len1-5_percase5_seed42424.js
+python experiments/makeproblems.py --vars 1-20 --clens 2-5 --horn mixed --percase 5 --seed 42424 --workers 4 > data/problems_validation_vars1-20_len2-5_percase5_seed42424.js
 
 # Production (after validation succeeds)
-python experiments/makeproblems.py --vars 1-20 --clens 1-5 --horn mixed --percase 40 --seed 42424 --workers 4 > data/problems_production_vars1-20_len1-5_percase40_seed42424.js
+python experiments/makeproblems.py --vars 1-20 --clens 2-5 --horn mixed --percase 40 --seed 42424 --workers 4 > data/problems_production_vars1-20_len2-5_percase40_seed42424.js
 ```
 
 ### Run Experiments

@@ -38,8 +38,8 @@ This directory contains the experimental framework for systematic LLM logic reas
    - Analysis approach
 
 2. ✅ Read **VALIDATION_WORKFLOW.md** for the two-phase strategy:
-   - Phase 1: Validation dataset (1,000 problems, ~$150-250)
-   - Phase 2: Production dataset (8,000 problems, ~$2,400-4,000)
+   - Phase 1: Validation dataset (800 problems, ~$150-250)
+   - Phase 2: Production dataset (6,400 problems, ~$2,400-4,000)
    - Why this approach saves money and reduces risk
 
 3. ✅ Follow **DATASET_GENERATION.md** to:
@@ -283,12 +283,12 @@ python -m experiments.export_results \
 - Tier 3 (budget): $0.001 - $0.005
 
 **Validation** (6 experiments × 12 models × 1000 problems):
-- ~72,000 API calls
+- ~57,600 API calls
 - Cost: $150 - $250
 - Time: ~8-12 hours total
 
 **Production** (6 experiments × 12 models × 8000 problems):
-- ~576,000 API calls
+- ~460,800 API calls
 - Cost: $2,400 - $4,000
 - Time: ~66-96 hours (3-4 days)
 - Run overnight/over weekend
