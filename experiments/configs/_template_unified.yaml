@@ -71,7 +71,16 @@ targets:
       budget_tokens: 8192              # Medium effort
 
   - provider: anthropic
-    model: claude-3-5-haiku-20241022
+    model: claude-haiku-4-5-20251001
+    temperature: 0
+    seed: 1234
+    max_tokens: 3000
+    thinking:
+      enabled: true
+      budget_tokens: 1024              # Low effort
+
+  - provider: anthropic
+    model: claude-haiku-4-5-20251001
     temperature: 0
     seed: 1234
     max_tokens: 3000
@@ -86,7 +95,7 @@ targets:
     max_tokens: 30000
     thinking:
       enabled: true
-      budget_tokens: 24576             # High effort (Pro cannot disable; set -1 for dynamic)
+      budget_tokens: 24576             # High effort; Pro cannot disable; set -1 for dynamic)
 
   - provider: google
     model: gemini-2.5-flash
@@ -95,10 +104,19 @@ targets:
     max_tokens: 10000
     thinking:
       enabled: true
-      budget_tokens: 8192              # Medium effort; set 0 to disable; -1 dynamic
+      budget_tokens: 8192              # Medium effort; set 0 to disable; set -1 for dynamic
 
   - provider: google
     model: gemini-2.5-flash-lite
+    temperature: 0
+    seed: 1234
+    max_tokens: 3000
+    thinking:
+      enabled: true
+      budget_tokens: 1024              # Low effort; set 0 to disable; set -1 for dynamic
+
+  - provider: google
+    model: gemini-2.5-flash
     temperature: 0
     seed: 1234
     max_tokens: 3000
