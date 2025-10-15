@@ -6,9 +6,14 @@ This directory contains the experimental framework for systematic LLM logic reas
 
 ## Quick Links
 
-### Planning Documents (Use These First)
-- **[DASHBOARD_DESIGN.md](DASHBOARD_DESIGN.md)** — Complete dashboard design, research questions, and analysis plan (READ THIS FIRST)
+### 🚀 Start Here
+- **[GETTING_STARTED.md](GETTING_STARTED.md)** — Quick overview and 3-step plan (START HERE!)
+
+### Planning Documents
+- **[VALIDATION_WORKFLOW.md](VALIDATION_WORKFLOW.md)** — Two-phase approach: validation → production (RECOMMENDED)
+- **[DATASET_GENERATION.md](DATASET_GENERATION.md)** — How to generate validation and production datasets
 - **[EXPERIMENT_CHECKLIST.md](EXPERIMENT_CHECKLIST.md)** — Step-by-step execution checklist
+- **[DASHBOARD_DESIGN.md](DASHBOARD_DESIGN.md)** — Complete dashboard design and 6 research questions
 
 ### Implementation Tools
 - `runner.py` — Generic experiment executor (config-driven)
@@ -32,10 +37,18 @@ This directory contains the experimental framework for systematic LLM logic reas
    - Expected dashboard structure
    - Analysis approach
 
-2. ✅ Follow **EXPERIMENT_CHECKLIST.md** to:
-   - Generate problem dataset
-   - Create experiment configs
-   - Set up and validate
+2. ✅ Read **VALIDATION_WORKFLOW.md** for the two-phase strategy:
+   - Phase 1: Validation dataset (1,000 problems, ~$150-250)
+   - Phase 2: Production dataset (8,000 problems, ~$2,400-4,000)
+   - Why this approach saves money and reduces risk
+
+3. ✅ Follow **DATASET_GENERATION.md** to:
+   - Generate validation dataset (5 per case)
+   - Understand dataset structure and verification
+
+4. ✅ Follow **EXPERIMENT_CHECKLIST.md** to:
+   - Create 6 experiment configs
+   - Set up and validate with small test
 
 ### Phase 2: Execution
 
@@ -269,15 +282,16 @@ python -m experiments.export_results \
 - Tier 2 (medium): $0.005 - $0.010
 - Tier 3 (budget): $0.001 - $0.005
 
-**Total Cost** (6 experiments × 12 models × 2000 problems):
-- ~144,000 API calls
-- Estimated: $600 - $1200
+**Validation** (6 experiments × 12 models × 1000 problems):
+- ~72,000 API calls
+- Cost: $150 - $250
+- Time: ~8-12 hours total
 
-**Time** (with concurrency=12):
-- ~5 seconds per problem average
-- ~2.8 hours per experiment
-- ~17 hours total (sequential)
-- Add 20-30% buffer for retries
+**Production** (6 experiments × 12 models × 8000 problems):
+- ~576,000 API calls
+- Cost: $2,400 - $4,000
+- Time: ~66-96 hours (3-4 days)
+- Run overnight/over weekend
 
 ---
 

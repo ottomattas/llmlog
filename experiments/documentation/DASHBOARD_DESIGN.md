@@ -12,15 +12,21 @@ This document describes the design for a unified analysis dashboard that will co
 
 ### Dataset Specifications
 
-**New Dataset** (to be generated):
-- **Variables**: 1-20 parameters
-- **Clause length**: 1-5
-- **Problem types**: Mixed (both Horn and non-Horn)
-- **Target size**: ~1000-2000 problems
-- **Balance**: Equal distribution across:
-  - Horn vs Non-Horn
-  - Satisfiable vs Unsatisfiable
-  - Complexity levels (variables)
+**Datasets**:
+
+1. **Validation Dataset** (for initial testing):
+   - Variables: 1-20, Clause length: 1-5
+   - **5 per case** → **1,000 problems** total
+   - Purpose: Validate configs, get initial results, discuss with supervisors
+   - Cost: ~$150-$250, Time: ~8-12 hours
+
+2. **Production Dataset** (for publication):
+   - Variables: 1-20, Clause length: 1-5
+   - **40 per case** → **8,000 problems** total
+   - Purpose: Publication-quality statistics, robust analysis
+   - Balance: 4,000 Horn + 4,000 non-Horn, 4,000 Sat + 4,000 Unsat
+   - Granularity: 400 problems per variable level
+   - Cost: ~$2,400-$4,000, Time: ~66-96 hours (3-4 days)
 
 **Reference** (existing `dist20` dataset):
 - 1040 problems

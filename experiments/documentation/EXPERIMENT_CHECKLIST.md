@@ -5,22 +5,59 @@
 ## Phase 1: Setup ☐
 
 ### 1.1 Generate Problem Dataset
+
+#### Option A: Validation Dataset (Recommended First Step)
+
 ```bash
-# TODO: Implement or use existing makeproblems.py
-python -m experiments.makeproblems \
+cd /Users/ottomattas/Downloads/repos/llmlog
+source venv/bin/activate
+
+# Generate VALIDATION dataset (takes ~8-15 minutes)
+python experiments/makeproblems.py \
   --vars 1-20 \
-  --len 1-5 \
-  --count 2000 \
-  --seed 4242 \
-  --output data/problems_complex_v2.js
+  --clens 1-5 \
+  --horn mixed \
+  --percase 5 \
+  --seed 42424 \
+  --workers 4 \
+  > data/problems_validation_vars1-20_len1-5_percase5_seed42424.js
+
+# Quick verification
+wc -l data/problems_validation_vars1-20_len1-5_percase5_seed42424.js
+# Expected: 1001 lines (1000 problems + 1 header)
 ```
 
 **Verify**:
-- [ ] Dataset has ~2000 problems
-- [ ] Balanced Horn vs non-Horn
-- [ ] Balanced Sat vs Unsat
-- [ ] Variables range from 1-20
-- [ ] Clause length ranges from 1-5
+- [ ] Dataset has 1001 lines (1000 problems + header)
+- [ ] Balanced Horn vs non-Horn (500 each)
+- [ ] Balanced Sat vs Unsat (500 each)
+- [ ] Variables range from 1-20 (50 per level)
+- [ ] Clause lengths range from 1-5 (200 per level)
+
+#### Option B: Production Dataset (After Validation Success)
+
+```bash
+# Generate PRODUCTION dataset (takes ~60-120 minutes)
+python experiments/makeproblems.py \
+  --vars 1-20 \
+  --clens 1-5 \
+  --horn mixed \
+  --percase 40 \
+  --seed 42424 \
+  --workers 4 \
+  > data/problems_production_vars1-20_len1-5_percase40_seed42424.js
+
+# Quick verification
+wc -l data/problems_production_vars1-20_len1-5_percase40_seed42424.js
+# Expected: 8001 lines (8000 problems + 1 header)
+```
+
+**Verify**:
+- [ ] Dataset has 8001 lines (8000 problems + header)
+- [ ] Balanced Horn vs non-Horn (4000 each)
+- [ ] Balanced Sat vs Unsat (4000 each)
+- [ ] Variables range from 1-20 (400 per level)
+- [ ] Clause lengths range from 1-5 (1600 per level)
 
 ### 1.2 Create Experiment Configs
 
@@ -64,16 +101,18 @@ cp _template_unified.yaml cnf2_con_hornonly.yaml
 - [ ] Template handles both Horn and CNF styles
 - [ ] Instructions are clear for yes/no and contradiction tasks
 
-### 1.4 Test Run (Small Sample)
+### 1.4 Validation Workflow (Recommended)
+
+**Step 1: Quick config test (10 problems)**
 
 ```bash
-# Test one config with 10 problems
+# Test one config with just 10 problems (dry-run first)
 python -m experiments.runner \
   --config experiments/configs/horn_yn_hornonly.yaml \
   --limit 10 \
   --dry-run
 
-# If dry-run looks good, run for real
+# If prompts look good, run for real
 python -m experiments.runner \
   --config experiments/configs/horn_yn_hornonly.yaml \
   --limit 10 \
@@ -83,35 +122,89 @@ python -m experiments.runner \
 
 **Verify**:
 - [ ] All 12 models run successfully
+- [ ] Prompts render correctly (check dry-run output)
 - [ ] Results written to expected paths
 - [ ] Summary JSON shows reasonable accuracy
 - [ ] No parsing errors
 
+**Step 2: Full validation run (1000 problems)**
+
+After configs work on 10 problems:
+
+```bash
+# Point all configs to validation dataset
+# Edit each config file:
+input_file: data/problems_validation_vars1-20_len1-5_percase5_seed42424.js
+
+# Run all 6 experiments on validation dataset
+for config in experiments/configs/horn_*.yaml experiments/configs/cnf*.yaml; do
+  python -m experiments.runner \
+    --config "$config" \
+    --resume \
+    --run validation_001
+done
+```
+
+**Verify**:
+- [ ] All 6 experiments complete (72 result files total: 6 × 12)
+- [ ] No excessive parsing errors (<5% unclear)
+- [ ] Accuracy ranges look reasonable (not all 0% or 100%)
+- [ ] Can generate basic analysis
+
+**Step 3: Analyze and discuss**
+
+```bash
+# Quick analysis of validation results
+python -m experiments.analyze_generic \
+  experiments/runs/horn_yn_hornonly/validation_001/anthropic/claude-sonnet*/results.jsonl
+
+# Discuss with supervisors:
+# - Do results make sense?
+# - Are experiment configs correct?
+# - Should we proceed to production?
+```
+
 ### 1.5 Estimate Cost and Time
 
-**Cost Calculation**:
+**Cost Calculation (Validation - 1000 problems)**:
 ```
 Models per experiment: 12
 Experiments: 6
-Problems: 2000
-Total API calls: 12 × 6 × 2000 = 144,000
+Problems: 1000
+Total API calls: 12 × 6 × 1000 = 72,000
 
 Estimated cost per call:
 - Tier 1 (flagship): ~$0.015
 - Tier 2 (medium): ~$0.008
 - Tier 3 (budget): ~$0.003
 
-Total cost estimate: $600-$1200 (varies by provider)
+Validation cost estimate: $150-$250
 ```
 
-**Time Estimation**:
+**Time Estimation (Validation)**:
 ```
 With concurrency=12, lockstep=true:
 - ~5 seconds per problem (average)
-- 2000 problems × 5 sec = ~2.8 hours per experiment
-- 6 experiments × 2.8 hours = ~17 hours total
+- 1000 problems × 5 sec = ~1.4 hours per experiment
+- 6 experiments × 1.4 hours = ~8 hours total
 
-With retry delays and rate limits: 20-24 hours total
+With retry delays and rate limits: 8-12 hours total
+```
+
+**Cost Calculation (Production - 8000 problems)**:
+```
+Total API calls: 12 × 6 × 8000 = 576,000
+
+Production cost estimate: $2,400-$4,000
+```
+
+**Time Estimation (Production)**:
+```
+With concurrency=12, lockstep=true:
+- 8000 problems × 5 sec = ~11 hours per experiment
+- 6 experiments × 11 hours = ~66 hours total
+
+With retry delays and rate limits: 66-96 hours (3-4 days)
 ```
 
 - [ ] Budget approved for API costs
@@ -122,20 +215,51 @@ With retry delays and rate limits: 20-24 hours total
 
 ## Phase 2: Execution ☐
 
-### 2.1 Run All Experiments
+### 2.1 Run Validation Experiments (Start Here)
+
+**After** validation dataset is generated and configs are ready:
 
 ```bash
-# Set run ID for this batch
-RUN_ID="production_$(date +%Y%m%d)"
+# Set run ID for validation batch
+RUN_ID="validation_$(date +%Y%m%d)"
 
-# Run all experiments sequentially (or in parallel if providers allow)
+# Ensure all configs point to validation dataset
+# input_file: data/problems_validation_vars1-20_len1-5_percase5_seed42424.js
+
+# Run all 6 experiments on validation dataset
 for config in experiments/configs/horn_*.yaml experiments/configs/cnf*.yaml; do
-  echo "Running $(basename $config)..."
+  echo "Running validation: $(basename $config)..."
   python -m experiments.runner \
     --config "$config" \
     --resume \
     --run "$RUN_ID"
 done
+
+# Cost: ~$150-$250, Time: ~8-12 hours
+```
+
+### 2.2 Run Production Experiments (After Validation Success)
+
+**After** discussing validation results with supervisors and generating production dataset:
+
+```bash
+# Set run ID for production batch
+RUN_ID="production_$(date +%Y%m%d)"
+
+# Update all configs to point to production dataset
+# input_file: data/problems_production_vars1-20_len1-5_percase40_seed42424.js
+
+# Run all 6 experiments on production dataset
+for config in experiments/configs/horn_*.yaml experiments/configs/cnf*.yaml; do
+  echo "Running production: $(basename $config)..."
+  python -m experiments.runner \
+    --config "$config" \
+    --resume \
+    --run "$RUN_ID"
+done
+
+# Cost: ~$2,400-$4,000, Time: ~66-96 hours (3-4 days)
+# Recommended: Run overnight/over weekend
 ```
 
 **Or run individually** (recommended for better control):
