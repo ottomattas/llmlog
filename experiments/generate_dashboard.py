@@ -114,7 +114,7 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
             if (typeof Chart === 'undefined') {
                 console.error('Chart.js failed to load from CDN');
                 document.querySelectorAll('canvas').forEach(function(canvas) {
-                    canvas.parentElement.innerHTML = '<div class="note" style="background: #fff3cd; border-left: 3px solid #ffc107; padding: 15px;">⚠️ <strong>Chart.js failed to load.</strong> Charts require JavaScript enabled and CDN access. If viewing on GitHub, download the HTML file and open locally, or use the static analysis below.</div>';
+                    canvas.parentElement.innerHTML = '<div class="note" style="background: #fff3cd; border-left: 3px solid #ffc107; padding: 15px;"><strong>WARNING: Chart.js failed to load.</strong> Charts require JavaScript enabled and CDN access. If viewing on GitHub, download the HTML file and open locally, or use the static analysis below.</div>';
                 });
             }
         });
@@ -331,7 +331,7 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
     
     html.append(f"""
         <header>
-            <h1>🧠 LLM Logic Reasoning Dashboard</h1>
+            <h1>LLM Logic Reasoning Dashboard</h1>
             <div class="subtitle">Systematic evaluation across representations, tasks, and models</div>
             <div class="subtitle">Run: {run_id}</div>
             <div class="subtitle" style="margin-top: 10px; font-size: 0.95em; opacity: 0.85;">
@@ -390,7 +390,7 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
     # Section 1: Overview Heatmap
     html.append("""
         <div class="section">
-            <h2>📊 Overview Heatmap: Experiment × Model Performance</h2>
+            <h2>Overview Heatmap: Experiment × Model Performance</h2>
             <p style="margin-bottom: 15px;">Accuracy for each model on each experiment. Hover over cells to see details.</p>
             
             <div class="filter-controls">
@@ -477,7 +477,7 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
     # Section 2: Research Questions
     html.append("""
         <div class="section">
-            <h2>🔬 Research Questions Analysis</h2>
+            <h2>Research Questions Analysis</h2>
 """)
     
     # RQ1: Representation
@@ -993,10 +993,10 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
     # Section 3: Degradation Curves (Interactive Charts)
     html.append("""
         <div class="section">
-            <h2>📉 Quality Degradation by Complexity</h2>
+            <h2>Quality Degradation by Complexity</h2>
             <p style="margin-bottom: 15px;">How accuracy changes as problem complexity (number of variables) increases. Each line represents one model.</p>
             <div class="note">
-                <strong>💡 Note:</strong> If charts don't appear (e.g., on GitHub Pages), download this HTML file and open locally. 
+                <strong>Note:</strong> If charts don't appear (e.g., on GitHub Pages), download this HTML file and open locally. 
                 Alternative: Check the ASCII representation tables below each chart.
             </div>
 """)
@@ -1152,7 +1152,7 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
             <div style="margin-top: 20px;">
                 <details>
                     <summary style="cursor: pointer; font-weight: 600; color: #667eea; padding: 10px; background: #f7fafc; border-radius: 4px;">
-                        📊 Show ASCII Table (fallback if chart doesn't render)
+                        Show ASCII Table (fallback if chart doesn't render)
                     </summary>
                     <div style="background: #2d3748; color: #e2e8f0; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 0.75em; overflow-x: auto; margin-top: 10px;">
                         <pre style="margin: 0;">
@@ -1348,7 +1348,7 @@ Vars:  {' '.join(f'{v:4}' for v in vars_sorted)}
                 if (section.textContent.includes('Degradation')) {
                     const note = document.createElement('div');
                     note.className = 'note';
-                    note.innerHTML = '<strong>💡 Interactive Charts:</strong> Click legend items to show/hide models. Hover over lines to see exact accuracy values.';
+                    note.innerHTML = '<strong>Interactive Charts:</strong> Click legend items to show/hide models. Hover over lines to see exact accuracy values.';
                     section.parentElement.insertBefore(note, section.nextSibling);
                     break;
                 }
