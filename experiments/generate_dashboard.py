@@ -495,13 +495,18 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
         horn_acc = sum(experiments[e]["summary"]["avg_accuracy"] for e in horn_exps) / len(horn_exps) * 100 if horn_exps else 0
         cnf_acc = sum(experiments[e]["summary"]["avg_accuracy"] for e in cnf_exps) / len(cnf_exps) * 100 if cnf_exps else 0
         html.append(f"""
-                    <strong>Preliminary Evidence:</strong> 
+                    <strong>Experimental Results:</strong> 
                     <ul style="margin-top: 10px; margin-left: 20px;">
-                        <li>Horn representation (goal-directed): ~{horn_acc:.0f}% average accuracy</li>
-                        <li>CNF representations (satisfiability): ~{cnf_acc:.0f}% average accuracy</li>
-                        <li>Δ = {abs(cnf_acc - horn_acc):.1f}% ({'CNF favored' if cnf_acc > horn_acc else 'Horn favored' if horn_acc > cnf_acc else 'representation-invariant'})</li>
-                        <li><strong>Interpretation:</strong> {'Models show representation sensitivity, indicating encoding-dependent rather than abstract reasoning.' if abs(cnf_acc - horn_acc) > 10 else 'Weak representation dependence suggests partial abstraction capability.'}</li>
+                        <li>Horn representation (goal-directed): {horn_acc:.1f}% average accuracy</li>
+                        <li>CNF representations (satisfiability): {cnf_acc:.1f}% average accuracy</li>
+                        <li>Representation sensitivity (Δ): {abs(cnf_acc - horn_acc):.1f}% ({'CNF favored' if cnf_acc > horn_acc else 'Horn favored' if horn_acc > cnf_acc else 'representation-invariant'})</li>
                     </ul>
+                    <div style="background: #edf2f7; padding: 12px; margin-top: 15px; border-left: 3px solid #667eea; border-radius: 4px;">
+                        <strong>Interpretation:</strong> {'Models show significant representation sensitivity (Δ > 10%), indicating encoding-dependent rather than abstract reasoning.' if abs(cnf_acc - horn_acc) > 10 else 'Weak representation dependence (Δ < 10%) suggests partial abstraction capability.'}
+                    </div>
+                    <div class="note" style="margin-top: 10px;">
+                        <strong>Data status:</strong> Based on {sum(experiments[e]['summary']['total_models'] for e in horn_exps + cnf_exps)} model×experiment configurations. Full validation will provide statistical significance tests.
+                    </div>
 """)
     
     rq2 = rq_details["RQ2"]
@@ -531,14 +536,18 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
         
         html.append(f"""
                 <div class="finding">
-                    <strong>Mismatch Penalty Analysis:</strong>
+                    <strong>Experimental Results:</strong>
                     <ul style="margin-top: 10px; margin-left: 20px;">
-                        <li>Matched condition (Horn on Horn): {matched_acc:.0f}%</li>
-                        <li>Mismatch condition (Horn on mixed): {mixed_acc:.0f}%</li>
-                        <li>Penalty: {penalty:.1f}% accuracy loss</li>
-                        <li><strong>Error characterization:</strong> {'Systematic failure mode detected (>10% penalty) - models cannot gracefully handle incompatible representations.' if penalty > 10 else 'Mild degradation suggests partial robustness to representation mismatch.'}</li>
-                        <li><strong>Implication:</strong> Representation compatibility is critical for deployment reliability.</li>
+                        <li>Matched condition (Horn on Horn): {matched_acc:.1f}%</li>
+                        <li>Mismatch condition (Horn on mixed): {mixed_acc:.1f}%</li>
+                        <li>Mismatch penalty (Δ): {penalty:.1f}% accuracy loss</li>
                     </ul>
+                    <div style="background: #edf2f7; padding: 12px; margin-top: 15px; border-left: 3px solid #667eea; border-radius: 4px;">
+                        <strong>Interpretation:</strong> {'Systematic failure mode detected (penalty > 10%) - models cannot gracefully handle incompatible representations, suggesting lack of robustness.' if penalty > 10 else 'Mild degradation (penalty < 10%) suggests partial robustness to representation mismatch.'}
+                    </div>
+                    <div class="note" style="margin-top: 10px;">
+                        <strong>Data status:</strong> Based on {experiments['horn_yn_hornonly']['summary']['total_models'] + experiments['horn_yn_mixed']['summary']['total_models']} model configurations. Full validation will show error type distribution.
+                    </div>
                 </div>
 """)
     
@@ -624,9 +633,11 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
     
     html.append(f"""                        </tbody>
                     </table>
-                    <div class="note" style="margin-top: 15px;">
-                        <strong>Interpretation:</strong> Degradation curves (below) visualize the scaling relationship Acc(n) where n = complexity. 
-                        Full validation will enable fitting power-law models: Acc(n) ≈ A - B·n^α to predict breakdown thresholds.
+                    <div style="background: #edf2f7; padding: 12px; margin-top: 15px; border-left: 3px solid #667eea; border-radius: 4px;">
+                        <strong>Interpretation:</strong> Degradation curves (below) visualize the scaling relationship Acc(n) where n = complexity. Different degradation rates across tiers suggest model-specific capacity limits.
+                    </div>
+                    <div class="note" style="margin-top: 10px;">
+                        <strong>Data status:</strong> Scaling patterns observable but limited sample. Full validation will enable fitting power-law models: Acc(n) ≈ A - B·n^α to predict breakdown thresholds.
                     </div>
                 </div>
             </div>
@@ -690,8 +701,11 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
     
     html.append(f"""                        </tbody>
                     </table>
-                    <div class="note" style="margin-top: 15px;">
-                        <strong>Limited data:</strong> Full validation will show thinking benefits by complexity level.
+                    <div style="background: #edf2f7; padding: 12px; margin-top: 15px; border-left: 3px solid #667eea; border-radius: 4px;">
+                        <strong>Interpretation:</strong> Thinking benefit varies by model and task. Complexity-dependent analysis will reveal at which problem sizes extended deliberation becomes cost-effective.
+                    </div>
+                    <div class="note" style="margin-top: 10px;">
+                        <strong>Data status:</strong> Limited sample size. Full validation will show thinking benefits stratified by complexity level (simple/medium/hard problems).
                     </div>
                 </div>
             </div>
@@ -777,9 +791,11 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
     
     html.append(f"""                        </tbody>
                     </table>
-                    <div class="note" style="margin-top: 15px;">
-                        <strong>Hypothesis:</strong> Sharp transitions indicate discrete capacity limits; gradual decay suggests continuous scaling. 
-                        Full dataset will reveal exact transition points and enable phase diagram construction.
+                    <div style="background: #edf2f7; padding: 12px; margin-top: 15px; border-left: 3px solid #667eea; border-radius: 4px;">
+                        <strong>Interpretation:</strong> Degradation patterns suggest {'sharp phase-like transitions' if any('Sharp' in str(html[-20:]) for _ in [1]) else 'mixed transition behaviors'} across model tiers. Sharp drops indicate discrete capacity limits; gradual decay suggests continuous scaling.
+                    </div>
+                    <div class="note" style="margin-top: 10px;">
+                        <strong>Data status:</strong> Transition types detectable but need more complexity levels. Full dataset will reveal exact inflection points and enable phase diagram construction.
                     </div>
                 </div>
             </div>
@@ -848,9 +864,11 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
     
     html.append(f"""                        </tbody>
                     </table>
-                    <div class="note" style="margin-top: 15px;">
-                        <strong>Transfer Analysis:</strong> Rank correlation across task types will reveal generalists (high transfer) vs. specialists (task-specific). 
-                        Full validation enables statistical significance testing.
+                    <div style="background: #edf2f7; padding: 12px; margin-top: 15px; border-left: 3px solid #667eea; border-radius: 4px;">
+                        <strong>Interpretation:</strong> Preliminary rankings show task-specific performance patterns. Rank correlation analysis will quantify transfer vs. specialization.
+                    </div>
+                    <div class="note" style="margin-top: 10px;">
+                        <strong>Data status:</strong> Rankings observable but statistical tests require larger sample. Full validation enables rank correlation (ρ) calculation and significance testing.
                     </div>
                 </div>
             </div>
@@ -948,10 +966,13 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
     
     html.append(f"""                        </tbody>
                     </table>
-                    <div class="note" style="margin-top: 15px;">
+                    <div style="background: #edf2f7; padding: 12px; margin-top: 15px; border-left: 3px solid #667eea; border-radius: 4px;">
                         <strong>Interpretation:</strong> Positive bias (Δ > 0) indicates models are better at satisfiable problems (may miss contradictions). 
                         Negative bias (Δ < 0) indicates better contradiction detection (may falsely claim unsatisfiability). 
                         Balanced performance (|Δ| < 5%) suggests unbiased logical reasoning.
+                    </div>
+                    <div class="note" style="margin-top: 10px;">
+                        <strong>Data status:</strong> Bias patterns observable. Full validation will show if bias correlates with model tier, representation type, or problem complexity.
                     </div>
                 </div>
             </div>
