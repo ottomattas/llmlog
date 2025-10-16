@@ -237,18 +237,17 @@
             
             <div class="filter-controls">
                 <label>
-                    <input type="checkbox" id="filterTier1" checked onchange="filterModels()"> Tier 1 (Flagship)
+                    <strong>View:</strong>
+                    <select id="viewMode" onchange="transposeHeatmap()">
+                        <option value="exp-rows">Experiments as Rows, Models as Columns</option>
+                        <option value="model-rows">Models as Rows, Experiments as Columns</option>
+                    </select>
                 </label>
-                <label>
-                    <input type="checkbox" id="filterTier2" checked onchange="filterModels()"> Tier 2 (Medium)
-                </label>
-                <label>
-                    <input type="checkbox" id="filterTier3" checked onchange="filterModels()"> Tier 3 (Budget)
-                </label>
-                <label style="margin-left: 30px;">
-                    Show: 
+                <label style="margin-left: 20px;">
+                    <strong>Metric:</strong>
                     <select id="metricSelect" onchange="updateMetric()">
-                        <option value="accuracy">Accuracy</option>
+                        <option value="accuracy">Accuracy (%)</option>
+                        <option value="correct">Correct Count</option>
                         <option value="unclear">Unclear Count</option>
                     </select>
                 </label>
@@ -773,6 +772,139 @@
                     <div class="note" style="margin-top: 15px;">
                         <strong>Transfer Analysis:</strong> Rank correlation across task types will reveal generalists (high transfer) vs. specialists (task-specific). 
                         Full validation enables statistical significance testing.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="rq-section">
+                <div class="rq-title">RQ7: Satisfiability Bias and Asymmetric Error Patterns</div>
+                <div class="rq-description">Do models exhibit systematic bias toward satisfiable or unsatisfiable judgments, and does this bias reveal learned heuristics vs. true logical reasoning?</div>
+                <div class="rq-toggle" onclick="toggleRQ('rq7')">
+                    <span class="rq-toggle-icon" id="rq7-icon">▶</span>
+                    <span>Click for detailed research context</span>
+                </div>
+                <div class="rq-details" id="rq7-details">
+                    <div class="rq-detail-section"><strong>Why it matters:</strong> Bias detection reveals whether models use shortcuts (e.g., 'usually satisfiable' heuristic) vs. proper logical analysis; asymmetric errors indicate reasoning gaps; critical for deployment reliability.</div>
+                    <div class="rq-detail-section"><strong>What we test:</strong> Compare accuracy on satisfiable vs. unsatisfiable problems separately; measure bias: (Acc_sat - Acc_unsat); analyze bias consistency across models and representations; check if bias correlates with problem complexity.</div>
+                    <div class="rq-detail-section"><strong>Expected finding:</strong> Models show asymmetric performance with 10-20% higher accuracy on one class (likely unsatisfiable, as contradictions are easier to detect), revealing systematic bias rather than balanced reasoning. Bias magnitude correlates with model tier.</div>
+                    <div class="rq-detail-section"><strong>Scientific impact:</strong> Reveals whether models learn logical principles or statistical shortcuts; informs bias correction strategies.</div>
+                </div>
+                <div class="finding">
+                    <strong>Sat/Unsat Performance Analysis:</strong>
+                    <table style="width: 100%; margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th>Model</th>
+                                <th>Satisfiable Acc</th>
+                                <th>Unsatisfiable Acc</th>
+                                <th>Bias (Δ)</th>
+                                <th>Interpretation</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                            <tr>
+                                <td style="text-align: left; font-size: 0.85em;">anthropic/claude-haiku-4-5-20251001/nothink</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100" style="font-weight: 600;">+0%</td>
+                                <td>Balanced</td>
+                            </tr>
+
+                            <tr>
+                                <td style="text-align: left; font-size: 0.85em;">anthropic/claude-haiku-4-5-20251001/think-low</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100" style="font-weight: 600;">+0%</td>
+                                <td>Balanced</td>
+                            </tr>
+
+                            <tr>
+                                <td style="text-align: left; font-size: 0.85em;">anthropic/claude-opus-4-1-20250805/think-med</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100" style="font-weight: 600;">+0%</td>
+                                <td>Balanced</td>
+                            </tr>
+
+                            <tr>
+                                <td style="text-align: left; font-size: 0.85em;">anthropic/claude-sonnet-4-5-20250929/think-high</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100" style="font-weight: 600;">+0%</td>
+                                <td>Balanced</td>
+                            </tr>
+
+                            <tr>
+                                <td style="text-align: left; font-size: 0.85em;">google/gemini-2.5-flash-lite/nothink</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-75">33%</td>
+                                <td class="acc-50" style="font-weight: 600;">+67%</td>
+                                <td>SAT bias</td>
+                            </tr>
+
+                            <tr>
+                                <td style="text-align: left; font-size: 0.85em;">google/gemini-2.5-flash-lite/think-low</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100" style="font-weight: 600;">+0%</td>
+                                <td>Balanced</td>
+                            </tr>
+
+                            <tr>
+                                <td style="text-align: left; font-size: 0.85em;">google/gemini-2.5-flash/think-med</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100" style="font-weight: 600;">+0%</td>
+                                <td>Balanced</td>
+                            </tr>
+
+                            <tr>
+                                <td style="text-align: left; font-size: 0.85em;">google/gemini-2.5-pro/think-high</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100" style="font-weight: 600;">+0%</td>
+                                <td>Balanced</td>
+                            </tr>
+
+                            <tr>
+                                <td style="text-align: left; font-size: 0.85em;">openai/gpt-5-2025-08-07/think-medium</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100" style="font-weight: 600;">+0%</td>
+                                <td>Balanced</td>
+                            </tr>
+
+                            <tr>
+                                <td style="text-align: left; font-size: 0.85em;">openai/gpt-5-mini-2025-08-07/think-low</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100" style="font-weight: 600;">+0%</td>
+                                <td>Balanced</td>
+                            </tr>
+
+                            <tr>
+                                <td style="text-align: left; font-size: 0.85em;">openai/gpt-5-nano-2025-08-07/nothink</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100" style="font-weight: 600;">+0%</td>
+                                <td>Balanced</td>
+                            </tr>
+
+                            <tr>
+                                <td style="text-align: left; font-size: 0.85em;">openai/gpt-5-pro-2025-10-06/think-high</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100" style="font-weight: 600;">+0%</td>
+                                <td>Balanced</td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                    <div class="note" style="margin-top: 15px;">
+                        <strong>Interpretation:</strong> Positive bias (Δ > 0) indicates models are better at satisfiable problems (may miss contradictions). 
+                        Negative bias (Δ < 0) indicates better contradiction detection (may falsely claim unsatisfiability). 
+                        Balanced performance (|Δ| < 5%) suggests unbiased logical reasoning.
                     </div>
                 </div>
             </div>
@@ -2185,289 +2317,126 @@
         </div>
 
 
-        <div class="section">
-            <h2>📈 Model Performance Across Experiments</h2>
-            <div style="overflow-x: auto;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="text-align: left;">Model</th>
-
-                            <th>cnf1_con_hornonly</th>
-
-                            <th>cnf1_con_mixed</th>
-
-                            <th>cnf2_con_hornonly</th>
-
-                            <th>cnf2_con_mixed</th>
-
-                            <th>horn_yn_hornonly</th>
-
-                            <th>horn_yn_mixed</th>
-
-                            <th>Average</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-
-                        <tr>
-
-                            <td style="text-align: left;">anthropic/claude-haiku-4-5-20251001/nothink</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-low">0%</td>
-
-                            <td class="acc-low">0%</td>
-
-                            <td class="acc-50"><strong>67%</strong></td>
-
-                        </tr>
-
-                        <tr>
-
-                            <td style="text-align: left;">anthropic/claude-haiku-4-5-20251001/think-low</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-low">33%</td>
-
-                            <td class="acc-50">67%</td>
-
-                            <td class="acc-75"><strong>83%</strong></td>
-
-                        </tr>
-
-                        <tr>
-
-                            <td style="text-align: left;">anthropic/claude-opus-4-1-20250805/think-med</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100"><strong>100%</strong></td>
-
-                        </tr>
-
-                        <tr>
-
-                            <td style="text-align: left;">anthropic/claude-sonnet-4-5-20250929/think-high</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-50">67%</td>
-
-                            <td class="acc-low">33%</td>
-
-                            <td class="acc-75"><strong>83%</strong></td>
-
-                        </tr>
-
-                        <tr>
-
-                            <td style="text-align: left;">google/gemini-2.5-flash-lite/nothink</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-50">67%</td>
-
-                            <td class="acc-50">67%</td>
-
-                            <td class="acc-50">67%</td>
-
-                            <td class="acc-50">67%</td>
-
-                            <td class="acc-75"><strong>78%</strong></td>
-
-                        </tr>
-
-                        <tr>
-
-                            <td style="text-align: left;">google/gemini-2.5-flash-lite/think-low</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100"><strong>100%</strong></td>
-
-                        </tr>
-
-                        <tr>
-
-                            <td style="text-align: left;">google/gemini-2.5-flash/think-med</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100"><strong>100%</strong></td>
-
-                        </tr>
-
-                        <tr>
-
-                            <td style="text-align: left;">google/gemini-2.5-pro/think-high</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100"><strong>100%</strong></td>
-
-                        </tr>
-
-                        <tr>
-
-                            <td style="text-align: left;">openai/gpt-5-2025-08-07/think-medium</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100"><strong>100%</strong></td>
-
-                        </tr>
-
-                        <tr>
-
-                            <td style="text-align: left;">openai/gpt-5-mini-2025-08-07/think-low</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100"><strong>100%</strong></td>
-
-                        </tr>
-
-                        <tr>
-
-                            <td style="text-align: left;">openai/gpt-5-nano-2025-08-07/nothink</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-50">67%</td>
-
-                            <td class="acc-low">33%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-75"><strong>83%</strong></td>
-
-                        </tr>
-
-                        <tr>
-
-                            <td style="text-align: left;">openai/gpt-5-pro-2025-10-06/think-high</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100">100%</td>
-
-                            <td class="acc-100"><strong>100%</strong></td>
-
-                        </tr>
-
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-
         <script>
         // Store full data for interactivity
         const fullData = {"metadata": {"run_id": "final_validation_test", "runs_dir": "experiments/runs"}, "experiments": {"cnf1_con_hornonly": {"name": "cnf1_con_hornonly", "models": {"anthropic/claude-haiku-4-5-20251001/nothink": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "thinking_mode": "nothink", "summary": {"name": "cnf1_con_hornonly", "provider": "anthropic", "model": "claude-haiku-4-5-20251001", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 2973.6666666666665, "timestamp": 1760570676}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "anthropic/claude-haiku-4-5-20251001/think-low": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "thinking_mode": "think-low", "summary": {"name": "cnf1_con_hornonly", "provider": "anthropic", "model": "claude-haiku-4-5-20251001", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 5040.0, "timestamp": 1760570676}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "anthropic/claude-opus-4-1-20250805/think-med": {"provider": "anthropic", "model": "claude-opus-4-1-20250805", "thinking_mode": "think-med", "summary": {"name": "cnf1_con_hornonly", "provider": "anthropic", "model": "claude-opus-4-1-20250805", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 23078.666666666668, "timestamp": 1760570676}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "anthropic/claude-sonnet-4-5-20250929/think-high": {"provider": "anthropic", "model": "claude-sonnet-4-5-20250929", "thinking_mode": "think-high", "summary": {"name": "cnf1_con_hornonly", "provider": "anthropic", "model": "claude-sonnet-4-5-20250929", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 16706.666666666668, "timestamp": 1760570676}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "google/gemini-2.5-flash/think-med": {"provider": "google", "model": "gemini-2.5-flash", "thinking_mode": "think-med", "summary": {"name": "cnf1_con_hornonly", "provider": "google", "model": "gemini-2.5-flash", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 3942.0, "timestamp": 1760570676}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "google/gemini-2.5-flash-lite/nothink": {"provider": "google", "model": "gemini-2.5-flash-lite", "thinking_mode": "nothink", "summary": {"name": "cnf1_con_hornonly", "provider": "google", "model": "gemini-2.5-flash-lite", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 1522.0, "timestamp": 1760570676}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "google/gemini-2.5-flash-lite/think-low": {"provider": "google", "model": "gemini-2.5-flash-lite", "thinking_mode": "think-low", "summary": {"name": "cnf1_con_hornonly", "provider": "google", "model": "gemini-2.5-flash-lite", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 2515.0, "timestamp": 1760570676}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "google/gemini-2.5-pro/think-high": {"provider": "google", "model": "gemini-2.5-pro", "thinking_mode": "think-high", "summary": {"name": "cnf1_con_hornonly", "provider": "google", "model": "gemini-2.5-pro", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 15904.666666666666, "timestamp": 1760570676}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "openai/gpt-5-2025-08-07/think-medium": {"provider": "openai", "model": "gpt-5-2025-08-07", "thinking_mode": "think-medium", "summary": {"name": "cnf1_con_hornonly", "provider": "openai", "model": "gpt-5-2025-08-07", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 4473.0, "timestamp": 1760570676}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "openai/gpt-5-mini-2025-08-07/think-low": {"provider": "openai", "model": "gpt-5-mini-2025-08-07", "thinking_mode": "think-low", "summary": {"name": "cnf1_con_hornonly", "provider": "openai", "model": "gpt-5-mini-2025-08-07", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 5305.333333333333, "timestamp": 1760570676}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "openai/gpt-5-nano-2025-08-07/nothink": {"provider": "openai", "model": "gpt-5-nano-2025-08-07", "thinking_mode": "nothink", "summary": {"name": "cnf1_con_hornonly", "provider": "openai", "model": "gpt-5-nano-2025-08-07", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 6726.333333333333, "timestamp": 1760570676}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "openai/gpt-5-pro-2025-10-06/think-high": {"provider": "openai", "model": "gpt-5-pro-2025-10-06", "thinking_mode": "think-high", "summary": {"name": "cnf1_con_hornonly", "provider": "openai", "model": "gpt-5-pro-2025-10-06", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 37734.333333333336, "timestamp": 1760570676}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}}, "summary": {"total_models": 12, "avg_accuracy": 1.0, "total_unclear": 0}}, "cnf1_con_mixed": {"name": "cnf1_con_mixed", "models": {"anthropic/claude-haiku-4-5-20251001/nothink": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "thinking_mode": "nothink", "summary": {"name": "cnf1_con_mixed", "provider": "anthropic", "model": "claude-haiku-4-5-20251001", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 3107.0, "timestamp": 1760570789}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "anthropic/claude-haiku-4-5-20251001/think-low": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "thinking_mode": "think-low", "summary": {"name": "cnf1_con_mixed", "provider": "anthropic", "model": "claude-haiku-4-5-20251001", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 5530.0, "timestamp": 1760570789}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "anthropic/claude-opus-4-1-20250805/think-med": {"provider": "anthropic", "model": "claude-opus-4-1-20250805", "thinking_mode": "think-med", "summary": {"name": "cnf1_con_mixed", "provider": "anthropic", "model": "claude-opus-4-1-20250805", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 23108.666666666668, "timestamp": 1760570789}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "anthropic/claude-sonnet-4-5-20250929/think-high": {"provider": "anthropic", "model": "claude-sonnet-4-5-20250929", "thinking_mode": "think-high", "summary": {"name": "cnf1_con_mixed", "provider": "anthropic", "model": "claude-sonnet-4-5-20250929", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 14271.666666666666, "timestamp": 1760570789}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "google/gemini-2.5-flash/think-med": {"provider": "google", "model": "gemini-2.5-flash", "thinking_mode": "think-med", "summary": {"name": "cnf1_con_mixed", "provider": "google", "model": "gemini-2.5-flash", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 4374.666666666667, "timestamp": 1760570789}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "google/gemini-2.5-flash-lite/nothink": {"provider": "google", "model": "gemini-2.5-flash-lite", "thinking_mode": "nothink", "summary": {"name": "cnf1_con_mixed", "provider": "google", "model": "gemini-2.5-flash-lite", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 1526.6666666666667, "timestamp": 1760570789}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "google/gemini-2.5-flash-lite/think-low": {"provider": "google", "model": "gemini-2.5-flash-lite", "thinking_mode": "think-low", "summary": {"name": "cnf1_con_mixed", "provider": "google", "model": "gemini-2.5-flash-lite", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 13802.333333333334, "timestamp": 1760570789}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "google/gemini-2.5-pro/think-high": {"provider": "google", "model": "gemini-2.5-pro", "thinking_mode": "think-high", "summary": {"name": "cnf1_con_mixed", "provider": "google", "model": "gemini-2.5-pro", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 14936.666666666666, "timestamp": 1760570789}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "openai/gpt-5-2025-08-07/think-medium": {"provider": "openai", "model": "gpt-5-2025-08-07", "thinking_mode": "think-medium", "summary": {"name": "cnf1_con_mixed", "provider": "openai", "model": "gpt-5-2025-08-07", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 5960.666666666667, "timestamp": 1760570789}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "openai/gpt-5-mini-2025-08-07/think-low": {"provider": "openai", "model": "gpt-5-mini-2025-08-07", "thinking_mode": "think-low", "summary": {"name": "cnf1_con_mixed", "provider": "openai", "model": "gpt-5-mini-2025-08-07", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 4621.0, "timestamp": 1760570789}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "openai/gpt-5-nano-2025-08-07/nothink": {"provider": "openai", "model": "gpt-5-nano-2025-08-07", "thinking_mode": "nothink", "summary": {"name": "cnf1_con_mixed", "provider": "openai", "model": "gpt-5-nano-2025-08-07", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 6459.0, "timestamp": 1760570789}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "openai/gpt-5-pro-2025-10-06/think-high": {"provider": "openai", "model": "gpt-5-pro-2025-10-06", "thinking_mode": "think-high", "summary": {"name": "cnf1_con_mixed", "provider": "openai", "model": "gpt-5-pro-2025-10-06", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 35023.0, "timestamp": 1760570789}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}}, "summary": {"total_models": 12, "avg_accuracy": 1.0, "total_unclear": 0}}, "cnf2_con_hornonly": {"name": "cnf2_con_hornonly", "models": {"anthropic/claude-haiku-4-5-20251001/nothink": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "thinking_mode": "nothink", "summary": {"name": "cnf2_con_hornonly", "provider": "anthropic", "model": "claude-haiku-4-5-20251001", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 6175.333333333333, "timestamp": 1760570898}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "anthropic/claude-haiku-4-5-20251001/think-low": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "thinking_mode": "think-low", "summary": {"name": "cnf2_con_hornonly", "provider": "anthropic", "model": "claude-haiku-4-5-20251001", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 5273.666666666667, "timestamp": 1760570898}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "anthropic/claude-opus-4-1-20250805/think-med": {"provider": "anthropic", "model": "claude-opus-4-1-20250805", "thinking_mode": "think-med", "summary": {"name": "cnf2_con_hornonly", "provider": "anthropic", "model": "claude-opus-4-1-20250805", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 24354.0, "timestamp": 1760570898}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "anthropic/claude-sonnet-4-5-20250929/think-high": {"provider": "anthropic", "model": "claude-sonnet-4-5-20250929", "thinking_mode": "think-high", "summary": {"name": "cnf2_con_hornonly", "provider": "anthropic", "model": "claude-sonnet-4-5-20250929", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 12922.333333333334, "timestamp": 1760570898}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "google/gemini-2.5-flash/think-med": {"provider": "google", "model": "gemini-2.5-flash", "thinking_mode": "think-med", "summary": {"name": "cnf2_con_hornonly", "provider": "google", "model": "gemini-2.5-flash", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 4498.333333333333, "timestamp": 1760570898}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "google/gemini-2.5-flash-lite/nothink": {"provider": "google", "model": "gemini-2.5-flash-lite", "thinking_mode": "nothink", "summary": {"name": "cnf2_con_hornonly", "provider": "google", "model": "gemini-2.5-flash-lite", "run": "final_validation_test", "total": 3, "correct": 2, "accuracy": 0.6666666666666666, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 0, "unsat_accuracy": 0.0, "avg_timing_ms": 578.0, "timestamp": 1760570898}, "complexity_breakdown": {"4": {"accuracy": 0.6666666666666666, "total": 3, "correct": 2}}}, "google/gemini-2.5-flash-lite/think-low": {"provider": "google", "model": "gemini-2.5-flash-lite", "thinking_mode": "think-low", "summary": {"name": "cnf2_con_hornonly", "provider": "google", "model": "gemini-2.5-flash-lite", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 2283.0, "timestamp": 1760570898}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "google/gemini-2.5-pro/think-high": {"provider": "google", "model": "gemini-2.5-pro", "thinking_mode": "think-high", "summary": {"name": "cnf2_con_hornonly", "provider": "google", "model": "gemini-2.5-pro", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 13148.333333333334, "timestamp": 1760570898}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "openai/gpt-5-2025-08-07/think-medium": {"provider": "openai", "model": "gpt-5-2025-08-07", "thinking_mode": "think-medium", "summary": {"name": "cnf2_con_hornonly", "provider": "openai", "model": "gpt-5-2025-08-07", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 5142.0, "timestamp": 1760570898}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "openai/gpt-5-mini-2025-08-07/think-low": {"provider": "openai", "model": "gpt-5-mini-2025-08-07", "thinking_mode": "think-low", "summary": {"name": "cnf2_con_hornonly", "provider": "openai", "model": "gpt-5-mini-2025-08-07", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 4967.333333333333, "timestamp": 1760570898}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "openai/gpt-5-nano-2025-08-07/nothink": {"provider": "openai", "model": "gpt-5-nano-2025-08-07", "thinking_mode": "nothink", "summary": {"name": "cnf2_con_hornonly", "provider": "openai", "model": "gpt-5-nano-2025-08-07", "run": "final_validation_test", "total": 3, "correct": 2, "accuracy": 0.6666666666666666, "unclear": 1, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 0, "unsat_accuracy": 0.0, "avg_timing_ms": 9705.333333333334, "timestamp": 1760570898}, "complexity_breakdown": {"4": {"accuracy": 0.6666666666666666, "total": 3, "correct": 2}}}, "openai/gpt-5-pro-2025-10-06/think-high": {"provider": "openai", "model": "gpt-5-pro-2025-10-06", "thinking_mode": "think-high", "summary": {"name": "cnf2_con_hornonly", "provider": "openai", "model": "gpt-5-pro-2025-10-06", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 35352.666666666664, "timestamp": 1760570898}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}}, "summary": {"total_models": 12, "avg_accuracy": 0.9444444444444445, "total_unclear": 1}}, "cnf2_con_mixed": {"name": "cnf2_con_mixed", "models": {"anthropic/claude-haiku-4-5-20251001/nothink": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "thinking_mode": "nothink", "summary": {"name": "cnf2_con_mixed", "provider": "anthropic", "model": "claude-haiku-4-5-20251001", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 2775.6666666666665, "timestamp": 1760571006}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "anthropic/claude-haiku-4-5-20251001/think-low": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "thinking_mode": "think-low", "summary": {"name": "cnf2_con_mixed", "provider": "anthropic", "model": "claude-haiku-4-5-20251001", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 4527.0, "timestamp": 1760571006}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "anthropic/claude-opus-4-1-20250805/think-med": {"provider": "anthropic", "model": "claude-opus-4-1-20250805", "thinking_mode": "think-med", "summary": {"name": "cnf2_con_mixed", "provider": "anthropic", "model": "claude-opus-4-1-20250805", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 18559.333333333332, "timestamp": 1760571006}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "anthropic/claude-sonnet-4-5-20250929/think-high": {"provider": "anthropic", "model": "claude-sonnet-4-5-20250929", "thinking_mode": "think-high", "summary": {"name": "cnf2_con_mixed", "provider": "anthropic", "model": "claude-sonnet-4-5-20250929", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 14400.666666666666, "timestamp": 1760571006}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "google/gemini-2.5-flash/think-med": {"provider": "google", "model": "gemini-2.5-flash", "thinking_mode": "think-med", "summary": {"name": "cnf2_con_mixed", "provider": "google", "model": "gemini-2.5-flash", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 4279.0, "timestamp": 1760571006}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "google/gemini-2.5-flash-lite/nothink": {"provider": "google", "model": "gemini-2.5-flash-lite", "thinking_mode": "nothink", "summary": {"name": "cnf2_con_mixed", "provider": "google", "model": "gemini-2.5-flash-lite", "run": "final_validation_test", "total": 3, "correct": 2, "accuracy": 0.6666666666666666, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 0, "unsat_accuracy": 0.0, "avg_timing_ms": 434.6666666666667, "timestamp": 1760571006}, "complexity_breakdown": {"4": {"accuracy": 0.6666666666666666, "total": 3, "correct": 2}}}, "google/gemini-2.5-flash-lite/think-low": {"provider": "google", "model": "gemini-2.5-flash-lite", "thinking_mode": "think-low", "summary": {"name": "cnf2_con_mixed", "provider": "google", "model": "gemini-2.5-flash-lite", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 2280.0, "timestamp": 1760571006}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "google/gemini-2.5-pro/think-high": {"provider": "google", "model": "gemini-2.5-pro", "thinking_mode": "think-high", "summary": {"name": "cnf2_con_mixed", "provider": "google", "model": "gemini-2.5-pro", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 12736.333333333334, "timestamp": 1760571006}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "openai/gpt-5-2025-08-07/think-medium": {"provider": "openai", "model": "gpt-5-2025-08-07", "thinking_mode": "think-medium", "summary": {"name": "cnf2_con_mixed", "provider": "openai", "model": "gpt-5-2025-08-07", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 4333.0, "timestamp": 1760571006}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "openai/gpt-5-mini-2025-08-07/think-low": {"provider": "openai", "model": "gpt-5-mini-2025-08-07", "thinking_mode": "think-low", "summary": {"name": "cnf2_con_mixed", "provider": "openai", "model": "gpt-5-mini-2025-08-07", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 3909.0, "timestamp": 1760571006}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "openai/gpt-5-nano-2025-08-07/nothink": {"provider": "openai", "model": "gpt-5-nano-2025-08-07", "thinking_mode": "nothink", "summary": {"name": "cnf2_con_mixed", "provider": "openai", "model": "gpt-5-nano-2025-08-07", "run": "final_validation_test", "total": 3, "correct": 1, "accuracy": 0.3333333333333333, "unclear": 2, "sat_total": 2, "sat_correct": 0, "sat_accuracy": 0.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 8436.666666666666, "timestamp": 1760571006}, "complexity_breakdown": {"4": {"accuracy": 0.3333333333333333, "total": 3, "correct": 1}}}, "openai/gpt-5-pro-2025-10-06/think-high": {"provider": "openai", "model": "gpt-5-pro-2025-10-06", "thinking_mode": "think-high", "summary": {"name": "cnf2_con_mixed", "provider": "openai", "model": "gpt-5-pro-2025-10-06", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 35980.0, "timestamp": 1760571006}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}}, "summary": {"total_models": 12, "avg_accuracy": 0.9166666666666666, "total_unclear": 2}}, "horn_yn_hornonly": {"name": "horn_yn_hornonly", "models": {"anthropic/claude-haiku-4-5-20251001/nothink": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "thinking_mode": "nothink", "summary": {"name": "horn_yn_hornonly", "provider": "anthropic", "model": "claude-haiku-4-5-20251001", "run": "final_validation_test", "total": 3, "correct": 0, "accuracy": 0.0, "unclear": 3, "sat_total": 2, "sat_correct": 0, "sat_accuracy": 0.0, "unsat_total": 1, "unsat_correct": 0, "unsat_accuracy": 0.0, "avg_timing_ms": 2384.3333333333335, "timestamp": 1760570463}, "complexity_breakdown": {"4": {"accuracy": 0.0, "total": 3, "correct": 0}}}, "anthropic/claude-haiku-4-5-20251001/think-low": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "thinking_mode": "think-low", "summary": {"name": "horn_yn_hornonly", "provider": "anthropic", "model": "claude-haiku-4-5-20251001", "run": "final_validation_test", "total": 3, "correct": 1, "accuracy": 0.3333333333333333, "unclear": 2, "sat_total": 2, "sat_correct": 1, "sat_accuracy": 0.5, "unsat_total": 1, "unsat_correct": 0, "unsat_accuracy": 0.0, "avg_timing_ms": 4359.0, "timestamp": 1760570463}, "complexity_breakdown": {"4": {"accuracy": 0.3333333333333333, "total": 3, "correct": 1}}}, "anthropic/claude-opus-4-1-20250805/think-med": {"provider": "anthropic", "model": "claude-opus-4-1-20250805", "thinking_mode": "think-med", "summary": {"name": "horn_yn_hornonly", "provider": "anthropic", "model": "claude-opus-4-1-20250805", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 19995.666666666668, "timestamp": 1760570463}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "anthropic/claude-sonnet-4-5-20250929/think-high": {"provider": "anthropic", "model": "claude-sonnet-4-5-20250929", "thinking_mode": "think-high", "summary": {"name": "horn_yn_hornonly", "provider": "anthropic", "model": "claude-sonnet-4-5-20250929", "run": "final_validation_test", "total": 3, "correct": 2, "accuracy": 0.6666666666666666, "unclear": 1, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 0, "unsat_accuracy": 0.0, "avg_timing_ms": 9262.666666666666, "timestamp": 1760570463}, "complexity_breakdown": {"4": {"accuracy": 0.6666666666666666, "total": 3, "correct": 2}}}, "google/gemini-2.5-flash/think-med": {"provider": "google", "model": "gemini-2.5-flash", "thinking_mode": "think-med", "summary": {"name": "horn_yn_hornonly", "provider": "google", "model": "gemini-2.5-flash", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 3718.6666666666665, "timestamp": 1760570463}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "google/gemini-2.5-flash-lite/nothink": {"provider": "google", "model": "gemini-2.5-flash-lite", "thinking_mode": "nothink", "summary": {"name": "horn_yn_hornonly", "provider": "google", "model": "gemini-2.5-flash-lite", "run": "final_validation_test", "total": 3, "correct": 2, "accuracy": 0.6666666666666666, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 0, "unsat_accuracy": 0.0, "avg_timing_ms": 347.3333333333333, "timestamp": 1760570463}, "complexity_breakdown": {"4": {"accuracy": 0.6666666666666666, "total": 3, "correct": 2}}}, "google/gemini-2.5-flash-lite/think-low": {"provider": "google", "model": "gemini-2.5-flash-lite", "thinking_mode": "think-low", "summary": {"name": "horn_yn_hornonly", "provider": "google", "model": "gemini-2.5-flash-lite", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 2517.3333333333335, "timestamp": 1760570463}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "google/gemini-2.5-pro/think-high": {"provider": "google", "model": "gemini-2.5-pro", "thinking_mode": "think-high", "summary": {"name": "horn_yn_hornonly", "provider": "google", "model": "gemini-2.5-pro", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 6596.0, "timestamp": 1760570463}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "openai/gpt-5-2025-08-07/think-medium": {"provider": "openai", "model": "gpt-5-2025-08-07", "thinking_mode": "think-medium", "summary": {"name": "horn_yn_hornonly", "provider": "openai", "model": "gpt-5-2025-08-07", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 3399.0, "timestamp": 1760570463}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "openai/gpt-5-mini-2025-08-07/think-low": {"provider": "openai", "model": "gpt-5-mini-2025-08-07", "thinking_mode": "think-low", "summary": {"name": "horn_yn_hornonly", "provider": "openai", "model": "gpt-5-mini-2025-08-07", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 2644.6666666666665, "timestamp": 1760570463}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "openai/gpt-5-nano-2025-08-07/nothink": {"provider": "openai", "model": "gpt-5-nano-2025-08-07", "thinking_mode": "nothink", "summary": {"name": "horn_yn_hornonly", "provider": "openai", "model": "gpt-5-nano-2025-08-07", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 4892.0, "timestamp": 1760570463}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "openai/gpt-5-pro-2025-10-06/think-high": {"provider": "openai", "model": "gpt-5-pro-2025-10-06", "thinking_mode": "think-high", "summary": {"name": "horn_yn_hornonly", "provider": "openai", "model": "gpt-5-pro-2025-10-06", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 24460.0, "timestamp": 1760570463}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}}, "summary": {"total_models": 12, "avg_accuracy": 0.8055555555555555, "total_unclear": 6}}, "horn_yn_mixed": {"name": "horn_yn_mixed", "models": {"anthropic/claude-haiku-4-5-20251001/nothink": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "thinking_mode": "nothink", "summary": {"name": "horn_yn_mixed", "provider": "anthropic", "model": "claude-haiku-4-5-20251001", "run": "final_validation_test", "total": 3, "correct": 0, "accuracy": 0.0, "unclear": 3, "sat_total": 2, "sat_correct": 0, "sat_accuracy": 0.0, "unsat_total": 1, "unsat_correct": 0, "unsat_accuracy": 0.0, "avg_timing_ms": 2507.0, "timestamp": 1760570547}, "complexity_breakdown": {"4": {"accuracy": 0.0, "total": 3, "correct": 0}}}, "anthropic/claude-haiku-4-5-20251001/think-low": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "thinking_mode": "think-low", "summary": {"name": "horn_yn_mixed", "provider": "anthropic", "model": "claude-haiku-4-5-20251001", "run": "final_validation_test", "total": 3, "correct": 2, "accuracy": 0.6666666666666666, "unclear": 1, "sat_total": 2, "sat_correct": 1, "sat_accuracy": 0.5, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 4179.666666666667, "timestamp": 1760570547}, "complexity_breakdown": {"4": {"accuracy": 0.6666666666666666, "total": 3, "correct": 2}}}, "anthropic/claude-opus-4-1-20250805/think-med": {"provider": "anthropic", "model": "claude-opus-4-1-20250805", "thinking_mode": "think-med", "summary": {"name": "horn_yn_mixed", "provider": "anthropic", "model": "claude-opus-4-1-20250805", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 18374.333333333332, "timestamp": 1760570547}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "anthropic/claude-sonnet-4-5-20250929/think-high": {"provider": "anthropic", "model": "claude-sonnet-4-5-20250929", "thinking_mode": "think-high", "summary": {"name": "horn_yn_mixed", "provider": "anthropic", "model": "claude-sonnet-4-5-20250929", "run": "final_validation_test", "total": 3, "correct": 1, "accuracy": 0.3333333333333333, "unclear": 2, "sat_total": 2, "sat_correct": 1, "sat_accuracy": 0.5, "unsat_total": 1, "unsat_correct": 0, "unsat_accuracy": 0.0, "avg_timing_ms": 9583.666666666666, "timestamp": 1760570547}, "complexity_breakdown": {"4": {"accuracy": 0.3333333333333333, "total": 3, "correct": 1}}}, "google/gemini-2.5-flash/think-med": {"provider": "google", "model": "gemini-2.5-flash", "thinking_mode": "think-med", "summary": {"name": "horn_yn_mixed", "provider": "google", "model": "gemini-2.5-flash", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 3201.0, "timestamp": 1760570547}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "google/gemini-2.5-flash-lite/nothink": {"provider": "google", "model": "gemini-2.5-flash-lite", "thinking_mode": "nothink", "summary": {"name": "horn_yn_mixed", "provider": "google", "model": "gemini-2.5-flash-lite", "run": "final_validation_test", "total": 3, "correct": 2, "accuracy": 0.6666666666666666, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 0, "unsat_accuracy": 0.0, "avg_timing_ms": 586.6666666666666, "timestamp": 1760570547}, "complexity_breakdown": {"4": {"accuracy": 0.6666666666666666, "total": 3, "correct": 2}}}, "google/gemini-2.5-flash-lite/think-low": {"provider": "google", "model": "gemini-2.5-flash-lite", "thinking_mode": "think-low", "summary": {"name": "horn_yn_mixed", "provider": "google", "model": "gemini-2.5-flash-lite", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 2446.6666666666665, "timestamp": 1760570547}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "google/gemini-2.5-pro/think-high": {"provider": "google", "model": "gemini-2.5-pro", "thinking_mode": "think-high", "summary": {"name": "horn_yn_mixed", "provider": "google", "model": "gemini-2.5-pro", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 6125.0, "timestamp": 1760570547}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "openai/gpt-5-2025-08-07/think-medium": {"provider": "openai", "model": "gpt-5-2025-08-07", "thinking_mode": "think-medium", "summary": {"name": "horn_yn_mixed", "provider": "openai", "model": "gpt-5-2025-08-07", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 3242.6666666666665, "timestamp": 1760570547}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "openai/gpt-5-mini-2025-08-07/think-low": {"provider": "openai", "model": "gpt-5-mini-2025-08-07", "thinking_mode": "think-low", "summary": {"name": "horn_yn_mixed", "provider": "openai", "model": "gpt-5-mini-2025-08-07", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 3271.3333333333335, "timestamp": 1760570547}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "openai/gpt-5-nano-2025-08-07/nothink": {"provider": "openai", "model": "gpt-5-nano-2025-08-07", "thinking_mode": "nothink", "summary": {"name": "horn_yn_mixed", "provider": "openai", "model": "gpt-5-nano-2025-08-07", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 3549.0, "timestamp": 1760570547}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}, "openai/gpt-5-pro-2025-10-06/think-high": {"provider": "openai", "model": "gpt-5-pro-2025-10-06", "thinking_mode": "think-high", "summary": {"name": "horn_yn_mixed", "provider": "openai", "model": "gpt-5-pro-2025-10-06", "run": "final_validation_test", "total": 3, "correct": 3, "accuracy": 1.0, "unclear": 0, "sat_total": 2, "sat_correct": 2, "sat_accuracy": 1.0, "unsat_total": 1, "unsat_correct": 1, "unsat_accuracy": 1.0, "avg_timing_ms": 27712.0, "timestamp": 1760570547}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 3, "correct": 3}}}}, "summary": {"total_models": 12, "avg_accuracy": 0.8055555555555555, "total_unclear": 6}}}, "models": {"anthropic/claude-haiku-4-5-20251001/nothink": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "thinking_mode": "nothink", "experiments": {"cnf1_con_hornonly": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "cnf1_con_mixed": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "cnf2_con_hornonly": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "cnf2_con_mixed": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "horn_yn_hornonly": {"accuracy": 0.0, "total": 3, "correct": 0, "unclear": 3}, "horn_yn_mixed": {"accuracy": 0.0, "total": 3, "correct": 0, "unclear": 3}}}, "anthropic/claude-haiku-4-5-20251001/think-low": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "thinking_mode": "think-low", "experiments": {"cnf1_con_hornonly": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "cnf1_con_mixed": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "cnf2_con_hornonly": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "cnf2_con_mixed": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "horn_yn_hornonly": {"accuracy": 0.3333333333333333, "total": 3, "correct": 1, "unclear": 2}, "horn_yn_mixed": {"accuracy": 0.6666666666666666, "total": 3, "correct": 2, "unclear": 1}}}, "anthropic/claude-opus-4-1-20250805/think-med": {"provider": "anthropic", "model": "claude-opus-4-1-20250805", "thinking_mode": "think-med", "experiments": {"cnf1_con_hornonly": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "cnf1_con_mixed": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "cnf2_con_hornonly": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "cnf2_con_mixed": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "horn_yn_hornonly": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "horn_yn_mixed": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}}}, "anthropic/claude-sonnet-4-5-20250929/think-high": {"provider": "anthropic", "model": "claude-sonnet-4-5-20250929", "thinking_mode": "think-high", "experiments": {"cnf1_con_hornonly": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "cnf1_con_mixed": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "cnf2_con_hornonly": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "cnf2_con_mixed": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "horn_yn_hornonly": {"accuracy": 0.6666666666666666, "total": 3, "correct": 2, "unclear": 1}, "horn_yn_mixed": {"accuracy": 0.3333333333333333, "total": 3, "correct": 1, "unclear": 2}}}, "google/gemini-2.5-flash/think-med": {"provider": "google", "model": "gemini-2.5-flash", "thinking_mode": "think-med", "experiments": {"cnf1_con_hornonly": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "cnf1_con_mixed": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "cnf2_con_hornonly": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "cnf2_con_mixed": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "horn_yn_hornonly": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "horn_yn_mixed": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}}}, "google/gemini-2.5-flash-lite/nothink": {"provider": "google", "model": "gemini-2.5-flash-lite", "thinking_mode": "nothink", "experiments": {"cnf1_con_hornonly": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "cnf1_con_mixed": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "cnf2_con_hornonly": {"accuracy": 0.6666666666666666, "total": 3, "correct": 2, "unclear": 0}, "cnf2_con_mixed": {"accuracy": 0.6666666666666666, "total": 3, "correct": 2, "unclear": 0}, "horn_yn_hornonly": {"accuracy": 0.6666666666666666, "total": 3, "correct": 2, "unclear": 0}, "horn_yn_mixed": {"accuracy": 0.6666666666666666, "total": 3, "correct": 2, "unclear": 0}}}, "google/gemini-2.5-flash-lite/think-low": {"provider": "google", "model": "gemini-2.5-flash-lite", "thinking_mode": "think-low", "experiments": {"cnf1_con_hornonly": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "cnf1_con_mixed": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "cnf2_con_hornonly": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "cnf2_con_mixed": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "horn_yn_hornonly": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "horn_yn_mixed": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}}}, "google/gemini-2.5-pro/think-high": {"provider": "google", "model": "gemini-2.5-pro", "thinking_mode": "think-high", "experiments": {"cnf1_con_hornonly": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "cnf1_con_mixed": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "cnf2_con_hornonly": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "cnf2_con_mixed": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "horn_yn_hornonly": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "horn_yn_mixed": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}}}, "openai/gpt-5-2025-08-07/think-medium": {"provider": "openai", "model": "gpt-5-2025-08-07", "thinking_mode": "think-medium", "experiments": {"cnf1_con_hornonly": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "cnf1_con_mixed": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "cnf2_con_hornonly": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "cnf2_con_mixed": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "horn_yn_hornonly": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "horn_yn_mixed": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}}}, "openai/gpt-5-mini-2025-08-07/think-low": {"provider": "openai", "model": "gpt-5-mini-2025-08-07", "thinking_mode": "think-low", "experiments": {"cnf1_con_hornonly": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "cnf1_con_mixed": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "cnf2_con_hornonly": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "cnf2_con_mixed": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "horn_yn_hornonly": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "horn_yn_mixed": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}}}, "openai/gpt-5-nano-2025-08-07/nothink": {"provider": "openai", "model": "gpt-5-nano-2025-08-07", "thinking_mode": "nothink", "experiments": {"cnf1_con_hornonly": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "cnf1_con_mixed": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "cnf2_con_hornonly": {"accuracy": 0.6666666666666666, "total": 3, "correct": 2, "unclear": 1}, "cnf2_con_mixed": {"accuracy": 0.3333333333333333, "total": 3, "correct": 1, "unclear": 2}, "horn_yn_hornonly": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "horn_yn_mixed": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}}}, "openai/gpt-5-pro-2025-10-06/think-high": {"provider": "openai", "model": "gpt-5-pro-2025-10-06", "thinking_mode": "think-high", "experiments": {"cnf1_con_hornonly": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "cnf1_con_mixed": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "cnf2_con_hornonly": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "cnf2_con_mixed": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "horn_yn_hornonly": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}, "horn_yn_mixed": {"accuracy": 1.0, "total": 3, "correct": 3, "unclear": 0}}}}, "summary": {"total_experiments": 6, "total_models": 12, "total_problems_processed": 0}};
         
-        function filterModels() {
-            // Model filtering logic (placeholder for now)
-            console.log('Filtering models...');
+        function transposeHeatmap() {
+            const viewMode = document.getElementById('viewMode').value;
+            const metric = document.getElementById('metricSelect').value;
+            
+            const table = document.getElementById('heatmapTable');
+            const experiments = fullData.experiments;
+            const models = fullData.models;
+            
+            const expNames = Object.keys(experiments).sort();
+            const modelKeys = Object.keys(models).sort();
+            
+            let html = '';
+            
+            if (viewMode === 'model-rows') {
+                // Transpose: Models as rows, Experiments as columns
+                html += '<thead><tr><th style="text-align: left;">Model</th>';
+                
+                for (const exp of expNames) {
+                    html += `<th style="min-width: 100px;">${exp}</th>`;
+                }
+                html += '<th>Average</th></tr></thead><tbody>';
+                
+                for (const modelKey of modelKeys) {
+                    html += '<tr>';
+                    html += `<td style="text-align: left; font-weight: 500;">${modelKey}</td>`;
+                    
+                    const accs = [];
+                    for (const expName of expNames) {
+                        const modelData = experiments[expName]?.models?.[modelKey];
+                        if (modelData) {
+                            const value = getMetricValue(modelData, metric);
+                            const cssClass = getCellClass(modelData.summary.accuracy * 100);
+                            html += `<td class="${cssClass} clickable-cell" title="${modelData.summary.correct}/${modelData.summary.total} correct, ${modelData.summary.unclear} unclear" onclick="showDetails('${expName}', '${modelKey}')">${value}</td>`;
+                            accs.push(modelData.summary.accuracy * 100);
+                        } else {
+                            html += '<td>—</td>';
+                        }
+                    }
+                    
+                    const avgAcc = accs.length > 0 ? accs.reduce((a,b) => a+b, 0) / accs.length : 0;
+                    const avgClass = getCellClass(avgAcc);
+                    html += `<td class="${avgClass}"><strong>${metric === 'accuracy' ? avgAcc.toFixed(0) + '%' : avgAcc.toFixed(0)}</strong></td>`;
+                    html += '</tr>';
+                }
+                
+                html += '</tbody>';
+            } else {
+                // Original: Experiments as rows, Models as columns
+                html += '<thead><tr><th style="text-align: left;">Experiment</th>';
+                
+                for (const modelKey of modelKeys) {
+                    const parts = modelKey.split('/');
+                    const label = `${parts[0].substr(0,3)}/${parts[1].substr(0,20)}/${parts[2]}`;
+                    html += `<th><div class="model-header">${label}</div></th>`;
+                }
+                html += '</tr></thead><tbody>';
+                
+                for (const expName of expNames) {
+                    const expDesc = fullData.experiments[expName].name || expName;
+                    html += `<tr><td class="exp-name">${expName}<div class="exp-description">${getExpDescription(expName)}</div></td>`;
+                    
+                    for (const modelKey of modelKeys) {
+                        const modelData = experiments[expName]?.models?.[modelKey];
+                        if (modelData) {
+                            const value = getMetricValue(modelData, metric);
+                            const cssClass = getCellClass(modelData.summary.accuracy * 100);
+                            html += `<td class="${cssClass} clickable-cell" title="${modelData.summary.correct}/${modelData.summary.total} correct, ${modelData.summary.unclear} unclear" onclick="showDetails('${expName}', '${modelKey}')">${value}</td>`;
+                        } else {
+                            html += '<td>—</td>';
+                        }
+                    }
+                    html += '</tr>';
+                }
+                
+                html += '</tbody>';
+            }
+            
+            table.innerHTML = html;
+        }
+        
+        function getMetricValue(modelData, metric) {
+            const summary = modelData.summary;
+            switch(metric) {
+                case 'accuracy':
+                    return (summary.accuracy * 100).toFixed(0) + '%';
+                case 'correct':
+                    return `${summary.correct}/${summary.total}`;
+                case 'unclear':
+                    return summary.unclear.toString();
+                default:
+                    return (summary.accuracy * 100).toFixed(0) + '%';
+            }
+        }
+        
+        function getCellClass(accPct) {
+            if (accPct >= 95) return 'acc-100';
+            if (accPct >= 85) return 'acc-90';
+            if (accPct >= 70) return 'acc-75';
+            if (accPct >= 50) return 'acc-50';
+            return 'acc-low';
+        }
+        
+        function getExpDescription(expName) {
+            const descriptions = {
+                "horn_yn_hornonly": "Goal-directed entailment task with matched Horn representation (baseline control)",
+                "horn_yn_mixed": "Representation mismatch condition: Horn encoding on mixed problem set (tests robustness)",
+                "cnf1_con_mixed": "Natural language CNF satisfiability (verbose encoding, tests NL scaffolding)",
+                "cnf2_con_mixed": "Symbolic CNF satisfiability (compact encoding, tests symbolic reasoning)",
+                "cnf1_con_hornonly": "NL-CNF on Horn subset (tests representation flexibility)",
+                "cnf2_con_hornonly": "Symbolic-CNF on Horn subset (tests abstraction capability)",
+            };
+            return descriptions[expName] || '';
         }
         
         function updateMetric() {
-            // Metric switching logic (placeholder for now)
-            console.log('Updating metric...');
+            transposeHeatmap(); // Just rebuild table with new metric
         }
         
         function showDetails(exp, model) {

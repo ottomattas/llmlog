@@ -20,6 +20,10 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
     experiments = aggregated_data.get("experiments", {})
     models = aggregated_data.get("models", {})
     
+    # Extract runs_dir and run_id from metadata
+    runs_dir = Path(metadata.get("runs_dir", "experiments/runs"))
+    run_id = metadata.get("run_id", "")
+    
     # Extract experiment and model lists
     exp_names = sorted(experiments.keys())
     model_keys = sorted(models.keys())
@@ -83,6 +87,14 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
             "what_we_test": "Rank models per representation type; measure rank correlation across representations; identify versatile generalists vs. specialized experts; analyze representation-specific failure patterns.",
             "expected": "Model rankings show weak correlation (ρ=0.4-0.6) across representations, with some models exhibiting versatile performance while others specialize in specific encodings, suggesting learned representation preferences.",
             "impact": "First evidence of representation specialization in LLMs."
+        },
+        "RQ7": {
+            "title": "Satisfiability Bias and Asymmetric Error Patterns",
+            "question": "Do models exhibit systematic bias toward satisfiable or unsatisfiable judgments, and does this bias reveal learned heuristics vs. true logical reasoning?",
+            "why_matters": "Bias detection reveals whether models use shortcuts (e.g., 'usually satisfiable' heuristic) vs. proper logical analysis; asymmetric errors indicate reasoning gaps; critical for deployment reliability.",
+            "what_we_test": "Compare accuracy on satisfiable vs. unsatisfiable problems separately; measure bias: (Acc_sat - Acc_unsat); analyze bias consistency across models and representations; check if bias correlates with problem complexity.",
+            "expected": "Models show asymmetric performance with 10-20% higher accuracy on one class (likely unsatisfiable, as contradictions are easier to detect), revealing systematic bias rather than balanced reasoning. Bias magnitude correlates with model tier.",
+            "impact": "Reveals whether models learn logical principles or statistical shortcuts; informs bias correction strategies."
         }
     }
     
@@ -348,18 +360,17 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
             
             <div class="filter-controls">
                 <label>
-                    <input type="checkbox" id="filterTier1" checked onchange="filterModels()"> Tier 1 (Flagship)
+                    <strong>View:</strong>
+                    <select id="viewMode" onchange="transposeHeatmap()">
+                        <option value="exp-rows">Experiments as Rows, Models as Columns</option>
+                        <option value="model-rows">Models as Rows, Experiments as Columns</option>
+                    </select>
                 </label>
-                <label>
-                    <input type="checkbox" id="filterTier2" checked onchange="filterModels()"> Tier 2 (Medium)
-                </label>
-                <label>
-                    <input type="checkbox" id="filterTier3" checked onchange="filterModels()"> Tier 3 (Budget)
-                </label>
-                <label style="margin-left: 30px;">
-                    Show: 
+                <label style="margin-left: 20px;">
+                    <strong>Metric:</strong>
                     <select id="metricSelect" onchange="updateMetric()">
-                        <option value="accuracy">Accuracy</option>
+                        <option value="accuracy">Accuracy (%)</option>
+                        <option value="correct">Correct Count</option>
                         <option value="unclear">Unclear Count</option>
                     </select>
                 </label>
@@ -819,6 +830,107 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
                     </div>
                 </div>
             </div>
+            
+            <div class="rq-section">
+                <div class="rq-title">RQ7: {rq_details['RQ7']['title']}</div>
+                <div class="rq-description">{rq_details['RQ7']['question']}</div>
+                <div class="rq-toggle" onclick="toggleRQ('rq7')">
+                    <span class="rq-toggle-icon" id="rq7-icon">▶</span>
+                    <span>Click for detailed research context</span>
+                </div>
+                <div class="rq-details" id="rq7-details">
+                    <div class="rq-detail-section"><strong>Why it matters:</strong> {rq_details['RQ7']['why_matters']}</div>
+                    <div class="rq-detail-section"><strong>What we test:</strong> {rq_details['RQ7']['what_we_test']}</div>
+                    <div class="rq-detail-section"><strong>Expected finding:</strong> {rq_details['RQ7']['expected']}</div>
+                    <div class="rq-detail-section"><strong>Scientific impact:</strong> {rq_details['RQ7']['impact']}</div>
+                </div>
+                <div class="finding">
+                    <strong>Sat/Unsat Performance Analysis:</strong>
+                    <table style="width: 100%; margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th>Model</th>
+                                <th>Satisfiable Acc</th>
+                                <th>Unsatisfiable Acc</th>
+                                <th>Bias (Δ)</th>
+                                <th>Interpretation</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+""")
+    
+    # Calculate sat/unsat bias for each model
+    for model_key in model_keys:
+        model_data = models[model_key]
+        
+        sat_correct = 0
+        sat_total = 0
+        unsat_correct = 0
+        unsat_total = 0
+        
+        # Aggregate across all experiments
+        for exp_name in exp_names:
+            if exp_name in model_data["experiments"]:
+                # Load detailed results to separate sat/unsat
+                exp_run_path = runs_dir / exp_name / run_id / model_key.split('/')[0] / model_key.split('/')[1] / model_key.split('/')[2]
+                results_file = exp_run_path / "results.jsonl"
+                
+                if results_file.exists():
+                    with open(results_file) as f:
+                        for line in f:
+                            try:
+                                row = json.loads(line)
+                                meta = row.get("meta", {})
+                                satflag = meta.get("satflag")
+                                parsed = row.get("parsed_answer")
+                                
+                                if satflag is not None and parsed is not None and parsed != 2:
+                                    if satflag == 1:  # Satisfiable
+                                        sat_total += 1
+                                        if parsed == satflag:
+                                            sat_correct += 1
+                                    elif satflag == 0:  # Unsatisfiable
+                                        unsat_total += 1
+                                        if parsed == satflag:
+                                            unsat_correct += 1
+                            except:
+                                pass
+        
+        if sat_total > 0 or unsat_total > 0:
+            sat_acc = (sat_correct / sat_total * 100) if sat_total > 0 else 0
+            unsat_acc = (unsat_correct / unsat_total * 100) if unsat_total > 0 else 0
+            bias = sat_acc - unsat_acc
+            
+            interpretation = ""
+            if abs(bias) < 5:
+                interpretation = "Balanced"
+            elif bias > 10:
+                interpretation = "SAT bias"
+            elif bias < -10:
+                interpretation = "UNSAT bias"
+            else:
+                interpretation = "Slight bias"
+            
+            bias_class = "acc-100" if abs(bias) < 10 else "acc-75" if abs(bias) < 20 else "acc-50"
+            
+            html.append(f"""                            <tr>
+                                <td style="text-align: left; font-size: 0.85em;">{model_key}</td>
+                                <td class="{'acc-100' if sat_acc >= 90 else 'acc-90' if sat_acc >= 75 else 'acc-75'}">{sat_acc:.0f}%</td>
+                                <td class="{'acc-100' if unsat_acc >= 90 else 'acc-90' if unsat_acc >= 75 else 'acc-75'}">{unsat_acc:.0f}%</td>
+                                <td class="{bias_class}" style="font-weight: 600;">{bias:+.0f}%</td>
+                                <td>{interpretation}</td>
+                            </tr>
+""")
+    
+    html.append(f"""                        </tbody>
+                    </table>
+                    <div class="note" style="margin-top: 15px;">
+                        <strong>Interpretation:</strong> Positive bias (Δ > 0) indicates models are better at satisfiable problems (may miss contradictions). 
+                        Negative bias (Δ < 0) indicates better contradiction detection (may falsely claim unsatisfiability). 
+                        Balanced performance (|Δ| < 5%) suggests unbiased logical reasoning.
+                    </div>
+                </div>
+            </div>
         </div>
 """)
     
@@ -989,64 +1101,7 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
         </div>
 """)
     
-    # Section 4: Model Performance Table
-    html.append("""
-        <div class="section">
-            <h2>📈 Model Performance Across Experiments</h2>
-            <div style="overflow-x: auto;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="text-align: left;">Model</th>
-""")
-    
-    for exp_name in exp_names:
-        html.append(f'                            <th>{exp_name}</th>\n')
-    
-    html.append("""                            <th>Average</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-""")
-    
-    for model_key in model_keys:
-        model_data = models[model_key]
-        html.append(f'                        <tr>\n')
-        html.append(f'                            <td style="text-align: left;">{model_key}</td>\n')
-        
-        accs = []
-        for exp_name in exp_names:
-            if exp_name in model_data["experiments"]:
-                acc = model_data["experiments"][exp_name]["accuracy"] * 100
-                accs.append(acc)
-                
-                css_class = (
-                    "acc-100" if acc >= 95 else
-                    "acc-90" if acc >= 85 else
-                    "acc-75" if acc >= 70 else
-                    "acc-50" if acc >= 50 else
-                    "acc-low"
-                )
-                html.append(f'                            <td class="{css_class}">{acc:.0f}%</td>\n')
-            else:
-                html.append(f'                            <td>—</td>\n')
-        
-        avg_acc = sum(accs) / len(accs) if accs else 0
-        avg_class = (
-            "acc-100" if avg_acc >= 95 else
-            "acc-90" if avg_acc >= 85 else
-            "acc-75" if avg_acc >= 70 else
-            "acc-50" if avg_acc >= 50 else
-            "acc-low"
-        )
-        html.append(f'                            <td class="{avg_class}"><strong>{avg_acc:.0f}%</strong></td>\n')
-        html.append(f'                        </tr>\n')
-    
-    html.append("""                    </tbody>
-                </table>
-            </div>
-        </div>
-""")
+    # No separate Model Performance table - integrated into transposable heatmap above
     
     # Add JavaScript for interactivity
     html.append("""
@@ -1054,14 +1109,122 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
         // Store full data for interactivity
         const fullData = """ + json.dumps(aggregated_data) + """;
         
-        function filterModels() {
-            // Model filtering logic (placeholder for now)
-            console.log('Filtering models...');
+        function transposeHeatmap() {
+            const viewMode = document.getElementById('viewMode').value;
+            const metric = document.getElementById('metricSelect').value;
+            
+            const table = document.getElementById('heatmapTable');
+            const experiments = fullData.experiments;
+            const models = fullData.models;
+            
+            const expNames = Object.keys(experiments).sort();
+            const modelKeys = Object.keys(models).sort();
+            
+            let html = '';
+            
+            if (viewMode === 'model-rows') {
+                // Transpose: Models as rows, Experiments as columns
+                html += '<thead><tr><th style="text-align: left;">Model</th>';
+                
+                for (const exp of expNames) {
+                    html += `<th style="min-width: 100px;">${exp}</th>`;
+                }
+                html += '<th>Average</th></tr></thead><tbody>';
+                
+                for (const modelKey of modelKeys) {
+                    html += '<tr>';
+                    html += `<td style="text-align: left; font-weight: 500;">${modelKey}</td>`;
+                    
+                    const accs = [];
+                    for (const expName of expNames) {
+                        const modelData = experiments[expName]?.models?.[modelKey];
+                        if (modelData) {
+                            const value = getMetricValue(modelData, metric);
+                            const cssClass = getCellClass(modelData.summary.accuracy * 100);
+                            html += `<td class="${cssClass} clickable-cell" title="${modelData.summary.correct}/${modelData.summary.total} correct, ${modelData.summary.unclear} unclear" onclick="showDetails('${expName}', '${modelKey}')">${value}</td>`;
+                            accs.push(modelData.summary.accuracy * 100);
+                        } else {
+                            html += '<td>—</td>';
+                        }
+                    }
+                    
+                    const avgAcc = accs.length > 0 ? accs.reduce((a,b) => a+b, 0) / accs.length : 0;
+                    const avgClass = getCellClass(avgAcc);
+                    html += `<td class="${avgClass}"><strong>${metric === 'accuracy' ? avgAcc.toFixed(0) + '%' : avgAcc.toFixed(0)}</strong></td>`;
+                    html += '</tr>';
+                }
+                
+                html += '</tbody>';
+            } else {
+                // Original: Experiments as rows, Models as columns
+                html += '<thead><tr><th style="text-align: left;">Experiment</th>';
+                
+                for (const modelKey of modelKeys) {
+                    const parts = modelKey.split('/');
+                    const label = `${parts[0].substr(0,3)}/${parts[1].substr(0,20)}/${parts[2]}`;
+                    html += `<th><div class="model-header">${label}</div></th>`;
+                }
+                html += '</tr></thead><tbody>';
+                
+                for (const expName of expNames) {
+                    const expDesc = fullData.experiments[expName].name || expName;
+                    html += `<tr><td class="exp-name">${expName}<div class="exp-description">${getExpDescription(expName)}</div></td>`;
+                    
+                    for (const modelKey of modelKeys) {
+                        const modelData = experiments[expName]?.models?.[modelKey];
+                        if (modelData) {
+                            const value = getMetricValue(modelData, metric);
+                            const cssClass = getCellClass(modelData.summary.accuracy * 100);
+                            html += `<td class="${cssClass} clickable-cell" title="${modelData.summary.correct}/${modelData.summary.total} correct, ${modelData.summary.unclear} unclear" onclick="showDetails('${expName}', '${modelKey}')">${value}</td>`;
+                        } else {
+                            html += '<td>—</td>';
+                        }
+                    }
+                    html += '</tr>';
+                }
+                
+                html += '</tbody>';
+            }
+            
+            table.innerHTML = html;
+        }
+        
+        function getMetricValue(modelData, metric) {
+            const summary = modelData.summary;
+            switch(metric) {
+                case 'accuracy':
+                    return (summary.accuracy * 100).toFixed(0) + '%';
+                case 'correct':
+                    return `${summary.correct}/${summary.total}`;
+                case 'unclear':
+                    return summary.unclear.toString();
+                default:
+                    return (summary.accuracy * 100).toFixed(0) + '%';
+            }
+        }
+        
+        function getCellClass(accPct) {
+            if (accPct >= 95) return 'acc-100';
+            if (accPct >= 85) return 'acc-90';
+            if (accPct >= 70) return 'acc-75';
+            if (accPct >= 50) return 'acc-50';
+            return 'acc-low';
+        }
+        
+        function getExpDescription(expName) {
+            const descriptions = {
+                "horn_yn_hornonly": "Goal-directed entailment task with matched Horn representation (baseline control)",
+                "horn_yn_mixed": "Representation mismatch condition: Horn encoding on mixed problem set (tests robustness)",
+                "cnf1_con_mixed": "Natural language CNF satisfiability (verbose encoding, tests NL scaffolding)",
+                "cnf2_con_mixed": "Symbolic CNF satisfiability (compact encoding, tests symbolic reasoning)",
+                "cnf1_con_hornonly": "NL-CNF on Horn subset (tests representation flexibility)",
+                "cnf2_con_hornonly": "Symbolic-CNF on Horn subset (tests abstraction capability)",
+            };
+            return descriptions[expName] || '';
         }
         
         function updateMetric() {
-            // Metric switching logic (placeholder for now)
-            console.log('Updating metric...');
+            transposeHeatmap(); // Just rebuild table with new metric
         }
         
         function showDetails(exp, model) {
