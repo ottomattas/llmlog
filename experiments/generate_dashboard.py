@@ -34,14 +34,56 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
         "cnf2_con_hornonly": "Symbolic-CNF on Horn subset (tests abstraction capability)",
     }
     
-    # Research question one-liners (scientific framing)
-    rq_descriptions = {
-        "RQ1": "Do LLMs exhibit representation-invariant logical reasoning, or is performance fundamentally bound to surface encodings?",
-        "RQ2": "When representations mismatch problem structure, do models exhibit systematic failures or degrade randomly?",
-        "RQ3": "How does reasoning accuracy scale with problem complexity, and can we predict breakdown thresholds?",
-        "RQ4": "Does extended thinking enable qualitatively different problem-solving or merely reduce errors on solvable problems?",
-        "RQ5": "Do models exhibit sharp phase transitions or gradual degradation at complexity thresholds?",
-        "RQ6": "Do models transfer reasoning capability across representations or exhibit task-specific specialization?",
+    # Research question details (from RESEARCH_QUESTIONS.md)
+    rq_details = {
+        "RQ1": {
+            "title": "Representation Invariance in Logical Reasoning",
+            "question": "Do LLMs exhibit representation-invariant logical reasoning, or is performance fundamentally bound to surface encodings?",
+            "why_matters": "Tests whether models learn abstract logical principles vs. pattern matching; connects to debates about symbolic vs. neural reasoning; has implications for AI safety (robust reasoning across contexts).",
+            "what_we_test": "Same logical problems in 3 representations (horn_if_then, cnf_v1, cnf_v2); compare accuracy on isomorphic problems with different encodings; measure representation sensitivity ΔAcc(repr_i, repr_j).",
+            "expected": "Models show 5-15% accuracy variation across representations of identical logical content, suggesting representation-dependent reasoning rather than true abstraction.",
+            "impact": "Challenges claims of 'emergent reasoning' in LLMs."
+        },
+        "RQ2": {
+            "title": "Systematic Failure Modes Under Representation Mismatch",
+            "question": "When representations mismatch problem structure, do models exhibit systematic failures or degrade randomly?",
+            "why_matters": "Distinguishes between 'confused' vs. 'guessing' behavior; reveals whether models detect incompatibility; informs model robustness and error detection.",
+            "what_we_test": "Horn representation on non-Horn problems (incompatible); measure error rate, unclear rate, systematic bias; analyze which specific problem types cause failures.",
+            "expected": "Models exhibit systematic errors (20-40% unclear responses) rather than random guessing when faced with incompatible representations, suggesting partial problem detection but inability to recover.",
+            "impact": "Reveals limitations in metacognitive awareness."
+        },
+        "RQ3": {
+            "title": "Scaling Laws for Logical Complexity",
+            "question": "How does reasoning accuracy scale with problem complexity, and do different models exhibit universal vs. model-specific scaling patterns?",
+            "why_matters": "Analogous to scaling laws for training compute/data; predictive: can we forecast failure on unseen complexities?; theoretical: what determines reasoning capacity limits?",
+            "what_we_test": "Accuracy vs. complexity (variables 4-20, clause length 2-5); fit power law: Acc(n) = A - B·n^α where n = complexity; compare α (decay exponent) across models.",
+            "expected": "Model accuracy follows power-law decay: Acc(n) ≈ 0.98 - 0.15·(n/10)^1.8 for flagship models, with steeper exponents for budget models, suggesting universal scaling with model-dependent constants.",
+            "impact": "First scaling law for logical reasoning in LLMs."
+        },
+        "RQ4": {
+            "title": "Extended Deliberation: Error Correction vs. Qualitative Improvement",
+            "question": "Does extended thinking (reasoning tokens) enable qualitatively different problem-solving strategies, or merely reduce errors on solvable problems?",
+            "why_matters": "Fundamental question about System 1 vs. System 2 cognition; cost-benefit: when is slow thinking actually better?; mechanistic: what does 'thinking longer' buy you?",
+            "what_we_test": "Same model with/without extended thinking; measure Δaccuracy by problem complexity; analyze threshold effects (complexity where thinking helps); qualitative analysis of reasoning traces.",
+            "expected": "Extended thinking provides minimal benefit (<2%) on simple problems but critical gains (8-15%) beyond complexity threshold (>10 variables), suggesting extended deliberation enables systematic search rather than mere error reduction.",
+            "impact": "Evidence for dual-process cognition in LLMs."
+        },
+        "RQ5": {
+            "title": "Capacity-Complexity Phase Transitions",
+            "question": "Do models exhibit sharp phase transitions in reasoning capability at specific complexity thresholds, or gradual degradation?",
+            "why_matters": "Sharp transitions → discrete capacity limits; gradual decay → continuous scaling; predictability of failure modes.",
+            "what_we_test": "Plot accuracy vs. complexity for all models; identify smooth decay vs. cliff-like drops; measure slope changes, inflection points; compare flagship vs. budget transition patterns.",
+            "expected": "All models exhibit phase transitions at model-specific complexity thresholds (vars: 7-9 for budget, 12-15 for flagship), with accuracy dropping >20% within 2-variable increments, suggesting discrete capacity limits rather than continuous scaling.",
+            "impact": "Reveals hard limits in reasoning capability."
+        },
+        "RQ6": {
+            "title": "Cross-Task Transfer and Representation Learnability",
+            "question": "Do models that excel at one representation type (e.g., Horn clauses) transfer that capability to others (CNF), or is performance representation-specific?",
+            "why_matters": "Tests generalization vs. specialization; reveals whether models learn task-general reasoning; informs multi-task training strategies.",
+            "what_we_test": "Rank models per representation type; measure rank correlation across representations; identify versatile generalists vs. specialized experts; analyze representation-specific failure patterns.",
+            "expected": "Model rankings show weak correlation (ρ=0.4-0.6) across representations, with some models exhibiting versatile performance while others specialize in specific encodings, suggesting learned representation preferences.",
+            "impact": "First evidence of representation specialization in LLMs."
+        }
     }
     
     html = []
@@ -211,6 +253,42 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
             transform: scale(1.05);
             box-shadow: 0 0 10px rgba(0,0,0,0.2);
         }
+        .rq-details {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            display: none;
+        }
+        .rq-details.expanded {
+            display: block;
+        }
+        .rq-toggle {
+            cursor: pointer;
+            color: #667eea;
+            font-weight: 600;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .rq-toggle:hover {
+            color: #5568d3;
+        }
+        .rq-toggle-icon {
+            transition: transform 0.2s;
+        }
+        .rq-toggle-icon.expanded {
+            transform: rotate(90deg);
+        }
+        .rq-detail-section {
+            margin: 10px 0;
+        }
+        .rq-detail-section strong {
+            color: #667eea;
+        }
     </style>
 </head>
 <body>
@@ -360,10 +438,21 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
     horn_exps = [e for e in exp_names if 'horn_yn' in e]
     cnf_exps = [e for e in exp_names if 'cnf' in e]
     
-    html.append("""
+    rq1 = rq_details["RQ1"]
+    html.append(f"""
             <div class="rq-section">
-                <div class="rq-title">RQ1: Does Representation Matter?</div>
-                <div class="rq-description">{rq_descriptions.get('RQ1', '')}</div>
+                <div class="rq-title">RQ1: {rq1['title']}</div>
+                <div class="rq-description">{rq1['question']}</div>
+                <div class="rq-toggle" onclick="toggleRQ('rq1')">
+                    <span class="rq-toggle-icon" id="rq1-icon">▶</span>
+                    <span>Click for detailed research context</span>
+                </div>
+                <div class="rq-details" id="rq1-details">
+                    <div class="rq-detail-section"><strong>Why it matters:</strong> {rq1['why_matters']}</div>
+                    <div class="rq-detail-section"><strong>What we test:</strong> {rq1['what_we_test']}</div>
+                    <div class="rq-detail-section"><strong>Expected finding:</strong> {rq1['expected']}</div>
+                    <div class="rq-detail-section"><strong>Scientific impact:</strong> {rq1['impact']}</div>
+                </div>
                 <div class="finding">
 """)
     
@@ -380,13 +469,24 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
                     </ul>
 """)
     
-    html.append("""
+    rq2 = rq_details["RQ2"]
+    html.append(f"""
                 </div>
             </div>
             
             <div class="rq-section">
-                <div class="rq-title">RQ2: Can Models Handle Representation Mismatch?</div>
-                <div class="rq-description">{rq_descriptions.get('RQ2', '')}</div>
+                <div class="rq-title">RQ2: {rq2['title']}</div>
+                <div class="rq-description">{rq2['question']}</div>
+                <div class="rq-toggle" onclick="toggleRQ('rq2')">
+                    <span class="rq-toggle-icon" id="rq2-icon">▶</span>
+                    <span>Click for detailed research context</span>
+                </div>
+                <div class="rq-details" id="rq2-details">
+                    <div class="rq-detail-section"><strong>Why it matters:</strong> {rq2['why_matters']}</div>
+                    <div class="rq-detail-section"><strong>What we test:</strong> {rq2['what_we_test']}</div>
+                    <div class="rq-detail-section"><strong>Expected finding:</strong> {rq2['expected']}</div>
+                    <div class="rq-detail-section"><strong>Scientific impact:</strong> {rq2['impact']}</div>
+                </div>
 """)
     
     if 'horn_yn_hornonly' in experiments and 'horn_yn_mixed' in experiments:
@@ -407,12 +507,23 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
                 </div>
 """)
     
-    html.append("""
+    rq3 = rq_details["RQ3"]
+    html.append(f"""
             </div>
             
             <div class="rq-section">
-                <div class="rq-title">RQ3: Scaling Laws for Logical Complexity</div>
-                <div class="rq-description">{rq_descriptions.get('RQ3', '')}</div>
+                <div class="rq-title">RQ3: {rq3['title']}</div>
+                <div class="rq-description">{rq3['question']}</div>
+                <div class="rq-toggle" onclick="toggleRQ('rq3')">
+                    <span class="rq-toggle-icon" id="rq3-icon">▶</span>
+                    <span>Click for detailed research context</span>
+                </div>
+                <div class="rq-details" id="rq3-details">
+                    <div class="rq-detail-section"><strong>Why it matters:</strong> {rq3['why_matters']}</div>
+                    <div class="rq-detail-section"><strong>What we test:</strong> {rq3['what_we_test']}</div>
+                    <div class="rq-detail-section"><strong>Expected finding:</strong> {rq3['expected']}</div>
+                    <div class="rq-detail-section"><strong>Scientific impact:</strong> {rq3['impact']}</div>
+                </div>
                 <div class="finding">
                     <strong>Complexity-Dependent Performance:</strong>
                     <p style="margin: 10px 0;">See degradation curves below for visual analysis. Preliminary scaling pattern:</p>
@@ -476,7 +587,7 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
                             </tr>
 """)
     
-    html.append("""                        </tbody>
+    html.append(f"""                        </tbody>
                     </table>
                     <div class="note" style="margin-top: 15px;">
                         <strong>Interpretation:</strong> Degradation curves (below) visualize the scaling relationship Acc(n) where n = complexity. 
@@ -486,8 +597,18 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
             </div>
             
             <div class="rq-section">
-                <div class="rq-title">RQ4: Is Extended Thinking Worth It?</div>
-                <div class="rq-description">{rq_descriptions.get('RQ4', '')}</div>
+                <div class="rq-title">RQ4: {rq_details['RQ4']['title']}</div>
+                <div class="rq-description">{rq_details['RQ4']['question']}</div>
+                <div class="rq-toggle" onclick="toggleRQ('rq4')">
+                    <span class="rq-toggle-icon" id="rq4-icon">▶</span>
+                    <span>Click for detailed research context</span>
+                </div>
+                <div class="rq-details" id="rq4-details">
+                    <div class="rq-detail-section"><strong>Why it matters:</strong> {rq_details['RQ4']['why_matters']}</div>
+                    <div class="rq-detail-section"><strong>What we test:</strong> {rq_details['RQ4']['what_we_test']}</div>
+                    <div class="rq-detail-section"><strong>Expected finding:</strong> {rq_details['RQ4']['expected']}</div>
+                    <div class="rq-detail-section"><strong>Scientific impact:</strong> {rq_details['RQ4']['impact']}</div>
+                </div>
                 <div class="finding">
                     <table style="width: 100%; margin-top: 10px;">
                         <thead>
@@ -532,7 +653,7 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
                             </tr>
 """)
     
-    html.append("""                        </tbody>
+    html.append(f"""                        </tbody>
                     </table>
                     <div class="note" style="margin-top: 15px;">
                         <strong>Limited data:</strong> Full validation will show thinking benefits by complexity level.
@@ -541,8 +662,18 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
             </div>
             
             <div class="rq-section">
-                <div class="rq-title">RQ5: Phase Transitions in Reasoning Capability</div>
-                <div class="rq-description">{rq_descriptions.get('RQ5', '')}</div>
+                <div class="rq-title">RQ5: {rq_details['RQ5']['title']}</div>
+                <div class="rq-description">{rq_details['RQ5']['question']}</div>
+                <div class="rq-toggle" onclick="toggleRQ('rq5')">
+                    <span class="rq-toggle-icon" id="rq5-icon">▶</span>
+                    <span>Click for detailed research context</span>
+                </div>
+                <div class="rq-details" id="rq5-details">
+                    <div class="rq-detail-section"><strong>Why it matters:</strong> {rq_details['RQ5']['why_matters']}</div>
+                    <div class="rq-detail-section"><strong>What we test:</strong> {rq_details['RQ5']['what_we_test']}</div>
+                    <div class="rq-detail-section"><strong>Expected finding:</strong> {rq_details['RQ5']['expected']}</div>
+                    <div class="rq-detail-section"><strong>Scientific impact:</strong> {rq_details['RQ5']['impact']}</div>
+                </div>
                 <div class="finding">
                     <strong>Tier-Based Phase Behavior:</strong>
                     <p style="margin: 10px 0;">Analyzing whether models show sharp transitions (phase-like) or gradual degradation:</p>
@@ -609,7 +740,7 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
                             </tr>
 """)
     
-    html.append("""                        </tbody>
+    html.append(f"""                        </tbody>
                     </table>
                     <div class="note" style="margin-top: 15px;">
                         <strong>Hypothesis:</strong> Sharp transitions indicate discrete capacity limits; gradual decay suggests continuous scaling. 
@@ -619,8 +750,18 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
             </div>
             
             <div class="rq-section">
-                <div class="rq-title">RQ6: Cross-Task Transfer and Specialization</div>
-                <div class="rq-description">{rq_descriptions.get('RQ6', '')}</div>
+                <div class="rq-title">RQ6: {rq_details['RQ6']['title']}</div>
+                <div class="rq-description">{rq_details['RQ6']['question']}</div>
+                <div class="rq-toggle" onclick="toggleRQ('rq6')">
+                    <span class="rq-toggle-icon" id="rq6-icon">▶</span>
+                    <span>Click for detailed research context</span>
+                </div>
+                <div class="rq-details" id="rq6-details">
+                    <div class="rq-detail-section"><strong>Why it matters:</strong> {rq_details['RQ6']['why_matters']}</div>
+                    <div class="rq-detail-section"><strong>What we test:</strong> {rq_details['RQ6']['what_we_test']}</div>
+                    <div class="rq-detail-section"><strong>Expected finding:</strong> {rq_details['RQ6']['expected']}</div>
+                    <div class="rq-detail-section"><strong>Scientific impact:</strong> {rq_details['RQ6']['impact']}</div>
+                </div>
                 <div class="finding">
                     <strong>Model Rankings by Task Type:</strong>
                     <table style="width: 100%; margin-top: 10px;">
@@ -670,7 +811,7 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
                             </tr>
 """)
     
-    html.append("""                        </tbody>
+    html.append(f"""                        </tbody>
                     </table>
                     <div class="note" style="margin-top: 15px;">
                         <strong>Transfer Analysis:</strong> Rank correlation across task types will reveal generalists (high transfer) vs. specialists (task-specific). 
@@ -924,16 +1065,36 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
         }
         
         function showDetails(exp, model) {
-            // Show detailed modal or expand section
-            alert(`Details for ${exp} - ${model}\\n\\nClick on degradation chart legends to toggle models on/off.`);
+            alert(`Details for ${exp} - ${model}\\n\\nSee degradation charts below for performance across complexity levels.`);
+        }
+        
+        function toggleRQ(rqId) {
+            const details = document.getElementById(rqId + '-details');
+            const icon = document.getElementById(rqId + '-icon');
+            
+            if (details.classList.contains('expanded')) {
+                details.classList.remove('expanded');
+                icon.classList.remove('expanded');
+                icon.textContent = '▶';
+            } else {
+                details.classList.add('expanded');
+                icon.classList.add('expanded');
+                icon.textContent = '▼';
+            }
         }
         
         // Add chart legend interactivity hint
         document.addEventListener('DOMContentLoaded', function() {
-            const note = document.createElement('div');
-            note.className = 'note';
-            note.innerHTML = '<strong>💡 Tip:</strong> Click on chart legends to show/hide individual models. Hover over lines to see exact values.';
-            document.querySelector('.section:has(canvas)').prepend(note);
+            const chartSections = document.querySelectorAll('.section h2');
+            for (const section of chartSections) {
+                if (section.textContent.includes('Degradation')) {
+                    const note = document.createElement('div');
+                    note.className = 'note';
+                    note.innerHTML = '<strong>💡 Interactive Charts:</strong> Click legend items to show/hide models. Hover over lines to see exact accuracy values.';
+                    section.parentElement.insertBefore(note, section.nextSibling);
+                    break;
+                }
+            }
         });
         </script>
 """)

@@ -162,6 +162,42 @@
             transform: scale(1.05);
             box-shadow: 0 0 10px rgba(0,0,0,0.2);
         }
+        .rq-details {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            display: none;
+        }
+        .rq-details.expanded {
+            display: block;
+        }
+        .rq-toggle {
+            cursor: pointer;
+            color: #667eea;
+            font-weight: 600;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .rq-toggle:hover {
+            color: #5568d3;
+        }
+        .rq-toggle-icon {
+            transition: transform 0.2s;
+        }
+        .rq-toggle-icon.expanded {
+            transform: rotate(90deg);
+        }
+        .rq-detail-section {
+            margin: 10px 0;
+        }
+        .rq-detail-section strong {
+            color: #667eea;
+        }
     </style>
 </head>
 <body>
@@ -447,8 +483,18 @@
 
 
             <div class="rq-section">
-                <div class="rq-title">RQ1: Does Representation Matter?</div>
-                <div class="rq-description">{rq_descriptions.get('RQ1', '')}</div>
+                <div class="rq-title">RQ1: Representation Invariance in Logical Reasoning</div>
+                <div class="rq-description">Do LLMs exhibit representation-invariant logical reasoning, or is performance fundamentally bound to surface encodings?</div>
+                <div class="rq-toggle" onclick="toggleRQ('rq1')">
+                    <span class="rq-toggle-icon" id="rq1-icon">▶</span>
+                    <span>Click for detailed research context</span>
+                </div>
+                <div class="rq-details" id="rq1-details">
+                    <div class="rq-detail-section"><strong>Why it matters:</strong> Tests whether models learn abstract logical principles vs. pattern matching; connects to debates about symbolic vs. neural reasoning; has implications for AI safety (robust reasoning across contexts).</div>
+                    <div class="rq-detail-section"><strong>What we test:</strong> Same logical problems in 3 representations (horn_if_then, cnf_v1, cnf_v2); compare accuracy on isomorphic problems with different encodings; measure representation sensitivity ΔAcc(repr_i, repr_j).</div>
+                    <div class="rq-detail-section"><strong>Expected finding:</strong> Models show 5-15% accuracy variation across representations of identical logical content, suggesting representation-dependent reasoning rather than true abstraction.</div>
+                    <div class="rq-detail-section"><strong>Scientific impact:</strong> Challenges claims of 'emergent reasoning' in LLMs.</div>
+                </div>
                 <div class="finding">
 
 
@@ -465,8 +511,18 @@
             </div>
             
             <div class="rq-section">
-                <div class="rq-title">RQ2: Can Models Handle Representation Mismatch?</div>
-                <div class="rq-description">{rq_descriptions.get('RQ2', '')}</div>
+                <div class="rq-title">RQ2: Systematic Failure Modes Under Representation Mismatch</div>
+                <div class="rq-description">When representations mismatch problem structure, do models exhibit systematic failures or degrade randomly?</div>
+                <div class="rq-toggle" onclick="toggleRQ('rq2')">
+                    <span class="rq-toggle-icon" id="rq2-icon">▶</span>
+                    <span>Click for detailed research context</span>
+                </div>
+                <div class="rq-details" id="rq2-details">
+                    <div class="rq-detail-section"><strong>Why it matters:</strong> Distinguishes between 'confused' vs. 'guessing' behavior; reveals whether models detect incompatibility; informs model robustness and error detection.</div>
+                    <div class="rq-detail-section"><strong>What we test:</strong> Horn representation on non-Horn problems (incompatible); measure error rate, unclear rate, systematic bias; analyze which specific problem types cause failures.</div>
+                    <div class="rq-detail-section"><strong>Expected finding:</strong> Models exhibit systematic errors (20-40% unclear responses) rather than random guessing when faced with incompatible representations, suggesting partial problem detection but inability to recover.</div>
+                    <div class="rq-detail-section"><strong>Scientific impact:</strong> Reveals limitations in metacognitive awareness.</div>
+                </div>
 
 
                 <div class="finding">
@@ -485,7 +541,17 @@
             
             <div class="rq-section">
                 <div class="rq-title">RQ3: Scaling Laws for Logical Complexity</div>
-                <div class="rq-description">{rq_descriptions.get('RQ3', '')}</div>
+                <div class="rq-description">How does reasoning accuracy scale with problem complexity, and do different models exhibit universal vs. model-specific scaling patterns?</div>
+                <div class="rq-toggle" onclick="toggleRQ('rq3')">
+                    <span class="rq-toggle-icon" id="rq3-icon">▶</span>
+                    <span>Click for detailed research context</span>
+                </div>
+                <div class="rq-details" id="rq3-details">
+                    <div class="rq-detail-section"><strong>Why it matters:</strong> Analogous to scaling laws for training compute/data; predictive: can we forecast failure on unseen complexities?; theoretical: what determines reasoning capacity limits?</div>
+                    <div class="rq-detail-section"><strong>What we test:</strong> Accuracy vs. complexity (variables 4-20, clause length 2-5); fit power law: Acc(n) = A - B·n^α where n = complexity; compare α (decay exponent) across models.</div>
+                    <div class="rq-detail-section"><strong>Expected finding:</strong> Model accuracy follows power-law decay: Acc(n) ≈ 0.98 - 0.15·(n/10)^1.8 for flagship models, with steeper exponents for budget models, suggesting universal scaling with model-dependent constants.</div>
+                    <div class="rq-detail-section"><strong>Scientific impact:</strong> First scaling law for logical reasoning in LLMs.</div>
+                </div>
                 <div class="finding">
                     <strong>Complexity-Dependent Performance:</strong>
                     <p style="margin: 10px 0;">See degradation curves below for visual analysis. Preliminary scaling pattern:</p>
@@ -538,8 +604,18 @@
             </div>
             
             <div class="rq-section">
-                <div class="rq-title">RQ4: Is Extended Thinking Worth It?</div>
-                <div class="rq-description">{rq_descriptions.get('RQ4', '')}</div>
+                <div class="rq-title">RQ4: Extended Deliberation: Error Correction vs. Qualitative Improvement</div>
+                <div class="rq-description">Does extended thinking (reasoning tokens) enable qualitatively different problem-solving strategies, or merely reduce errors on solvable problems?</div>
+                <div class="rq-toggle" onclick="toggleRQ('rq4')">
+                    <span class="rq-toggle-icon" id="rq4-icon">▶</span>
+                    <span>Click for detailed research context</span>
+                </div>
+                <div class="rq-details" id="rq4-details">
+                    <div class="rq-detail-section"><strong>Why it matters:</strong> Fundamental question about System 1 vs. System 2 cognition; cost-benefit: when is slow thinking actually better?; mechanistic: what does 'thinking longer' buy you?</div>
+                    <div class="rq-detail-section"><strong>What we test:</strong> Same model with/without extended thinking; measure Δaccuracy by problem complexity; analyze threshold effects (complexity where thinking helps); qualitative analysis of reasoning traces.</div>
+                    <div class="rq-detail-section"><strong>Expected finding:</strong> Extended thinking provides minimal benefit (<2%) on simple problems but critical gains (8-15%) beyond complexity threshold (>10 variables), suggesting extended deliberation enables systematic search rather than mere error reduction.</div>
+                    <div class="rq-detail-section"><strong>Scientific impact:</strong> Evidence for dual-process cognition in LLMs.</div>
+                </div>
                 <div class="finding">
                     <table style="width: 100%; margin-top: 10px;">
                         <thead>
@@ -575,8 +651,18 @@
             </div>
             
             <div class="rq-section">
-                <div class="rq-title">RQ5: Phase Transitions in Reasoning Capability</div>
-                <div class="rq-description">{rq_descriptions.get('RQ5', '')}</div>
+                <div class="rq-title">RQ5: Capacity-Complexity Phase Transitions</div>
+                <div class="rq-description">Do models exhibit sharp phase transitions in reasoning capability at specific complexity thresholds, or gradual degradation?</div>
+                <div class="rq-toggle" onclick="toggleRQ('rq5')">
+                    <span class="rq-toggle-icon" id="rq5-icon">▶</span>
+                    <span>Click for detailed research context</span>
+                </div>
+                <div class="rq-details" id="rq5-details">
+                    <div class="rq-detail-section"><strong>Why it matters:</strong> Sharp transitions → discrete capacity limits; gradual decay → continuous scaling; predictability of failure modes.</div>
+                    <div class="rq-detail-section"><strong>What we test:</strong> Plot accuracy vs. complexity for all models; identify smooth decay vs. cliff-like drops; measure slope changes, inflection points; compare flagship vs. budget transition patterns.</div>
+                    <div class="rq-detail-section"><strong>Expected finding:</strong> All models exhibit phase transitions at model-specific complexity thresholds (vars: 7-9 for budget, 12-15 for flagship), with accuracy dropping >20% within 2-variable increments, suggesting discrete capacity limits rather than continuous scaling.</div>
+                    <div class="rq-detail-section"><strong>Scientific impact:</strong> Reveals hard limits in reasoning capability.</div>
+                </div>
                 <div class="finding">
                     <strong>Tier-Based Phase Behavior:</strong>
                     <p style="margin: 10px 0;">Analyzing whether models show sharp transitions (phase-like) or gradual degradation:</p>
@@ -634,8 +720,18 @@
             </div>
             
             <div class="rq-section">
-                <div class="rq-title">RQ6: Cross-Task Transfer and Specialization</div>
-                <div class="rq-description">{rq_descriptions.get('RQ6', '')}</div>
+                <div class="rq-title">RQ6: Cross-Task Transfer and Representation Learnability</div>
+                <div class="rq-description">Do models that excel at one representation type (e.g., Horn clauses) transfer that capability to others (CNF), or is performance representation-specific?</div>
+                <div class="rq-toggle" onclick="toggleRQ('rq6')">
+                    <span class="rq-toggle-icon" id="rq6-icon">▶</span>
+                    <span>Click for detailed research context</span>
+                </div>
+                <div class="rq-details" id="rq6-details">
+                    <div class="rq-detail-section"><strong>Why it matters:</strong> Tests generalization vs. specialization; reveals whether models learn task-general reasoning; informs multi-task training strategies.</div>
+                    <div class="rq-detail-section"><strong>What we test:</strong> Rank models per representation type; measure rank correlation across representations; identify versatile generalists vs. specialized experts; analyze representation-specific failure patterns.</div>
+                    <div class="rq-detail-section"><strong>Expected finding:</strong> Model rankings show weak correlation (ρ=0.4-0.6) across representations, with some models exhibiting versatile performance while others specialize in specific encodings, suggesting learned representation preferences.</div>
+                    <div class="rq-detail-section"><strong>Scientific impact:</strong> First evidence of representation specialization in LLMs.</div>
+                </div>
                 <div class="finding">
                     <strong>Model Rankings by Task Type:</strong>
                     <table style="width: 100%; margin-top: 10px;">
@@ -2375,16 +2471,36 @@
         }
         
         function showDetails(exp, model) {
-            // Show detailed modal or expand section
-            alert(`Details for ${exp} - ${model}\n\nClick on degradation chart legends to toggle models on/off.`);
+            alert(`Details for ${exp} - ${model}\n\nSee degradation charts below for performance across complexity levels.`);
+        }
+        
+        function toggleRQ(rqId) {
+            const details = document.getElementById(rqId + '-details');
+            const icon = document.getElementById(rqId + '-icon');
+            
+            if (details.classList.contains('expanded')) {
+                details.classList.remove('expanded');
+                icon.classList.remove('expanded');
+                icon.textContent = '▶';
+            } else {
+                details.classList.add('expanded');
+                icon.classList.add('expanded');
+                icon.textContent = '▼';
+            }
         }
         
         // Add chart legend interactivity hint
         document.addEventListener('DOMContentLoaded', function() {
-            const note = document.createElement('div');
-            note.className = 'note';
-            note.innerHTML = '<strong>💡 Tip:</strong> Click on chart legends to show/hide individual models. Hover over lines to see exact values.';
-            document.querySelector('.section:has(canvas)').prepend(note);
+            const chartSections = document.querySelectorAll('.section h2');
+            for (const section of chartSections) {
+                if (section.textContent.includes('Degradation')) {
+                    const note = document.createElement('div');
+                    note.className = 'note';
+                    note.innerHTML = '<strong>💡 Interactive Charts:</strong> Click legend items to show/hide models. Hover over lines to see exact accuracy values.';
+                    section.parentElement.insertBefore(note, section.nextSibling);
+                    break;
+                }
+            }
         });
         </script>
 
