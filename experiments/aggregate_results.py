@@ -22,6 +22,17 @@ def aggregate_results(runs_dir: Path, run_id: str) -> Dict[str, Any]:
         "metadata": {
             "run_id": run_id,
             "runs_dir": str(runs_dir),
+            "dataset": {
+                "min_vars": None,
+                "max_vars": None,
+                "min_len": None,
+                "max_len": None,
+                "total_problems": 0,
+                "horn_problems": 0,
+                "nonhorn_problems": 0,
+                "sat_problems": 0,
+                "unsat_problems": 0,
+            }
         },
         "experiments": {},
         "models": {},
@@ -31,6 +42,9 @@ def aggregate_results(runs_dir: Path, run_id: str) -> Dict[str, Any]:
             "total_problems_processed": 0,
         }
     }
+    
+    # Track unique problems globally
+    seen_problems = set()  # Track (problem_id, horn, satflag) tuples
     
     # Scan all experiments
     for exp_dir in sorted(runs_dir.iterdir()):
@@ -79,14 +93,47 @@ def aggregate_results(runs_dir: Path, run_id: str) -> Dict[str, Any]:
                             row = json.loads(line)
                             meta = row.get("meta", {})
                             maxvars = meta.get("maxvars")
+                            maxlen = meta.get("maxlen")
+                            horn = meta.get("horn")
+                            satflag = meta.get("satflag")
                             parsed = row.get("parsed_answer")
-                            sat = meta.get("satflag")
                             
-                            if maxvars is not None and parsed is not None and sat is not None:
+                            # Update dataset metadata from ANY row
+                            if maxvars is not None:
+                                if aggregated["metadata"]["dataset"]["min_vars"] is None or maxvars < aggregated["metadata"]["dataset"]["min_vars"]:
+                                    aggregated["metadata"]["dataset"]["min_vars"] = maxvars
+                                if aggregated["metadata"]["dataset"]["max_vars"] is None or maxvars > aggregated["metadata"]["dataset"]["max_vars"]:
+                                    aggregated["metadata"]["dataset"]["max_vars"] = maxvars
+                            
+                            if maxlen is not None:
+                                if aggregated["metadata"]["dataset"]["min_len"] is None or maxlen < aggregated["metadata"]["dataset"]["min_len"]:
+                                    aggregated["metadata"]["dataset"]["min_len"] = maxlen
+                                if aggregated["metadata"]["dataset"]["max_len"] is None or maxlen > aggregated["metadata"]["dataset"]["max_len"]:
+                                    aggregated["metadata"]["dataset"]["max_len"] = maxlen
+                            
+                            # Count problem types (only once per unique problem ID)
+                            problem_id = row.get("id")
+                            if problem_id is not None and horn is not None and satflag is not None:
+                                prob_key = (problem_id, horn, satflag)
+                                if prob_key not in seen_problems:
+                                    seen_problems.add(prob_key)
+                                    
+                                    if horn == 1:
+                                        aggregated["metadata"]["dataset"]["horn_problems"] += 1
+                                    elif horn == 0:
+                                        aggregated["metadata"]["dataset"]["nonhorn_problems"] += 1
+                                    
+                                    if satflag == 1:
+                                        aggregated["metadata"]["dataset"]["sat_problems"] += 1
+                                    elif satflag == 0:
+                                        aggregated["metadata"]["dataset"]["unsat_problems"] += 1
+                            
+                            # Complexity breakdown
+                            if maxvars is not None and parsed is not None and satflag is not None:
                                 if maxvars not in complexity_breakdown:
                                     complexity_breakdown[maxvars] = {"total": 0, "correct": 0}
                                 complexity_breakdown[maxvars]["total"] += 1
-                                if parsed != 2 and parsed == sat:
+                                if parsed != 2 and parsed == satflag:
                                     complexity_breakdown[maxvars]["correct"] += 1
                         except:
                             pass
@@ -140,6 +187,10 @@ def aggregate_results(runs_dir: Path, run_id: str) -> Dict[str, Any]:
     for exp_data in aggregated["experiments"].values():
         all_models.update(exp_data["models"].keys())
     aggregated["summary"]["total_models"] = len(all_models)
+    
+    # Calculate total unique problems
+    dataset = aggregated["metadata"]["dataset"]
+    dataset["total_problems"] = dataset["horn_problems"] + dataset["nonhorn_problems"]
     
     return aggregated
 

@@ -1,7 +1,18 @@
 {
   "metadata": {
     "run_id": "final_validation_test",
-    "runs_dir": "experiments/runs"
+    "runs_dir": "experiments/runs",
+    "dataset": {
+      "min_vars": 4,
+      "max_vars": 4,
+      "min_len": 2,
+      "max_len": 2,
+      "total_problems": 3,
+      "horn_problems": 3,
+      "nonhorn_problems": 0,
+      "sat_problems": 2,
+      "unsat_problems": 1
+    }
   },
   "experiments": {
     "cnf1_con_hornonly": {

@@ -309,11 +309,23 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
     
     # Header
     run_id = metadata.get("run_id", "unknown")
+    # Extract dataset info
+    dataset = metadata.get("dataset", {})
+    dataset_desc = f"Variables: {dataset.get('min_vars', '?')}-{dataset.get('max_vars', '?')}, Clause length: {dataset.get('min_len', '?')}-{dataset.get('max_len', '?')}"
+    total_probs = dataset.get('total_problems', 0)
+    horn_probs = dataset.get('horn_problems', 0)
+    nonhorn_probs = dataset.get('nonhorn_problems', 0)
+    sat_probs = dataset.get('sat_problems', 0)
+    unsat_probs = dataset.get('unsat_problems', 0)
+    
     html.append(f"""
         <header>
             <h1>🧠 LLM Logic Reasoning Dashboard</h1>
             <div class="subtitle">Systematic evaluation across representations, tasks, and models</div>
             <div class="subtitle">Run: {run_id}</div>
+            <div class="subtitle" style="margin-top: 10px; font-size: 0.95em; opacity: 0.85;">
+                Dataset: {total_probs} problems ({horn_probs} Horn, {nonhorn_probs} non-Horn | {sat_probs} SAT, {unsat_probs} UNSAT) | {dataset_desc}
+            </div>
         </header>
 """)
     
@@ -342,12 +354,24 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
                 <div class="stat-value">{total_models}</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Overall Accuracy</div>
-                <div class="stat-value">{overall_acc:.0f}%</div>
+                <div class="stat-label">Total Problems</div>
+                <div class="stat-value">{total_probs}</div>
+                <div class="stat-label" style="font-size: 0.8em; margin-top: 5px;">{horn_probs} Horn, {nonhorn_probs} non-Horn</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Total Evaluations</div>
-                <div class="stat-value">{all_total}</div>
+                <div class="stat-label">Complexity Range</div>
+                <div class="stat-value">{dataset.get('min_vars', '?')}-{dataset.get('max_vars', '?')}</div>
+                <div class="stat-label" style="font-size: 0.8em; margin-top: 5px;">vars, len {dataset.get('min_len', '?')}-{dataset.get('max_len', '?')}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Overall Accuracy</div>
+                <div class="stat-value">{overall_acc:.0f}%</div>
+                <div class="stat-label" style="font-size: 0.8em; margin-top: 5px;">{all_total} evaluations</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Balance</div>
+                <div class="stat-value">{sat_probs}/{unsat_probs}</div>
+                <div class="stat-label" style="font-size: 0.8em; margin-top: 5px;">SAT/UNSAT</div>
             </div>
         </div>
 """)
