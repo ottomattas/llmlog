@@ -107,7 +107,18 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LLM Logic Reasoning Dashboard</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js" integrity="sha512-SIMGYRUjwY8+gKg7nn9EItdD8LCADSDfJNutF9TPrvEo86sQmFMh6MyralfIyhADlajSxqc7G0gs7+MwWF/ogQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+        // Fallback check for Chart.js loading
+        window.addEventListener('load', function() {
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js failed to load from CDN');
+                document.querySelectorAll('canvas').forEach(function(canvas) {
+                    canvas.parentElement.innerHTML = '<div class="note" style="background: #fff3cd; border-left: 3px solid #ffc107; padding: 15px;">⚠️ <strong>Chart.js failed to load.</strong> Charts require JavaScript enabled and CDN access. If viewing on GitHub, download the HTML file and open locally, or use the static analysis below.</div>';
+                });
+            }
+        });
+    </script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -983,7 +994,11 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
     html.append("""
         <div class="section">
             <h2>📉 Quality Degradation by Complexity</h2>
-            <p style="margin-bottom: 15px;">How accuracy changes as problem complexity increases. Each line represents one model.</p>
+            <p style="margin-bottom: 15px;">How accuracy changes as problem complexity (number of variables) increases. Each line represents one model.</p>
+            <div class="note">
+                <strong>💡 Note:</strong> If charts don't appear (e.g., on GitHub Pages), download this HTML file and open locally. 
+                Alternative: Check the ASCII representation tables below each chart.
+            </div>
 """)
     
     # Generate degradation charts for each experiment
@@ -1133,6 +1148,41 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
                 }});
             }})();
             </script>
+            
+            <div style="margin-top: 20px;">
+                <details>
+                    <summary style="cursor: pointer; font-weight: 600; color: #667eea; padding: 10px; background: #f7fafc; border-radius: 4px;">
+                        📊 Show ASCII Table (fallback if chart doesn't render)
+                    </summary>
+                    <div style="background: #2d3748; color: #e2e8f0; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 0.75em; overflow-x: auto; margin-top: 10px;">
+                        <pre style="margin: 0;">
+Vars:  {' '.join(f'{v:4}' for v in vars_sorted)}
+
+""")
+            
+            # Add ASCII table for each model
+            for model_key, model_data in sorted(model_degradation.items())[:12]:
+                provider = model_key.split('/')[0]
+                model_name = model_key.split('/')[1][:20]
+                thinking = model_key.split('/')[2][:10]
+                
+                accs = []
+                for var in vars_sorted:
+                    var_data = model_data.get(str(var), {})
+                    acc = var_data.get("accuracy", 0)
+                    accs.append(acc)
+                
+                acc_str = ' '.join(f'{int(a*100):3}%' for a in accs)
+                provider_icons = {'anthropic': '🔴', 'google': '🔵', 'openai': '🟢'}
+                icon = provider_icons.get(provider, '⚪')
+                
+                html.append(f"{icon} {model_name:20} {thinking:10}: {acc_str}\n")
+            
+            html.append(f"""</pre>
+                        <div style="margin-top: 10px; opacity: 0.8;">🔴 Anthropic | 🔵 Google | 🟢 OpenAI</div>
+                    </div>
+                </details>
+            </div>
 """)
         else:
             html.append(f"""
