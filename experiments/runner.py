@@ -353,6 +353,9 @@ def run_targets_lockstep(
         if getattr(cfg.parse, "type", None) == "both":
             inject = "\nUnified answer rule (mixed cases)\n- Regardless of how the statements are rendered, output only a final single word: \"yes\" if p0 is derivable OR the set is a contradiction; otherwise \"no\". Do not output any other words.\n"
             tmpl = base_tmpl.replace("\n\nConventions", inject + "\nConventions")
+        elif getattr(cfg.parse, "type", None) == "yes_no" and cfg.prompt.style in (None, "horn_if_then"):
+            inject = "\nHorn answer rule\n- Output ONLY a single final word: \"yes\" if p0 is derivable, otherwise \"no\". Do not output any other words.\n"
+            tmpl = base_tmpl.replace("\n\nConventions", inject + "\nConventions")
         else:
             tmpl = base_tmpl
         prompt = render_prompt(problem, tmpl, cfg.prompt.style)
@@ -711,6 +714,9 @@ def run_target(
 
                 if getattr(cfg.parse, "type", None) == "both":
                     inject = "\nUnified answer rule (mixed cases)\n- Regardless of how the statements are rendered, output only a final single word: \"yes\" if p0 is derivable OR the set is a contradiction; otherwise \"no\". Do not output any other words.\n"
+                    tmpl = base_tmpl.replace("\n\nConventions", inject + "\nConventions")
+                elif getattr(cfg.parse, "type", None) == "yes_no" and cfg.prompt.style in (None, "horn_if_then"):
+                    inject = "\nHorn answer rule\n- Output ONLY a single final word: \"yes\" if p0 is derivable, otherwise \"no\". Do not output any other words.\n"
                     tmpl = base_tmpl.replace("\n\nConventions", inject + "\nConventions")
                 else:
                     tmpl = base_tmpl
