@@ -10,7 +10,7 @@ Conventions
 
 Answer format
 - For Horn tasks (style: horn_if_then): Output exactly one final word on the last line, lowercase with no punctuation: "yes" if p0 is derivable from the given facts and rules; otherwise "no". Do not output any other words (do not output "contradiction"/"satisfiable"/"unknown").
-- For CNF contradiction tasks (styles: cnf_v1 or cnf_v2): Output exactly one final word on the last line, lowercase with no punctuation: "contradiction" if the set is a contradiction (unsatisfiable); otherwise "satisfiable" (or "unknown" if undecidable). Do not output "yes"/"no".
+- For CNF contradiction tasks (styles: cnf_v1 or cnf_v2): Output exactly one final word on the last line, lowercase with no punctuation: "contradiction" if the set is a contradiction (unsatisfiable); otherwise "satisfiable", or "unknown" if undecidable. Do not output any other words (do not output "yes"/"no").
 
 Examples (Horn, yes/no)
 - p1. if p1 then p0. → yes
