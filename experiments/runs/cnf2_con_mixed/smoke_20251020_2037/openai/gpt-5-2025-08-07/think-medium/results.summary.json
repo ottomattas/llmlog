@@ -1,0 +1,18 @@
+{
+  "name": "cnf2_con_mixed",
+  "provider": "openai",
+  "model": "gpt-5-2025-08-07",
+  "run": "smoke_20251020_2037",
+  "total": 8,
+  "correct": 8,
+  "accuracy": 1.0,
+  "unclear": 0,
+  "sat_total": 4,
+  "sat_correct": 4,
+  "sat_accuracy": 1.0,
+  "unsat_total": 4,
+  "unsat_correct": 4,
+  "unsat_accuracy": 1.0,
+  "avg_timing_ms": 5652.5,
+  "timestamp": 1760985102
+}

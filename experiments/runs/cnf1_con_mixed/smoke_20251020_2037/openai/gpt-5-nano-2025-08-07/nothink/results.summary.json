@@ -1,0 +1,18 @@
+{
+  "name": "cnf1_con_mixed",
+  "provider": "openai",
+  "model": "gpt-5-nano-2025-08-07",
+  "run": "smoke_20251020_2037",
+  "total": 8,
+  "correct": 7,
+  "accuracy": 0.875,
+  "unclear": 1,
+  "sat_total": 4,
+  "sat_correct": 3,
+  "sat_accuracy": 0.75,
+  "unsat_total": 4,
+  "unsat_correct": 4,
+  "unsat_accuracy": 1.0,
+  "avg_timing_ms": 11724.5,
+  "timestamp": 1760984176
+}

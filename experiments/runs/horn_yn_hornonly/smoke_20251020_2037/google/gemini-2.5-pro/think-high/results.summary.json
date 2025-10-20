@@ -1,0 +1,18 @@
+{
+  "name": "horn_yn_hornonly",
+  "provider": "google",
+  "model": "gemini-2.5-pro",
+  "run": "smoke_20251020_2037",
+  "total": 8,
+  "correct": 8,
+  "accuracy": 1.0,
+  "unclear": 0,
+  "sat_total": 4,
+  "sat_correct": 4,
+  "sat_accuracy": 1.0,
+  "unsat_total": 4,
+  "unsat_correct": 4,
+  "unsat_accuracy": 1.0,
+  "avg_timing_ms": 9323.75,
+  "timestamp": 1760982155
+}

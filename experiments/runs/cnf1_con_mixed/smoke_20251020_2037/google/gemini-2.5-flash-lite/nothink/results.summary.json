@@ -1,0 +1,18 @@
+{
+  "name": "cnf1_con_mixed",
+  "provider": "google",
+  "model": "gemini-2.5-flash-lite",
+  "run": "smoke_20251020_2037",
+  "total": 8,
+  "correct": 5,
+  "accuracy": 0.625,
+  "unclear": 0,
+  "sat_total": 4,
+  "sat_correct": 4,
+  "sat_accuracy": 1.0,
+  "unsat_total": 4,
+  "unsat_correct": 1,
+  "unsat_accuracy": 0.25,
+  "avg_timing_ms": 1555.125,
+  "timestamp": 1760984176
+}
