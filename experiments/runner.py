@@ -496,7 +496,41 @@ def run_targets_lockstep(
                     resp_meta = result.get("meta") or {}
 
                     # Parse and derive normalized token from parsed result
-                    parsed = parse_output(text, cfg.parse) if (not err_msg) else 2
+                    # Retry parse if text empty: attempt to extract from raw_response
+                    if not err_msg:
+                        parsed = parse_output(text, cfg.parse)
+                        if (parsed == 2) and (not text) and isinstance(resp_meta.get("raw_response"), (dict, str)):
+                            rr = resp_meta.get("raw_response")
+                            extracted = ""
+                            if isinstance(rr, dict):
+                                # Try common provider shapes
+                                if isinstance(rr.get("text"), str):
+                                    extracted = rr.get("text")
+                                else:
+                                    out = rr.get("output")
+                                    if isinstance(out, list):
+                                        for item in out:
+                                            if isinstance(item, dict) and item.get("type") == "message":
+                                                content = item.get("content")
+                                                if isinstance(content, list):
+                                                    for c in content:
+                                                        if isinstance(c, dict) and isinstance(c.get("text"), str) and c.get("text").strip():
+                                                            extracted = c.get("text").strip()
+                                                            break
+                                            if extracted:
+                                                break
+                                if not extracted:
+                                    # Fallback: any string value in raw_response
+                                    for v in rr.values():
+                                        if isinstance(v, str) and v.strip():
+                                            extracted = v.strip(); break
+                            elif isinstance(rr, str):
+                                extracted = rr
+                            if extracted:
+                                text = extracted
+                                parsed = parse_output(text, cfg.parse)
+                    else:
+                        parsed = 2
                     norm = ("yes" if parsed == 0 else ("no" if parsed == 1 else None))
                     gt = None
                     try:
