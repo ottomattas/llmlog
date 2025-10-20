@@ -1,0 +1,18 @@
+{
+  "name": "horn_yn_hornonly",
+  "provider": "anthropic",
+  "model": "claude-haiku-4-5-20251001",
+  "run": "validation_20251016_0357",
+  "total": 272,
+  "correct": 144,
+  "accuracy": 0.5294117647058824,
+  "unclear": 126,
+  "sat_total": 136,
+  "sat_correct": 96,
+  "sat_accuracy": 0.7058823529411765,
+  "unsat_total": 136,
+  "unsat_correct": 48,
+  "unsat_accuracy": 0.35294117647058826,
+  "avg_timing_ms": 6681.830258302583,
+  "timestamp": 1760612926
+}

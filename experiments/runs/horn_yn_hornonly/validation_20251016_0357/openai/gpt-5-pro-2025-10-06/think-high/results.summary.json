@@ -1,0 +1,18 @@
+{
+  "name": "horn_yn_hornonly",
+  "provider": "openai",
+  "model": "gpt-5-pro-2025-10-06",
+  "run": "validation_20251016_0357",
+  "total": 272,
+  "correct": 119,
+  "accuracy": 0.4375,
+  "unclear": 153,
+  "sat_total": 136,
+  "sat_correct": 31,
+  "sat_accuracy": 0.22794117647058823,
+  "unsat_total": 136,
+  "unsat_correct": 88,
+  "unsat_accuracy": 0.6470588235294118,
+  "avg_timing_ms": 42191.705882352944,
+  "timestamp": 1760612926
+}
