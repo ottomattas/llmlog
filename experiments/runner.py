@@ -15,14 +15,14 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 try:
     from .schema import RunConfig, ResultRow, ProblemMeta
     from .filters import horn_only as filter_horn_only, skip as filter_skip, limit as filter_limit
-    from .parsers import parse_yes_no, parse_contradiction
+    from .parsers import parse_yes_no, parse_contradiction, parse_both
     from ..utils.provider_router import run_chat
 except Exception:
     # Fallback for script execution
     sys.path.append(os.path.dirname(os.path.dirname(__file__)))
     from experiments.schema import RunConfig, ResultRow, ProblemMeta
     from experiments.filters import horn_only as filter_horn_only, skip as filter_skip, limit as filter_limit
-    from experiments.parsers import parse_yes_no, parse_contradiction
+    from experiments.parsers import parse_yes_no, parse_contradiction, parse_both
     from utils.provider_router import run_chat
 
 
@@ -122,6 +122,8 @@ def parse_output(text: str, parse_cfg) -> int:
         return parse_yes_no(text, parse_cfg.yes_tokens or ["yes"], parse_cfg.no_tokens or ["no"])
     elif parse_cfg.type == "contradiction":
         return parse_contradiction(text)
+    elif parse_cfg.type == "both":
+        return parse_both(text, parse_cfg.yes_tokens or ["yes"], parse_cfg.no_tokens or ["no"])
     else:
         return 2
 
@@ -246,7 +248,7 @@ def run_targets_lockstep(
     rows_iter = apply_filters(rows_iter, cfg)
     problems = list(rows_iter)
 
-    tmpl = read_text(cfg.prompt.template)
+    base_tmpl = read_text(cfg.prompt.template)
 
     # Expand targets x models taking overrides into account and apply provider filter
     expanded: List[Dict[str, Any]]
@@ -347,6 +349,12 @@ def run_targets_lockstep(
     # Per-problem lockstep
     for idx, problem in enumerate(problems, start=1):
         pid = problem[0] if isinstance(problem, list) and len(problem) > 0 else idx
+        # Inject unified instruction only for parse.type == both
+        if getattr(cfg.parse, "type", None) == "both":
+            inject = "\nUnified answer rule (mixed cases)\n- Regardless of how the statements are rendered, output only a final single word: \"yes\" if p0 is derivable OR the set is a contradiction; otherwise \"no\". Do not output any other words.\n"
+            tmpl = base_tmpl.replace("\n\nConventions", inject + "\nConventions")
+        else:
+            tmpl = base_tmpl
         prompt = render_prompt(problem, tmpl, cfg.prompt.style)
 
         # Build task list for keys that still need this pid
@@ -637,7 +645,7 @@ def run_target(
     rows_iter = apply_filters(rows_iter, cfg)
     problems = list(rows_iter)
 
-    tmpl = read_text(cfg.prompt.template)
+    base_tmpl = read_text(cfg.prompt.template)
 
     for model in models:
         # decide output path
@@ -701,15 +709,12 @@ def run_target(
                 if pid in processed_ids:
                     continue
 
-                # Handle representation mismatch for horn_if_then if configured
-                if cfg.prompt.style in (None, "horn_if_then") and not _is_horn_problem(problem):
-                    policy = getattr(cfg.prompt, "mismatch_policy", None)
-                    if policy == "fallback_cnf":
-                        prompt = render_prompt(problem, tmpl, "cnf_v2")
-                    else:
-                        prompt = None  # will be treated as mismatch below
+                if getattr(cfg.parse, "type", None) == "both":
+                    inject = "\nUnified answer rule (mixed cases)\n- Regardless of how the statements are rendered, output only a final single word: \"yes\" if p0 is derivable OR the set is a contradiction; otherwise \"no\". Do not output any other words.\n"
+                    tmpl = base_tmpl.replace("\n\nConventions", inject + "\nConventions")
                 else:
-                    prompt = render_prompt(problem, tmpl, cfg.prompt.style)
+                    tmpl = base_tmpl
+                prompt = render_prompt(problem, tmpl, cfg.prompt.style)
                 sysprompt = None
 
                 if dry_run:

@@ -16,7 +16,7 @@ class ConcurrencySettings(BaseModel):
 
 
 class ParseConfig(BaseModel):
-    type: Literal["yes_no", "contradiction"] = "yes_no"
+    type: Literal["yes_no", "contradiction", "both"] = "yes_no"
     yes_tokens: Optional[List[str]] = None
     no_tokens: Optional[List[str]] = None
 

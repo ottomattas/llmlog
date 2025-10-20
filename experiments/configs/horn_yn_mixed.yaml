@@ -149,7 +149,7 @@ prompt:
 
 # Parser configuration
 parse:
-  type: yes_no
+  type: both
   yes_tokens: ["yes"]
   no_tokens: ["no"]
 
