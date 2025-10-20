@@ -28,7 +28,7 @@ targets:
       budget_tokens: 24576
 
   - provider: openai
-    model: gpt-5-pro-2025-10-06
+    model: gpt-5-2025-08-07    # gpt-5-pro-2025-10-06 is expensive
     temperature: 0
     seed: 1234
     max_tokens: 30000
@@ -38,7 +38,7 @@ targets:
 
   # Tier 2: Medium models with medium thinking
   - provider: anthropic
-    model: claude-opus-4-1-20250805
+    model: claude-haiku-4-5-20251001  # claude-opus-4-1-20250805 is expensive
     temperature: 1
     seed: 1234
     max_tokens: 10000
