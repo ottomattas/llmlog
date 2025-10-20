@@ -1,0 +1,2774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Logic Reasoning Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js" integrity="sha512-SIMGYRUjwY8+gKg7nn9EItdD8LCADSDfJNutF9TPrvEo86sQmFMh6MyralfIyhADlajSxqc7G0gs7+MwWF/ogQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+        // Fallback check for Chart.js loading
+        window.addEventListener('load', function() {
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js failed to load from CDN');
+                document.querySelectorAll('canvas').forEach(function(canvas) {
+                    canvas.parentElement.innerHTML = '<div class="note" style="background: #fff3cd; border-left: 3px solid #ffc107; padding: 15px;"><strong>WARNING: Chart.js failed to load.</strong> Charts require JavaScript enabled and CDN access. If viewing on GitHub, download the HTML file and open locally, or use the static analysis below.</div>';
+                });
+            }
+        });
+    </script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container { max-width: 1600px; margin: 0 auto; }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 { font-size: 2em; margin-bottom: 10px; }
+        .subtitle { opacity: 0.9; font-size: 1.1em; }
+        .section {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        h2 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+        }
+        th, td {
+            padding: 12px 8px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+        th {
+            background: #f7fafc;
+            font-weight: 600;
+            color: #2d3748;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .exp-name {
+            text-align: left;
+            font-weight: 500;
+            background: #f7fafc;
+        }
+        .acc-100 { background: #48bb78; color: white; font-weight: 600; }
+        .acc-90 { background: #68d391; color: white; }
+        .acc-75 { background: #f6e05e; }
+        .acc-50 { background: #fc8181; color: white; }
+        .acc-low { background: #f56565; color: white; font-weight: 600; }
+        .model-header {
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            white-space: nowrap;
+            padding: 8px 4px;
+            font-size: 0.85em;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .stat-label {
+            opacity: 0.9;
+            font-size: 0.9em;
+        }
+        .rq-section {
+            background: #f7fafc;
+            padding: 20px;
+            border-left: 4px solid #667eea;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .rq-title {
+            color: #667eea;
+            font-weight: 600;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+        .finding {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            border-left: 3px solid #48bb78;
+        }
+        .note {
+            background: #fef5e7;
+            border-left: 3px solid #f39c12;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #718096;
+            font-size: 0.9em;
+        }
+        .filter-controls {
+            background: #edf2f7;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .filter-controls label {
+            margin-right: 15px;
+            font-weight: 500;
+        }
+        .filter-controls select, .filter-controls input {
+            margin-right: 20px;
+            padding: 5px 10px;
+            border-radius: 4px;
+            border: 1px solid #cbd5e0;
+        }
+        .exp-description {
+            font-size: 0.85em;
+            color: #718096;
+            font-style: italic;
+            margin-top: 4px;
+        }
+        .rq-description {
+            color: #4a5568;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+        .clickable-cell {
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .clickable-cell:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+        .rq-details {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            display: none;
+        }
+        .rq-details.expanded {
+            display: block;
+        }
+        .rq-toggle {
+            cursor: pointer;
+            color: #667eea;
+            font-weight: 600;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .rq-toggle:hover {
+            color: #5568d3;
+        }
+        .rq-toggle-icon {
+            transition: transform 0.2s;
+        }
+        .rq-toggle-icon.expanded {
+            transform: rotate(90deg);
+        }
+        .rq-detail-section {
+            margin: 10px 0;
+        }
+        .rq-detail-section strong {
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+
+        <header>
+            <h1>LLM Logic Reasoning Dashboard</h1>
+            <div class="subtitle">Systematic evaluation across representations, tasks, and models</div>
+            <div class="subtitle">Run: smoke_20251020_2224</div>
+            <div class="subtitle" style="margin-top: 10px; font-size: 0.95em; opacity: 0.85;">
+                Dataset: 6 problems (5 Horn, 1 non-Horn | 4 SAT, 2 UNSAT) | Variables: 4-4, Clause length: 2-3
+            </div>
+        </header>
+
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Experiments</div>
+                <div class="stat-value">6</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Model Configurations</div>
+                <div class="stat-value">12</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Problems</div>
+                <div class="stat-value">6</div>
+                <div class="stat-label" style="font-size: 0.8em; margin-top: 5px;">5 Horn, 1 non-Horn</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Complexity Range</div>
+                <div class="stat-value">4-4</div>
+                <div class="stat-label" style="font-size: 0.8em; margin-top: 5px;">vars, len 2-3</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Overall Accuracy</div>
+                <div class="stat-value">91%</div>
+                <div class="stat-label" style="font-size: 0.8em; margin-top: 5px;">360 evaluations</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Balance</div>
+                <div class="stat-value">4/2</div>
+                <div class="stat-label" style="font-size: 0.8em; margin-top: 5px;">SAT/UNSAT</div>
+            </div>
+        </div>
+
+
+        <div class="section">
+            <h2>Overview Heatmap: Experiment × Model Performance</h2>
+            <p style="margin-bottom: 15px;">Accuracy for each model on each experiment. Hover over cells to see details.</p>
+            
+            <div class="filter-controls">
+                <label>
+                    <strong>View:</strong>
+                    <select id="viewMode" onchange="transposeHeatmap()">
+                        <option value="exp-rows">Experiments as Rows, Models as Columns</option>
+                        <option value="model-rows">Models as Rows, Experiments as Columns</option>
+                    </select>
+                </label>
+                <label style="margin-left: 20px;">
+                    <strong>Metric:</strong>
+                    <select id="metricSelect" onchange="updateMetric()">
+                        <option value="accuracy">Accuracy (%)</option>
+                        <option value="correct">Correct Count</option>
+                        <option value="unclear">Unclear Count</option>
+                    </select>
+                </label>
+            </div>
+            
+            <div style="overflow-x: auto;">
+                <table id="heatmapTable">
+                    <thead>
+                        <tr>
+                            <th style="text-align: left;">Experiment</th>
+
+                            <th><div class="model-header">ant/claude-haiku-4-5-202/nothink</div></th>
+
+                            <th><div class="model-header">ant/claude-haiku-4-5-202/think-low</div></th>
+
+                            <th><div class="model-header">ant/claude-haiku-4-5-202/think-med</div></th>
+
+                            <th><div class="model-header">ant/claude-sonnet-4-5-20/think-high</div></th>
+
+                            <th><div class="model-header">goo/gemini-2.5-flash-lit/nothink</div></th>
+
+                            <th><div class="model-header">goo/gemini-2.5-flash-lit/think-low</div></th>
+
+                            <th><div class="model-header">goo/gemini-2.5-flash/think-med</div></th>
+
+                            <th><div class="model-header">goo/gemini-2.5-pro/think-high</div></th>
+
+                            <th><div class="model-header">ope/gpt-5-2025-08-07/think-high</div></th>
+
+                            <th><div class="model-header">ope/gpt-5-2025-08-07/think-medium</div></th>
+
+                            <th><div class="model-header">ope/gpt-5-mini-2025-08-0/think-low</div></th>
+
+                            <th><div class="model-header">ope/gpt-5-nano-2025-08-0/nothink</div></th>
+
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        <tr>
+
+                            <td class="exp-name">cnf1_con_hornonly<div class="exp-description">NL-CNF on Horn subset (tests representation flexibility)</div></td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('cnf1_con_hornonly', 'anthropic/claude-haiku-4-5-20251001/nothink')">100%</td>
+
+                            <td class="acc-75 clickable-cell" title="4/5 correct, 0 unclear" onclick="showDetails('cnf1_con_hornonly', 'anthropic/claude-haiku-4-5-20251001/think-low')">80%</td>
+
+                            <td class="acc-50 clickable-cell" title="3/5 correct, 0 unclear" onclick="showDetails('cnf1_con_hornonly', 'anthropic/claude-haiku-4-5-20251001/think-med')">60%</td>
+
+                            <td class="acc-50 clickable-cell" title="3/5 correct, 0 unclear" onclick="showDetails('cnf1_con_hornonly', 'anthropic/claude-sonnet-4-5-20250929/think-high')">60%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('cnf1_con_hornonly', 'google/gemini-2.5-flash-lite/nothink')">100%</td>
+
+                            <td class="acc-75 clickable-cell" title="4/5 correct, 0 unclear" onclick="showDetails('cnf1_con_hornonly', 'google/gemini-2.5-flash-lite/think-low')">80%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('cnf1_con_hornonly', 'google/gemini-2.5-flash/think-med')">100%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('cnf1_con_hornonly', 'google/gemini-2.5-pro/think-high')">100%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('cnf1_con_hornonly', 'openai/gpt-5-2025-08-07/think-high')">100%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('cnf1_con_hornonly', 'openai/gpt-5-2025-08-07/think-medium')">100%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('cnf1_con_hornonly', 'openai/gpt-5-mini-2025-08-07/think-low')">100%</td>
+
+                            <td class="acc-75 clickable-cell" title="4/5 correct, 1 unclear" onclick="showDetails('cnf1_con_hornonly', 'openai/gpt-5-nano-2025-08-07/nothink')">80%</td>
+
+                        </tr>
+
+                        <tr>
+
+                            <td class="exp-name">cnf1_con_mixed<div class="exp-description">Natural language CNF satisfiability (verbose encoding, tests NL scaffolding)</div></td>
+
+                            <td class="acc-75 clickable-cell" title="4/5 correct, 0 unclear" onclick="showDetails('cnf1_con_mixed', 'anthropic/claude-haiku-4-5-20251001/nothink')">80%</td>
+
+                            <td class="acc-75 clickable-cell" title="4/5 correct, 0 unclear" onclick="showDetails('cnf1_con_mixed', 'anthropic/claude-haiku-4-5-20251001/think-low')">80%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('cnf1_con_mixed', 'anthropic/claude-haiku-4-5-20251001/think-med')">100%</td>
+
+                            <td class="acc-50 clickable-cell" title="3/5 correct, 0 unclear" onclick="showDetails('cnf1_con_mixed', 'anthropic/claude-sonnet-4-5-20250929/think-high')">60%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('cnf1_con_mixed', 'google/gemini-2.5-flash-lite/nothink')">100%</td>
+
+                            <td class="acc-75 clickable-cell" title="4/5 correct, 0 unclear" onclick="showDetails('cnf1_con_mixed', 'google/gemini-2.5-flash-lite/think-low')">80%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('cnf1_con_mixed', 'google/gemini-2.5-flash/think-med')">100%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('cnf1_con_mixed', 'google/gemini-2.5-pro/think-high')">100%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('cnf1_con_mixed', 'openai/gpt-5-2025-08-07/think-high')">100%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('cnf1_con_mixed', 'openai/gpt-5-2025-08-07/think-medium')">100%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('cnf1_con_mixed', 'openai/gpt-5-mini-2025-08-07/think-low')">100%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('cnf1_con_mixed', 'openai/gpt-5-nano-2025-08-07/nothink')">100%</td>
+
+                        </tr>
+
+                        <tr>
+
+                            <td class="exp-name">cnf2_con_hornonly<div class="exp-description">Symbolic-CNF on Horn subset (tests abstraction capability)</div></td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('cnf2_con_hornonly', 'anthropic/claude-haiku-4-5-20251001/nothink')">100%</td>
+
+                            <td class="acc-50 clickable-cell" title="3/5 correct, 0 unclear" onclick="showDetails('cnf2_con_hornonly', 'anthropic/claude-haiku-4-5-20251001/think-low')">60%</td>
+
+                            <td class="acc-75 clickable-cell" title="4/5 correct, 0 unclear" onclick="showDetails('cnf2_con_hornonly', 'anthropic/claude-haiku-4-5-20251001/think-med')">80%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('cnf2_con_hornonly', 'anthropic/claude-sonnet-4-5-20250929/think-high')">100%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('cnf2_con_hornonly', 'google/gemini-2.5-flash-lite/nothink')">100%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('cnf2_con_hornonly', 'google/gemini-2.5-flash-lite/think-low')">100%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('cnf2_con_hornonly', 'google/gemini-2.5-flash/think-med')">100%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('cnf2_con_hornonly', 'google/gemini-2.5-pro/think-high')">100%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('cnf2_con_hornonly', 'openai/gpt-5-2025-08-07/think-high')">100%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('cnf2_con_hornonly', 'openai/gpt-5-2025-08-07/think-medium')">100%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('cnf2_con_hornonly', 'openai/gpt-5-mini-2025-08-07/think-low')">100%</td>
+
+                            <td class="acc-low clickable-cell" title="0/5 correct, 5 unclear" onclick="showDetails('cnf2_con_hornonly', 'openai/gpt-5-nano-2025-08-07/nothink')">0%</td>
+
+                        </tr>
+
+                        <tr>
+
+                            <td class="exp-name">cnf2_con_mixed<div class="exp-description">Symbolic CNF satisfiability (compact encoding, tests symbolic reasoning)</div></td>
+
+                            <td class="acc-75 clickable-cell" title="4/5 correct, 0 unclear" onclick="showDetails('cnf2_con_mixed', 'anthropic/claude-haiku-4-5-20251001/nothink')">80%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('cnf2_con_mixed', 'anthropic/claude-haiku-4-5-20251001/think-low')">100%</td>
+
+                            <td class="acc-75 clickable-cell" title="4/5 correct, 0 unclear" onclick="showDetails('cnf2_con_mixed', 'anthropic/claude-haiku-4-5-20251001/think-med')">80%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('cnf2_con_mixed', 'anthropic/claude-sonnet-4-5-20250929/think-high')">100%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('cnf2_con_mixed', 'google/gemini-2.5-flash-lite/nothink')">100%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('cnf2_con_mixed', 'google/gemini-2.5-flash-lite/think-low')">100%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('cnf2_con_mixed', 'google/gemini-2.5-flash/think-med')">100%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('cnf2_con_mixed', 'google/gemini-2.5-pro/think-high')">100%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('cnf2_con_mixed', 'openai/gpt-5-2025-08-07/think-high')">100%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('cnf2_con_mixed', 'openai/gpt-5-2025-08-07/think-medium')">100%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('cnf2_con_mixed', 'openai/gpt-5-mini-2025-08-07/think-low')">100%</td>
+
+                            <td class="acc-low clickable-cell" title="2/5 correct, 3 unclear" onclick="showDetails('cnf2_con_mixed', 'openai/gpt-5-nano-2025-08-07/nothink')">40%</td>
+
+                        </tr>
+
+                        <tr>
+
+                            <td class="exp-name">horn_yn_hornonly<div class="exp-description">Goal-directed entailment task with matched Horn representation (baseline control)</div></td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('horn_yn_hornonly', 'anthropic/claude-haiku-4-5-20251001/nothink')">100%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('horn_yn_hornonly', 'anthropic/claude-haiku-4-5-20251001/think-low')">100%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('horn_yn_hornonly', 'anthropic/claude-haiku-4-5-20251001/think-med')">100%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('horn_yn_hornonly', 'anthropic/claude-sonnet-4-5-20250929/think-high')">100%</td>
+
+                            <td class="acc-50 clickable-cell" title="3/5 correct, 0 unclear" onclick="showDetails('horn_yn_hornonly', 'google/gemini-2.5-flash-lite/nothink')">60%</td>
+
+                            <td class="acc-75 clickable-cell" title="4/5 correct, 0 unclear" onclick="showDetails('horn_yn_hornonly', 'google/gemini-2.5-flash-lite/think-low')">80%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('horn_yn_hornonly', 'google/gemini-2.5-flash/think-med')">100%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('horn_yn_hornonly', 'google/gemini-2.5-pro/think-high')">100%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('horn_yn_hornonly', 'openai/gpt-5-2025-08-07/think-high')">100%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('horn_yn_hornonly', 'openai/gpt-5-2025-08-07/think-medium')">100%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('horn_yn_hornonly', 'openai/gpt-5-mini-2025-08-07/think-low')">100%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('horn_yn_hornonly', 'openai/gpt-5-nano-2025-08-07/nothink')">100%</td>
+
+                        </tr>
+
+                        <tr>
+
+                            <td class="exp-name">horn_yn_mixed<div class="exp-description">Representation mismatch condition: Horn encoding on mixed problem set (tests robustness)</div></td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('horn_yn_mixed', 'anthropic/claude-haiku-4-5-20251001/nothink')">100%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('horn_yn_mixed', 'anthropic/claude-haiku-4-5-20251001/think-low')">100%</td>
+
+                            <td class="acc-75 clickable-cell" title="4/5 correct, 0 unclear" onclick="showDetails('horn_yn_mixed', 'anthropic/claude-haiku-4-5-20251001/think-med')">80%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('horn_yn_mixed', 'anthropic/claude-sonnet-4-5-20250929/think-high')">100%</td>
+
+                            <td class="acc-75 clickable-cell" title="4/5 correct, 0 unclear" onclick="showDetails('horn_yn_mixed', 'google/gemini-2.5-flash-lite/nothink')">80%</td>
+
+                            <td class="acc-75 clickable-cell" title="4/5 correct, 0 unclear" onclick="showDetails('horn_yn_mixed', 'google/gemini-2.5-flash-lite/think-low')">80%</td>
+
+                            <td class="acc-75 clickable-cell" title="4/5 correct, 0 unclear" onclick="showDetails('horn_yn_mixed', 'google/gemini-2.5-flash/think-med')">80%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('horn_yn_mixed', 'google/gemini-2.5-pro/think-high')">100%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('horn_yn_mixed', 'openai/gpt-5-2025-08-07/think-high')">100%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('horn_yn_mixed', 'openai/gpt-5-2025-08-07/think-medium')">100%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('horn_yn_mixed', 'openai/gpt-5-mini-2025-08-07/think-low')">100%</td>
+
+                            <td class="acc-100 clickable-cell" title="5/5 correct, 0 unclear" onclick="showDetails('horn_yn_mixed', 'openai/gpt-5-nano-2025-08-07/nothink')">100%</td>
+
+                        </tr>
+
+                    </tbody>
+                </table>
+            </div>
+            <div class="note">
+                <strong>Color Legend:</strong> 
+                🟩 Green (≥95%) | 🟨 Light Green (85-95%) | 🟡 Yellow (70-85%) | 🟧 Orange (50-70%) | 🟥 Red (<50%)
+            </div>
+        </div>
+
+
+        <div class="section">
+            <h2>Research Questions Analysis</h2>
+
+
+            <div class="rq-section">
+                <div class="rq-title">RQ1: Representation Invariance in Logical Reasoning</div>
+                <div class="rq-description">Do LLMs exhibit representation-invariant logical reasoning, or is performance fundamentally bound to surface encodings?</div>
+                <div class="rq-toggle" onclick="toggleRQ('rq1')">
+                    <span class="rq-toggle-icon" id="rq1-icon">▶</span>
+                    <span>Click for detailed research context</span>
+                </div>
+                <div class="rq-details" id="rq1-details">
+                    <div class="rq-detail-section"><strong>Why it matters:</strong> Tests whether models learn abstract logical principles vs. pattern matching; connects to debates about symbolic vs. neural reasoning; has implications for AI safety (robust reasoning across contexts).</div>
+                    <div class="rq-detail-section"><strong>What we test:</strong> Same logical problems in 3 representations (horn_if_then, cnf_v1, cnf_v2); compare accuracy on isomorphic problems with different encodings; measure representation sensitivity ΔAcc(repr_i, repr_j).</div>
+                    <div class="rq-detail-section"><strong>Expected finding:</strong> Models show 5-15% accuracy variation across representations of identical logical content, suggesting representation-dependent reasoning rather than true abstraction.</div>
+                    <div class="rq-detail-section"><strong>Scientific impact:</strong> Challenges claims of 'emergent reasoning' in LLMs.</div>
+                </div>
+                <div class="finding">
+
+
+                    <strong>Experimental Results:</strong> 
+                    <ul style="margin-top: 10px; margin-left: 20px;">
+                        <li>Horn representation (goal-directed): 94.2% average accuracy</li>
+                        <li>CNF representations (satisfiability): 89.6% average accuracy</li>
+                        <li>Representation sensitivity (Δ): 4.6% (Horn favored)</li>
+                    </ul>
+                    <div style="background: #edf2f7; padding: 12px; margin-top: 15px; border-left: 3px solid #667eea; border-radius: 4px;">
+                        <strong>Interpretation:</strong> Weak representation dependence (Δ < 10%) suggests partial abstraction capability.
+                    </div>
+                    <div class="note" style="margin-top: 10px;">
+                        <strong>Data status:</strong> Based on 72 model×experiment configurations. Full validation will provide statistical significance tests.
+                    </div>
+
+
+                </div>
+            </div>
+            
+            <div class="rq-section">
+                <div class="rq-title">RQ2: Systematic Failure Modes Under Representation Mismatch</div>
+                <div class="rq-description">When representations mismatch problem structure, do models exhibit systematic failures or degrade randomly?</div>
+                <div class="rq-toggle" onclick="toggleRQ('rq2')">
+                    <span class="rq-toggle-icon" id="rq2-icon">▶</span>
+                    <span>Click for detailed research context</span>
+                </div>
+                <div class="rq-details" id="rq2-details">
+                    <div class="rq-detail-section"><strong>Why it matters:</strong> Distinguishes between 'confused' vs. 'guessing' behavior; reveals whether models detect incompatibility; informs model robustness and error detection.</div>
+                    <div class="rq-detail-section"><strong>What we test:</strong> Horn representation on non-Horn problems (incompatible); measure error rate, unclear rate, systematic bias; analyze which specific problem types cause failures.</div>
+                    <div class="rq-detail-section"><strong>Expected finding:</strong> Models exhibit systematic errors (20-40% unclear responses) rather than random guessing when faced with incompatible representations, suggesting partial problem detection but inability to recover.</div>
+                    <div class="rq-detail-section"><strong>Scientific impact:</strong> Reveals limitations in metacognitive awareness.</div>
+                </div>
+
+
+                <div class="finding">
+                    <strong>Experimental Results:</strong>
+                    <ul style="margin-top: 10px; margin-left: 20px;">
+                        <li>Matched condition (Horn on Horn): 95.0%</li>
+                        <li>Mismatch condition (Horn on mixed): 93.3%</li>
+                        <li>Mismatch penalty (Δ): 1.7% accuracy loss</li>
+                    </ul>
+                    <div style="background: #edf2f7; padding: 12px; margin-top: 15px; border-left: 3px solid #667eea; border-radius: 4px;">
+                        <strong>Interpretation:</strong> Mild degradation (penalty < 10%) suggests partial robustness to representation mismatch.
+                    </div>
+                    <div class="note" style="margin-top: 10px;">
+                        <strong>Data status:</strong> Based on 24 model configurations. Full validation will show error type distribution.
+                    </div>
+                </div>
+
+
+            </div>
+            
+            <div class="rq-section">
+                <div class="rq-title">RQ3: Scaling Laws for Logical Complexity</div>
+                <div class="rq-description">How does reasoning accuracy scale with problem complexity, and do different models exhibit universal vs. model-specific scaling patterns?</div>
+                <div class="rq-toggle" onclick="toggleRQ('rq3')">
+                    <span class="rq-toggle-icon" id="rq3-icon">▶</span>
+                    <span>Click for detailed research context</span>
+                </div>
+                <div class="rq-details" id="rq3-details">
+                    <div class="rq-detail-section"><strong>Why it matters:</strong> Analogous to scaling laws for training compute/data; predictive: can we forecast failure on unseen complexities?; theoretical: what determines reasoning capacity limits?</div>
+                    <div class="rq-detail-section"><strong>What we test:</strong> Accuracy vs. complexity (variables 4-20, clause length 2-5); fit power law: Acc(n) = A - B·n^α where n = complexity; compare α (decay exponent) across models.</div>
+                    <div class="rq-detail-section"><strong>Expected finding:</strong> Model accuracy follows power-law decay: Acc(n) ≈ 0.98 - 0.15·(n/10)^1.8 for flagship models, with steeper exponents for budget models, suggesting universal scaling with model-dependent constants.</div>
+                    <div class="rq-detail-section"><strong>Scientific impact:</strong> First scaling law for logical reasoning in LLMs.</div>
+                </div>
+                <div class="finding">
+                    <strong>Complexity-Dependent Performance:</strong>
+                    <p style="margin: 10px 0;">See degradation curves below for visual analysis. Preliminary scaling pattern:</p>
+                    <table style="width: 100%; margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th>Model Tier</th>
+                                <th>Performance at Low Complexity<br>(vars 4-8)</th>
+                                <th>Performance at High Complexity<br>(vars 15-20)</th>
+                                <th>Scaling Pattern</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                            <tr>
+                                <td style="text-align: left;">Tier 1 (Flagship)</td>
+                                <td class="acc-100">93%</td>
+                                <td class="acc-50">0%</td>
+                                <td>Sharp decline (93% drop)</td>
+                            </tr>
+
+                            <tr>
+                                <td style="text-align: left;">Tier 2 (Medium)</td>
+                                <td class="acc-100">99%</td>
+                                <td class="acc-50">0%</td>
+                                <td>Sharp decline (99% drop)</td>
+                            </tr>
+
+                            <tr>
+                                <td style="text-align: left;">Tier 3 (Budget+think)</td>
+                                <td class="acc-100">91%</td>
+                                <td class="acc-50">0%</td>
+                                <td>Sharp decline (91% drop)</td>
+                            </tr>
+
+                            <tr>
+                                <td style="text-align: left;">Tier 3 (Budget no-think)</td>
+                                <td class="acc-100">84%</td>
+                                <td class="acc-50">0%</td>
+                                <td>Sharp decline (84% drop)</td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                    <div style="background: #edf2f7; padding: 12px; margin-top: 15px; border-left: 3px solid #667eea; border-radius: 4px;">
+                        <strong>Interpretation:</strong> Degradation curves (below) visualize the scaling relationship Acc(n) where n = complexity. Different degradation rates across tiers suggest model-specific capacity limits.
+                    </div>
+                    <div class="note" style="margin-top: 10px;">
+                        <strong>Data status:</strong> Scaling patterns observable but limited sample. Full validation will enable fitting power-law models: Acc(n) ≈ A - B·n^α to predict breakdown thresholds.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="rq-section">
+                <div class="rq-title">RQ4: Extended Deliberation: Error Correction vs. Qualitative Improvement</div>
+                <div class="rq-description">Does extended thinking (reasoning tokens) enable qualitatively different problem-solving strategies, or merely reduce errors on solvable problems?</div>
+                <div class="rq-toggle" onclick="toggleRQ('rq4')">
+                    <span class="rq-toggle-icon" id="rq4-icon">▶</span>
+                    <span>Click for detailed research context</span>
+                </div>
+                <div class="rq-details" id="rq4-details">
+                    <div class="rq-detail-section"><strong>Why it matters:</strong> Fundamental question about System 1 vs. System 2 cognition; cost-benefit: when is slow thinking actually better?; mechanistic: what does 'thinking longer' buy you?</div>
+                    <div class="rq-detail-section"><strong>What we test:</strong> Same model with/without extended thinking; measure Δaccuracy by problem complexity; analyze threshold effects (complexity where thinking helps); qualitative analysis of reasoning traces.</div>
+                    <div class="rq-detail-section"><strong>Expected finding:</strong> Extended thinking provides minimal benefit (<2%) on simple problems but critical gains (8-15%) beyond complexity threshold (>10 variables), suggesting extended deliberation enables systematic search rather than mere error reduction.</div>
+                    <div class="rq-detail-section"><strong>Scientific impact:</strong> Evidence for dual-process cognition in LLMs.</div>
+                </div>
+                <div class="finding">
+                    <table style="width: 100%; margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th>Model</th>
+                                <th>With Thinking</th>
+                                <th>Without Thinking</th>
+                                <th>Delta</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                            <tr>
+                                <td style="text-align: left;">claude-haiku-4-5-20251001</td>
+                                <td>87%</td>
+                                <td>93%</td>
+                                <td style="font-weight: 600; color: red;">-7%</td>
+                            </tr>
+
+                            <tr>
+                                <td style="text-align: left;">gemini-2.5-flash-lite</td>
+                                <td>87%</td>
+                                <td>90%</td>
+                                <td style="font-weight: 600; color: red;">-3%</td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                    <div style="background: #edf2f7; padding: 12px; margin-top: 15px; border-left: 3px solid #667eea; border-radius: 4px;">
+                        <strong>Interpretation:</strong> Thinking benefit varies by model and task. Complexity-dependent analysis will reveal at which problem sizes extended deliberation becomes cost-effective.
+                    </div>
+                    <div class="note" style="margin-top: 10px;">
+                        <strong>Data status:</strong> Limited sample size. Full validation will show thinking benefits stratified by complexity level (simple/medium/hard problems).
+                    </div>
+                </div>
+            </div>
+            
+            <div class="rq-section">
+                <div class="rq-title">RQ5: Capacity-Complexity Phase Transitions</div>
+                <div class="rq-description">Do models exhibit sharp phase transitions in reasoning capability at specific complexity thresholds, or gradual degradation?</div>
+                <div class="rq-toggle" onclick="toggleRQ('rq5')">
+                    <span class="rq-toggle-icon" id="rq5-icon">▶</span>
+                    <span>Click for detailed research context</span>
+                </div>
+                <div class="rq-details" id="rq5-details">
+                    <div class="rq-detail-section"><strong>Why it matters:</strong> Sharp transitions → discrete capacity limits; gradual decay → continuous scaling; predictability of failure modes.</div>
+                    <div class="rq-detail-section"><strong>What we test:</strong> Plot accuracy vs. complexity for all models; identify smooth decay vs. cliff-like drops; measure slope changes, inflection points; compare flagship vs. budget transition patterns.</div>
+                    <div class="rq-detail-section"><strong>Expected finding:</strong> All models exhibit phase transitions at model-specific complexity thresholds (vars: 7-9 for budget, 12-15 for flagship), with accuracy dropping >20% within 2-variable increments, suggesting discrete capacity limits rather than continuous scaling.</div>
+                    <div class="rq-detail-section"><strong>Scientific impact:</strong> Reveals hard limits in reasoning capability.</div>
+                </div>
+                <div class="finding">
+                    <strong>Tier-Based Phase Behavior:</strong>
+                    <p style="margin: 10px 0;">Analyzing whether models show sharp transitions (phase-like) or gradual degradation:</p>
+                    <table style="width: 100%; margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th>Tier</th>
+                                <th>Low Complexity<br>(vars 4-8)</th>
+                                <th>High Complexity<br>(vars 15-20)</th>
+                                <th>Degradation Rate</th>
+                                <th>Transition Type</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                            <tr>
+                                <td style="text-align: left;">Tier 1 (Flagship)</td>
+                                <td class="acc-100">93%</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100">-6.7% drop</td>
+                                <td>Gradual (continuous)</td>
+                            </tr>
+
+                            <tr>
+                                <td style="text-align: left;">Tier 2 (Medium)</td>
+                                <td class="acc-100">99%</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100">-1.1% drop</td>
+                                <td>Gradual (continuous)</td>
+                            </tr>
+
+                            <tr>
+                                <td style="text-align: left;">Tier 3 (Budget+think)</td>
+                                <td class="acc-100">91%</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100">-8.9% drop</td>
+                                <td>Gradual (continuous)</td>
+                            </tr>
+
+                            <tr>
+                                <td style="text-align: left;">Tier 3 (Budget no-think)</td>
+                                <td class="acc-100">84%</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100">-15.6% drop</td>
+                                <td>Gradual (continuous)</td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                    <div style="background: #edf2f7; padding: 12px; margin-top: 15px; border-left: 3px solid #667eea; border-radius: 4px;">
+                        <strong>Interpretation:</strong> Degradation patterns suggest sharp phase-like transitions across model tiers. Sharp drops indicate discrete capacity limits; gradual decay suggests continuous scaling.
+                    </div>
+                    <div class="note" style="margin-top: 10px;">
+                        <strong>Data status:</strong> Transition types detectable but need more complexity levels. Full dataset will reveal exact inflection points and enable phase diagram construction.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="rq-section">
+                <div class="rq-title">RQ6: Cross-Task Transfer and Representation Learnability</div>
+                <div class="rq-description">Do models that excel at one representation type (e.g., Horn clauses) transfer that capability to others (CNF), or is performance representation-specific?</div>
+                <div class="rq-toggle" onclick="toggleRQ('rq6')">
+                    <span class="rq-toggle-icon" id="rq6-icon">▶</span>
+                    <span>Click for detailed research context</span>
+                </div>
+                <div class="rq-details" id="rq6-details">
+                    <div class="rq-detail-section"><strong>Why it matters:</strong> Tests generalization vs. specialization; reveals whether models learn task-general reasoning; informs multi-task training strategies.</div>
+                    <div class="rq-detail-section"><strong>What we test:</strong> Rank models per representation type; measure rank correlation across representations; identify versatile generalists vs. specialized experts; analyze representation-specific failure patterns.</div>
+                    <div class="rq-detail-section"><strong>Expected finding:</strong> Model rankings show weak correlation (ρ=0.4-0.6) across representations, with some models exhibiting versatile performance while others specialize in specific encodings, suggesting learned representation preferences.</div>
+                    <div class="rq-detail-section"><strong>Scientific impact:</strong> First evidence of representation specialization in LLMs.</div>
+                </div>
+                <div class="finding">
+                    <strong>Model Rankings by Task Type:</strong>
+                    <table style="width: 100%; margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th>Task Category</th>
+                                <th>Top 3 Models (by avg accuracy)</th>
+                                <th>Performance Range</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                            <tr>
+                                <td style="text-align: left;">Horn Tasks (goal entailment)</td>
+                                <td>claude-haiku-4-, claude-haiku-4-, claude-sonnet-4</td>
+                                <td class="acc-100">100%-100%</td>
+                            </tr>
+
+                            <tr>
+                                <td style="text-align: left;">CNF Tasks (satisfiability)</td>
+                                <td>gemini-2.5-flas, gemini-2.5-flas, gemini-2.5-pro</td>
+                                <td class="acc-100">100%-100%</td>
+                            </tr>
+
+                            <tr>
+                                <td style="text-align: left;">Matched Representations</td>
+                                <td>claude-haiku-4-, gemini-2.5-flas, gemini-2.5-pro</td>
+                                <td class="acc-100">100%-100%</td>
+                            </tr>
+
+                            <tr>
+                                <td style="text-align: left;">Mismatch Handling</td>
+                                <td>claude-haiku-4-, claude-haiku-4-, claude-sonnet-4</td>
+                                <td class="acc-100">100%-100%</td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                    <div style="background: #edf2f7; padding: 12px; margin-top: 15px; border-left: 3px solid #667eea; border-radius: 4px;">
+                        <strong>Interpretation:</strong> Preliminary rankings show task-specific performance patterns. Rank correlation analysis will quantify transfer vs. specialization.
+                    </div>
+                    <div class="note" style="margin-top: 10px;">
+                        <strong>Data status:</strong> Rankings observable but statistical tests require larger sample. Full validation enables rank correlation (ρ) calculation and significance testing.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="rq-section">
+                <div class="rq-title">RQ7: Satisfiability Bias and Asymmetric Error Patterns</div>
+                <div class="rq-description">Do models exhibit systematic bias toward satisfiable or unsatisfiable judgments, and does this bias reveal learned heuristics vs. true logical reasoning?</div>
+                <div class="rq-toggle" onclick="toggleRQ('rq7')">
+                    <span class="rq-toggle-icon" id="rq7-icon">▶</span>
+                    <span>Click for detailed research context</span>
+                </div>
+                <div class="rq-details" id="rq7-details">
+                    <div class="rq-detail-section"><strong>Why it matters:</strong> Bias detection reveals whether models use shortcuts (e.g., 'usually satisfiable' heuristic) vs. proper logical analysis; asymmetric errors indicate reasoning gaps; critical for deployment reliability.</div>
+                    <div class="rq-detail-section"><strong>What we test:</strong> Compare accuracy on satisfiable vs. unsatisfiable problems separately; measure bias: (Acc_sat - Acc_unsat); analyze bias consistency across models and representations; check if bias correlates with problem complexity.</div>
+                    <div class="rq-detail-section"><strong>Expected finding:</strong> Models show asymmetric performance with 10-20% higher accuracy on one class (likely unsatisfiable, as contradictions are easier to detect), revealing systematic bias rather than balanced reasoning. Bias magnitude correlates with model tier.</div>
+                    <div class="rq-detail-section"><strong>Scientific impact:</strong> Reveals whether models learn logical principles or statistical shortcuts; informs bias correction strategies.</div>
+                </div>
+                <div class="finding">
+                    <strong>Sat/Unsat Performance Analysis:</strong>
+                    <table style="width: 100%; margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th>Model</th>
+                                <th>Satisfiable Acc</th>
+                                <th>Unsatisfiable Acc</th>
+                                <th>Bias (Δ)</th>
+                                <th>Interpretation</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                            <tr>
+                                <td style="text-align: left; font-size: 0.85em;">anthropic/claude-haiku-4-5-20251001/nothink</td>
+                                <td class="acc-90">89%</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-75" style="font-weight: 600;">-11%</td>
+                                <td>UNSAT bias</td>
+                            </tr>
+
+                            <tr>
+                                <td style="text-align: left; font-size: 0.85em;">anthropic/claude-haiku-4-5-20251001/think-low</td>
+                                <td class="acc-90">78%</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-50" style="font-weight: 600;">-22%</td>
+                                <td>UNSAT bias</td>
+                            </tr>
+
+                            <tr>
+                                <td style="text-align: left; font-size: 0.85em;">anthropic/claude-haiku-4-5-20251001/think-med</td>
+                                <td class="acc-75">72%</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-50" style="font-weight: 600;">-28%</td>
+                                <td>UNSAT bias</td>
+                            </tr>
+
+                            <tr>
+                                <td style="text-align: left; font-size: 0.85em;">anthropic/claude-sonnet-4-5-20250929/think-high</td>
+                                <td class="acc-90">78%</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-50" style="font-weight: 600;">-22%</td>
+                                <td>UNSAT bias</td>
+                            </tr>
+
+                            <tr>
+                                <td style="text-align: left; font-size: 0.85em;">google/gemini-2.5-flash-lite/nothink</td>
+                                <td class="acc-100">94%</td>
+                                <td class="acc-90">83%</td>
+                                <td class="acc-75" style="font-weight: 600;">+11%</td>
+                                <td>SAT bias</td>
+                            </tr>
+
+                            <tr>
+                                <td style="text-align: left; font-size: 0.85em;">google/gemini-2.5-flash-lite/think-low</td>
+                                <td class="acc-90">89%</td>
+                                <td class="acc-90">83%</td>
+                                <td class="acc-100" style="font-weight: 600;">+6%</td>
+                                <td>Slight bias</td>
+                            </tr>
+
+                            <tr>
+                                <td style="text-align: left; font-size: 0.85em;">google/gemini-2.5-flash/think-med</td>
+                                <td class="acc-100">94%</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100" style="font-weight: 600;">-6%</td>
+                                <td>Slight bias</td>
+                            </tr>
+
+                            <tr>
+                                <td style="text-align: left; font-size: 0.85em;">google/gemini-2.5-pro/think-high</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100" style="font-weight: 600;">+0%</td>
+                                <td>Balanced</td>
+                            </tr>
+
+                            <tr>
+                                <td style="text-align: left; font-size: 0.85em;">openai/gpt-5-2025-08-07/think-high</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100" style="font-weight: 600;">+0%</td>
+                                <td>Balanced</td>
+                            </tr>
+
+                            <tr>
+                                <td style="text-align: left; font-size: 0.85em;">openai/gpt-5-2025-08-07/think-medium</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100" style="font-weight: 600;">+0%</td>
+                                <td>Balanced</td>
+                            </tr>
+
+                            <tr>
+                                <td style="text-align: left; font-size: 0.85em;">openai/gpt-5-mini-2025-08-07/think-low</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100" style="font-weight: 600;">+0%</td>
+                                <td>Balanced</td>
+                            </tr>
+
+                            <tr>
+                                <td style="text-align: left; font-size: 0.85em;">openai/gpt-5-nano-2025-08-07/nothink</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100">100%</td>
+                                <td class="acc-100" style="font-weight: 600;">+0%</td>
+                                <td>Balanced</td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                    <div style="background: #edf2f7; padding: 12px; margin-top: 15px; border-left: 3px solid #667eea; border-radius: 4px;">
+                        <strong>Interpretation:</strong> Positive bias (Δ > 0) indicates models are better at satisfiable problems (may miss contradictions). 
+                        Negative bias (Δ < 0) indicates better contradiction detection (may falsely claim unsatisfiability). 
+                        Balanced performance (|Δ| < 5%) suggests unbiased logical reasoning.
+                    </div>
+                    <div class="note" style="margin-top: 10px;">
+                        <strong>Data status:</strong> Bias patterns observable. Full validation will show if bias correlates with model tier, representation type, or problem complexity.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="section">
+            <h2>Quality Degradation by Complexity</h2>
+            <p style="margin-bottom: 15px;">How accuracy changes as problem complexity (number of variables) increases. Each line represents one model.</p>
+            <div class="note">
+                <strong>Note:</strong> If charts don't appear (e.g., on GitHub Pages), download this HTML file and open locally. 
+                Alternative: Check the ASCII representation tables below each chart.
+            </div>
+
+
+            <div style="margin-bottom: 30px;">
+                <h3 style="color: #4a5568; margin-bottom: 15px;">cnf1_con_hornonly</h3>
+                <canvas id="degradation_chart_0" style="max-height: 400px;"></canvas>
+            </div>
+            <script>
+            (function() {
+                const ctx = document.getElementById('degradation_chart_0').getContext('2d');
+                
+                // Provider colors
+                const providerColors = {
+                    'anthropic': ['#E91E63', '#F06292', '#F8BBD0', '#FCE4EC'],
+                    'google': ['#2196F3', '#64B5F6', '#BBDEFB', '#E3F2FD'],
+                    'openai': ['#4CAF50', '#81C784', '#C8E6C9', '#E8F5E9']
+                };
+                
+                const datasets = [];
+
+
+                datasets.push({
+                    label: 'anthropic/claude-haiku-4-5-202/nothink',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#E91E63',
+                    backgroundColor: '#E91E6320',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'anthropic/claude-haiku-4-5-202/think-low',
+                    data: [{"x": 4, "y": 80.0}],
+                    borderColor: '#F06292',
+                    backgroundColor: '#F0629220',
+                    borderWidth: 2,
+                    borderDash: [10, 5],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'anthropic/claude-haiku-4-5-202/think-med',
+                    data: [{"x": 4, "y": 60.0}],
+                    borderColor: '#F8BBD0',
+                    backgroundColor: '#F8BBD020',
+                    borderWidth: 2,
+                    borderDash: [],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'anthropic/claude-sonnet-4-5-20/think-high',
+                    data: [{"x": 4, "y": 60.0}],
+                    borderColor: '#FCE4EC',
+                    backgroundColor: '#FCE4EC20',
+                    borderWidth: 2,
+                    borderDash: [],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'google/gemini-2.5-flash-lit/nothink',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#2196F3',
+                    backgroundColor: '#2196F320',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'google/gemini-2.5-flash-lit/think-low',
+                    data: [{"x": 4, "y": 80.0}],
+                    borderColor: '#64B5F6',
+                    backgroundColor: '#64B5F620',
+                    borderWidth: 2,
+                    borderDash: [10, 5],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'google/gemini-2.5-flash/think-med',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#BBDEFB',
+                    backgroundColor: '#BBDEFB20',
+                    borderWidth: 2,
+                    borderDash: [],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'google/gemini-2.5-pro/think-high',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#E3F2FD',
+                    backgroundColor: '#E3F2FD20',
+                    borderWidth: 2,
+                    borderDash: [],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'openai/gpt-5-2025-08-07/think-high',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#4CAF50',
+                    backgroundColor: '#4CAF5020',
+                    borderWidth: 2,
+                    borderDash: [],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'openai/gpt-5-2025-08-07/think-medium',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#81C784',
+                    backgroundColor: '#81C78420',
+                    borderWidth: 2,
+                    borderDash: [],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'openai/gpt-5-mini-2025-08-0/think-low',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#C8E6C9',
+                    backgroundColor: '#C8E6C920',
+                    borderWidth: 2,
+                    borderDash: [10, 5],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'openai/gpt-5-nano-2025-08-0/nothink',
+                    data: [{"x": 4, "y": 80.0}],
+                    borderColor: '#E8F5E9',
+                    backgroundColor: '#E8F5E920',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                new Chart(ctx, {
+                    type: 'line',
+                    data: { datasets: datasets },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'right',
+                                labels: {
+                                    boxWidth: 12,
+                                    font: { size: 10 },
+                                    padding: 8
+                                }
+                            },
+                            title: {
+                                display: false
+                            },
+                            tooltip: {
+                                mode: 'nearest',
+                                intersect: false
+                            }
+                        },
+                        scales: {
+                            x: {
+                                type: 'linear',
+                                title: {
+                                    display: true,
+                                    text: 'Maximum Variables',
+                                    font: { weight: 'bold' }
+                                },
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Accuracy (%)',
+                                    font: { weight: 'bold' }
+                                },
+                                min: 0,
+                                max: 100,
+                                ticks: {
+                                    callback: function(value) { return value + '%'; }
+                                }
+                            }
+                        },
+                        interaction: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    }
+                });
+            })();
+            </script>
+            
+            <div style="margin-top: 20px;">
+                <details>
+                    <summary style="cursor: pointer; font-weight: 600; color: #667eea; padding: 10px; background: #f7fafc; border-radius: 4px;">
+                        Show ASCII Table (fallback if chart doesn't render)
+                    </summary>
+                    <div style="background: #2d3748; color: #e2e8f0; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 0.75em; overflow-x: auto; margin-top: 10px;">
+                        <pre style="margin: 0;">
+Vars:     4
+
+
+🔴 claude-haiku-4-5-202 nothink   : 100%
+
+🔴 claude-haiku-4-5-202 think-low :  80%
+
+🔴 claude-haiku-4-5-202 think-med :  60%
+
+🔴 claude-sonnet-4-5-20 think-high:  60%
+
+🔵 gemini-2.5-flash-lit nothink   : 100%
+
+🔵 gemini-2.5-flash-lit think-low :  80%
+
+🔵 gemini-2.5-flash     think-med : 100%
+
+🔵 gemini-2.5-pro       think-high: 100%
+
+🟢 gpt-5-2025-08-07     think-high: 100%
+
+🟢 gpt-5-2025-08-07     think-medi: 100%
+
+🟢 gpt-5-mini-2025-08-0 think-low : 100%
+
+🟢 gpt-5-nano-2025-08-0 nothink   :  80%
+
+</pre>
+                        <div style="margin-top: 10px; opacity: 0.8;">🔴 Anthropic | 🔵 Google | 🟢 OpenAI</div>
+                    </div>
+                </details>
+            </div>
+
+
+            <div style="margin-bottom: 30px;">
+                <h3 style="color: #4a5568; margin-bottom: 15px;">cnf1_con_mixed</h3>
+                <canvas id="degradation_chart_1" style="max-height: 400px;"></canvas>
+            </div>
+            <script>
+            (function() {
+                const ctx = document.getElementById('degradation_chart_1').getContext('2d');
+                
+                // Provider colors
+                const providerColors = {
+                    'anthropic': ['#E91E63', '#F06292', '#F8BBD0', '#FCE4EC'],
+                    'google': ['#2196F3', '#64B5F6', '#BBDEFB', '#E3F2FD'],
+                    'openai': ['#4CAF50', '#81C784', '#C8E6C9', '#E8F5E9']
+                };
+                
+                const datasets = [];
+
+
+                datasets.push({
+                    label: 'anthropic/claude-haiku-4-5-202/nothink',
+                    data: [{"x": 4, "y": 80.0}],
+                    borderColor: '#E91E63',
+                    backgroundColor: '#E91E6320',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'anthropic/claude-haiku-4-5-202/think-low',
+                    data: [{"x": 4, "y": 80.0}],
+                    borderColor: '#F06292',
+                    backgroundColor: '#F0629220',
+                    borderWidth: 2,
+                    borderDash: [10, 5],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'anthropic/claude-haiku-4-5-202/think-med',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#F8BBD0',
+                    backgroundColor: '#F8BBD020',
+                    borderWidth: 2,
+                    borderDash: [],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'anthropic/claude-sonnet-4-5-20/think-high',
+                    data: [{"x": 4, "y": 60.0}],
+                    borderColor: '#FCE4EC',
+                    backgroundColor: '#FCE4EC20',
+                    borderWidth: 2,
+                    borderDash: [],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'google/gemini-2.5-flash-lit/nothink',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#2196F3',
+                    backgroundColor: '#2196F320',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'google/gemini-2.5-flash-lit/think-low',
+                    data: [{"x": 4, "y": 80.0}],
+                    borderColor: '#64B5F6',
+                    backgroundColor: '#64B5F620',
+                    borderWidth: 2,
+                    borderDash: [10, 5],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'google/gemini-2.5-flash/think-med',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#BBDEFB',
+                    backgroundColor: '#BBDEFB20',
+                    borderWidth: 2,
+                    borderDash: [],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'google/gemini-2.5-pro/think-high',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#E3F2FD',
+                    backgroundColor: '#E3F2FD20',
+                    borderWidth: 2,
+                    borderDash: [],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'openai/gpt-5-2025-08-07/think-high',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#4CAF50',
+                    backgroundColor: '#4CAF5020',
+                    borderWidth: 2,
+                    borderDash: [],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'openai/gpt-5-2025-08-07/think-medium',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#81C784',
+                    backgroundColor: '#81C78420',
+                    borderWidth: 2,
+                    borderDash: [],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'openai/gpt-5-mini-2025-08-0/think-low',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#C8E6C9',
+                    backgroundColor: '#C8E6C920',
+                    borderWidth: 2,
+                    borderDash: [10, 5],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'openai/gpt-5-nano-2025-08-0/nothink',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#E8F5E9',
+                    backgroundColor: '#E8F5E920',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                new Chart(ctx, {
+                    type: 'line',
+                    data: { datasets: datasets },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'right',
+                                labels: {
+                                    boxWidth: 12,
+                                    font: { size: 10 },
+                                    padding: 8
+                                }
+                            },
+                            title: {
+                                display: false
+                            },
+                            tooltip: {
+                                mode: 'nearest',
+                                intersect: false
+                            }
+                        },
+                        scales: {
+                            x: {
+                                type: 'linear',
+                                title: {
+                                    display: true,
+                                    text: 'Maximum Variables',
+                                    font: { weight: 'bold' }
+                                },
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Accuracy (%)',
+                                    font: { weight: 'bold' }
+                                },
+                                min: 0,
+                                max: 100,
+                                ticks: {
+                                    callback: function(value) { return value + '%'; }
+                                }
+                            }
+                        },
+                        interaction: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    }
+                });
+            })();
+            </script>
+            
+            <div style="margin-top: 20px;">
+                <details>
+                    <summary style="cursor: pointer; font-weight: 600; color: #667eea; padding: 10px; background: #f7fafc; border-radius: 4px;">
+                        Show ASCII Table (fallback if chart doesn't render)
+                    </summary>
+                    <div style="background: #2d3748; color: #e2e8f0; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 0.75em; overflow-x: auto; margin-top: 10px;">
+                        <pre style="margin: 0;">
+Vars:     4
+
+
+🔴 claude-haiku-4-5-202 nothink   :  80%
+
+🔴 claude-haiku-4-5-202 think-low :  80%
+
+🔴 claude-haiku-4-5-202 think-med : 100%
+
+🔴 claude-sonnet-4-5-20 think-high:  60%
+
+🔵 gemini-2.5-flash-lit nothink   : 100%
+
+🔵 gemini-2.5-flash-lit think-low :  80%
+
+🔵 gemini-2.5-flash     think-med : 100%
+
+🔵 gemini-2.5-pro       think-high: 100%
+
+🟢 gpt-5-2025-08-07     think-high: 100%
+
+🟢 gpt-5-2025-08-07     think-medi: 100%
+
+🟢 gpt-5-mini-2025-08-0 think-low : 100%
+
+🟢 gpt-5-nano-2025-08-0 nothink   : 100%
+
+</pre>
+                        <div style="margin-top: 10px; opacity: 0.8;">🔴 Anthropic | 🔵 Google | 🟢 OpenAI</div>
+                    </div>
+                </details>
+            </div>
+
+
+            <div style="margin-bottom: 30px;">
+                <h3 style="color: #4a5568; margin-bottom: 15px;">cnf2_con_hornonly</h3>
+                <canvas id="degradation_chart_2" style="max-height: 400px;"></canvas>
+            </div>
+            <script>
+            (function() {
+                const ctx = document.getElementById('degradation_chart_2').getContext('2d');
+                
+                // Provider colors
+                const providerColors = {
+                    'anthropic': ['#E91E63', '#F06292', '#F8BBD0', '#FCE4EC'],
+                    'google': ['#2196F3', '#64B5F6', '#BBDEFB', '#E3F2FD'],
+                    'openai': ['#4CAF50', '#81C784', '#C8E6C9', '#E8F5E9']
+                };
+                
+                const datasets = [];
+
+
+                datasets.push({
+                    label: 'anthropic/claude-haiku-4-5-202/nothink',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#E91E63',
+                    backgroundColor: '#E91E6320',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'anthropic/claude-haiku-4-5-202/think-low',
+                    data: [{"x": 4, "y": 60.0}],
+                    borderColor: '#F06292',
+                    backgroundColor: '#F0629220',
+                    borderWidth: 2,
+                    borderDash: [10, 5],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'anthropic/claude-haiku-4-5-202/think-med',
+                    data: [{"x": 4, "y": 80.0}],
+                    borderColor: '#F8BBD0',
+                    backgroundColor: '#F8BBD020',
+                    borderWidth: 2,
+                    borderDash: [],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'anthropic/claude-sonnet-4-5-20/think-high',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#FCE4EC',
+                    backgroundColor: '#FCE4EC20',
+                    borderWidth: 2,
+                    borderDash: [],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'google/gemini-2.5-flash-lit/nothink',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#2196F3',
+                    backgroundColor: '#2196F320',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'google/gemini-2.5-flash-lit/think-low',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#64B5F6',
+                    backgroundColor: '#64B5F620',
+                    borderWidth: 2,
+                    borderDash: [10, 5],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'google/gemini-2.5-flash/think-med',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#BBDEFB',
+                    backgroundColor: '#BBDEFB20',
+                    borderWidth: 2,
+                    borderDash: [],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'google/gemini-2.5-pro/think-high',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#E3F2FD',
+                    backgroundColor: '#E3F2FD20',
+                    borderWidth: 2,
+                    borderDash: [],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'openai/gpt-5-2025-08-07/think-high',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#4CAF50',
+                    backgroundColor: '#4CAF5020',
+                    borderWidth: 2,
+                    borderDash: [],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'openai/gpt-5-2025-08-07/think-medium',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#81C784',
+                    backgroundColor: '#81C78420',
+                    borderWidth: 2,
+                    borderDash: [],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'openai/gpt-5-mini-2025-08-0/think-low',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#C8E6C9',
+                    backgroundColor: '#C8E6C920',
+                    borderWidth: 2,
+                    borderDash: [10, 5],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'openai/gpt-5-nano-2025-08-0/nothink',
+                    data: [{"x": 4, "y": 0.0}],
+                    borderColor: '#E8F5E9',
+                    backgroundColor: '#E8F5E920',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                new Chart(ctx, {
+                    type: 'line',
+                    data: { datasets: datasets },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'right',
+                                labels: {
+                                    boxWidth: 12,
+                                    font: { size: 10 },
+                                    padding: 8
+                                }
+                            },
+                            title: {
+                                display: false
+                            },
+                            tooltip: {
+                                mode: 'nearest',
+                                intersect: false
+                            }
+                        },
+                        scales: {
+                            x: {
+                                type: 'linear',
+                                title: {
+                                    display: true,
+                                    text: 'Maximum Variables',
+                                    font: { weight: 'bold' }
+                                },
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Accuracy (%)',
+                                    font: { weight: 'bold' }
+                                },
+                                min: 0,
+                                max: 100,
+                                ticks: {
+                                    callback: function(value) { return value + '%'; }
+                                }
+                            }
+                        },
+                        interaction: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    }
+                });
+            })();
+            </script>
+            
+            <div style="margin-top: 20px;">
+                <details>
+                    <summary style="cursor: pointer; font-weight: 600; color: #667eea; padding: 10px; background: #f7fafc; border-radius: 4px;">
+                        Show ASCII Table (fallback if chart doesn't render)
+                    </summary>
+                    <div style="background: #2d3748; color: #e2e8f0; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 0.75em; overflow-x: auto; margin-top: 10px;">
+                        <pre style="margin: 0;">
+Vars:     4
+
+
+🔴 claude-haiku-4-5-202 nothink   : 100%
+
+🔴 claude-haiku-4-5-202 think-low :  60%
+
+🔴 claude-haiku-4-5-202 think-med :  80%
+
+🔴 claude-sonnet-4-5-20 think-high: 100%
+
+🔵 gemini-2.5-flash-lit nothink   : 100%
+
+🔵 gemini-2.5-flash-lit think-low : 100%
+
+🔵 gemini-2.5-flash     think-med : 100%
+
+🔵 gemini-2.5-pro       think-high: 100%
+
+🟢 gpt-5-2025-08-07     think-high: 100%
+
+🟢 gpt-5-2025-08-07     think-medi: 100%
+
+🟢 gpt-5-mini-2025-08-0 think-low : 100%
+
+🟢 gpt-5-nano-2025-08-0 nothink   :   0%
+
+</pre>
+                        <div style="margin-top: 10px; opacity: 0.8;">🔴 Anthropic | 🔵 Google | 🟢 OpenAI</div>
+                    </div>
+                </details>
+            </div>
+
+
+            <div style="margin-bottom: 30px;">
+                <h3 style="color: #4a5568; margin-bottom: 15px;">cnf2_con_mixed</h3>
+                <canvas id="degradation_chart_3" style="max-height: 400px;"></canvas>
+            </div>
+            <script>
+            (function() {
+                const ctx = document.getElementById('degradation_chart_3').getContext('2d');
+                
+                // Provider colors
+                const providerColors = {
+                    'anthropic': ['#E91E63', '#F06292', '#F8BBD0', '#FCE4EC'],
+                    'google': ['#2196F3', '#64B5F6', '#BBDEFB', '#E3F2FD'],
+                    'openai': ['#4CAF50', '#81C784', '#C8E6C9', '#E8F5E9']
+                };
+                
+                const datasets = [];
+
+
+                datasets.push({
+                    label: 'anthropic/claude-haiku-4-5-202/nothink',
+                    data: [{"x": 4, "y": 80.0}],
+                    borderColor: '#E91E63',
+                    backgroundColor: '#E91E6320',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'anthropic/claude-haiku-4-5-202/think-low',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#F06292',
+                    backgroundColor: '#F0629220',
+                    borderWidth: 2,
+                    borderDash: [10, 5],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'anthropic/claude-haiku-4-5-202/think-med',
+                    data: [{"x": 4, "y": 80.0}],
+                    borderColor: '#F8BBD0',
+                    backgroundColor: '#F8BBD020',
+                    borderWidth: 2,
+                    borderDash: [],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'anthropic/claude-sonnet-4-5-20/think-high',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#FCE4EC',
+                    backgroundColor: '#FCE4EC20',
+                    borderWidth: 2,
+                    borderDash: [],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'google/gemini-2.5-flash-lit/nothink',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#2196F3',
+                    backgroundColor: '#2196F320',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'google/gemini-2.5-flash-lit/think-low',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#64B5F6',
+                    backgroundColor: '#64B5F620',
+                    borderWidth: 2,
+                    borderDash: [10, 5],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'google/gemini-2.5-flash/think-med',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#BBDEFB',
+                    backgroundColor: '#BBDEFB20',
+                    borderWidth: 2,
+                    borderDash: [],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'google/gemini-2.5-pro/think-high',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#E3F2FD',
+                    backgroundColor: '#E3F2FD20',
+                    borderWidth: 2,
+                    borderDash: [],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'openai/gpt-5-2025-08-07/think-high',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#4CAF50',
+                    backgroundColor: '#4CAF5020',
+                    borderWidth: 2,
+                    borderDash: [],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'openai/gpt-5-2025-08-07/think-medium',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#81C784',
+                    backgroundColor: '#81C78420',
+                    borderWidth: 2,
+                    borderDash: [],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'openai/gpt-5-mini-2025-08-0/think-low',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#C8E6C9',
+                    backgroundColor: '#C8E6C920',
+                    borderWidth: 2,
+                    borderDash: [10, 5],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'openai/gpt-5-nano-2025-08-0/nothink',
+                    data: [{"x": 4, "y": 40.0}],
+                    borderColor: '#E8F5E9',
+                    backgroundColor: '#E8F5E920',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                new Chart(ctx, {
+                    type: 'line',
+                    data: { datasets: datasets },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'right',
+                                labels: {
+                                    boxWidth: 12,
+                                    font: { size: 10 },
+                                    padding: 8
+                                }
+                            },
+                            title: {
+                                display: false
+                            },
+                            tooltip: {
+                                mode: 'nearest',
+                                intersect: false
+                            }
+                        },
+                        scales: {
+                            x: {
+                                type: 'linear',
+                                title: {
+                                    display: true,
+                                    text: 'Maximum Variables',
+                                    font: { weight: 'bold' }
+                                },
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Accuracy (%)',
+                                    font: { weight: 'bold' }
+                                },
+                                min: 0,
+                                max: 100,
+                                ticks: {
+                                    callback: function(value) { return value + '%'; }
+                                }
+                            }
+                        },
+                        interaction: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    }
+                });
+            })();
+            </script>
+            
+            <div style="margin-top: 20px;">
+                <details>
+                    <summary style="cursor: pointer; font-weight: 600; color: #667eea; padding: 10px; background: #f7fafc; border-radius: 4px;">
+                        Show ASCII Table (fallback if chart doesn't render)
+                    </summary>
+                    <div style="background: #2d3748; color: #e2e8f0; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 0.75em; overflow-x: auto; margin-top: 10px;">
+                        <pre style="margin: 0;">
+Vars:     4
+
+
+🔴 claude-haiku-4-5-202 nothink   :  80%
+
+🔴 claude-haiku-4-5-202 think-low : 100%
+
+🔴 claude-haiku-4-5-202 think-med :  80%
+
+🔴 claude-sonnet-4-5-20 think-high: 100%
+
+🔵 gemini-2.5-flash-lit nothink   : 100%
+
+🔵 gemini-2.5-flash-lit think-low : 100%
+
+🔵 gemini-2.5-flash     think-med : 100%
+
+🔵 gemini-2.5-pro       think-high: 100%
+
+🟢 gpt-5-2025-08-07     think-high: 100%
+
+🟢 gpt-5-2025-08-07     think-medi: 100%
+
+🟢 gpt-5-mini-2025-08-0 think-low : 100%
+
+🟢 gpt-5-nano-2025-08-0 nothink   :  40%
+
+</pre>
+                        <div style="margin-top: 10px; opacity: 0.8;">🔴 Anthropic | 🔵 Google | 🟢 OpenAI</div>
+                    </div>
+                </details>
+            </div>
+
+
+            <div style="margin-bottom: 30px;">
+                <h3 style="color: #4a5568; margin-bottom: 15px;">horn_yn_hornonly</h3>
+                <canvas id="degradation_chart_4" style="max-height: 400px;"></canvas>
+            </div>
+            <script>
+            (function() {
+                const ctx = document.getElementById('degradation_chart_4').getContext('2d');
+                
+                // Provider colors
+                const providerColors = {
+                    'anthropic': ['#E91E63', '#F06292', '#F8BBD0', '#FCE4EC'],
+                    'google': ['#2196F3', '#64B5F6', '#BBDEFB', '#E3F2FD'],
+                    'openai': ['#4CAF50', '#81C784', '#C8E6C9', '#E8F5E9']
+                };
+                
+                const datasets = [];
+
+
+                datasets.push({
+                    label: 'anthropic/claude-haiku-4-5-202/nothink',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#E91E63',
+                    backgroundColor: '#E91E6320',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'anthropic/claude-haiku-4-5-202/think-low',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#F06292',
+                    backgroundColor: '#F0629220',
+                    borderWidth: 2,
+                    borderDash: [10, 5],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'anthropic/claude-haiku-4-5-202/think-med',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#F8BBD0',
+                    backgroundColor: '#F8BBD020',
+                    borderWidth: 2,
+                    borderDash: [],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'anthropic/claude-sonnet-4-5-20/think-high',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#FCE4EC',
+                    backgroundColor: '#FCE4EC20',
+                    borderWidth: 2,
+                    borderDash: [],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'google/gemini-2.5-flash-lit/nothink',
+                    data: [{"x": 4, "y": 60.0}],
+                    borderColor: '#2196F3',
+                    backgroundColor: '#2196F320',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'google/gemini-2.5-flash-lit/think-low',
+                    data: [{"x": 4, "y": 80.0}],
+                    borderColor: '#64B5F6',
+                    backgroundColor: '#64B5F620',
+                    borderWidth: 2,
+                    borderDash: [10, 5],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'google/gemini-2.5-flash/think-med',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#BBDEFB',
+                    backgroundColor: '#BBDEFB20',
+                    borderWidth: 2,
+                    borderDash: [],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'google/gemini-2.5-pro/think-high',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#E3F2FD',
+                    backgroundColor: '#E3F2FD20',
+                    borderWidth: 2,
+                    borderDash: [],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'openai/gpt-5-2025-08-07/think-high',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#4CAF50',
+                    backgroundColor: '#4CAF5020',
+                    borderWidth: 2,
+                    borderDash: [],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'openai/gpt-5-2025-08-07/think-medium',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#81C784',
+                    backgroundColor: '#81C78420',
+                    borderWidth: 2,
+                    borderDash: [],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'openai/gpt-5-mini-2025-08-0/think-low',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#C8E6C9',
+                    backgroundColor: '#C8E6C920',
+                    borderWidth: 2,
+                    borderDash: [10, 5],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'openai/gpt-5-nano-2025-08-0/nothink',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#E8F5E9',
+                    backgroundColor: '#E8F5E920',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                new Chart(ctx, {
+                    type: 'line',
+                    data: { datasets: datasets },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'right',
+                                labels: {
+                                    boxWidth: 12,
+                                    font: { size: 10 },
+                                    padding: 8
+                                }
+                            },
+                            title: {
+                                display: false
+                            },
+                            tooltip: {
+                                mode: 'nearest',
+                                intersect: false
+                            }
+                        },
+                        scales: {
+                            x: {
+                                type: 'linear',
+                                title: {
+                                    display: true,
+                                    text: 'Maximum Variables',
+                                    font: { weight: 'bold' }
+                                },
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Accuracy (%)',
+                                    font: { weight: 'bold' }
+                                },
+                                min: 0,
+                                max: 100,
+                                ticks: {
+                                    callback: function(value) { return value + '%'; }
+                                }
+                            }
+                        },
+                        interaction: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    }
+                });
+            })();
+            </script>
+            
+            <div style="margin-top: 20px;">
+                <details>
+                    <summary style="cursor: pointer; font-weight: 600; color: #667eea; padding: 10px; background: #f7fafc; border-radius: 4px;">
+                        Show ASCII Table (fallback if chart doesn't render)
+                    </summary>
+                    <div style="background: #2d3748; color: #e2e8f0; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 0.75em; overflow-x: auto; margin-top: 10px;">
+                        <pre style="margin: 0;">
+Vars:     4
+
+
+🔴 claude-haiku-4-5-202 nothink   : 100%
+
+🔴 claude-haiku-4-5-202 think-low : 100%
+
+🔴 claude-haiku-4-5-202 think-med : 100%
+
+🔴 claude-sonnet-4-5-20 think-high: 100%
+
+🔵 gemini-2.5-flash-lit nothink   :  60%
+
+🔵 gemini-2.5-flash-lit think-low :  80%
+
+🔵 gemini-2.5-flash     think-med : 100%
+
+🔵 gemini-2.5-pro       think-high: 100%
+
+🟢 gpt-5-2025-08-07     think-high: 100%
+
+🟢 gpt-5-2025-08-07     think-medi: 100%
+
+🟢 gpt-5-mini-2025-08-0 think-low : 100%
+
+🟢 gpt-5-nano-2025-08-0 nothink   : 100%
+
+</pre>
+                        <div style="margin-top: 10px; opacity: 0.8;">🔴 Anthropic | 🔵 Google | 🟢 OpenAI</div>
+                    </div>
+                </details>
+            </div>
+
+
+            <div style="margin-bottom: 30px;">
+                <h3 style="color: #4a5568; margin-bottom: 15px;">horn_yn_mixed</h3>
+                <canvas id="degradation_chart_5" style="max-height: 400px;"></canvas>
+            </div>
+            <script>
+            (function() {
+                const ctx = document.getElementById('degradation_chart_5').getContext('2d');
+                
+                // Provider colors
+                const providerColors = {
+                    'anthropic': ['#E91E63', '#F06292', '#F8BBD0', '#FCE4EC'],
+                    'google': ['#2196F3', '#64B5F6', '#BBDEFB', '#E3F2FD'],
+                    'openai': ['#4CAF50', '#81C784', '#C8E6C9', '#E8F5E9']
+                };
+                
+                const datasets = [];
+
+
+                datasets.push({
+                    label: 'anthropic/claude-haiku-4-5-202/nothink',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#E91E63',
+                    backgroundColor: '#E91E6320',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'anthropic/claude-haiku-4-5-202/think-low',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#F06292',
+                    backgroundColor: '#F0629220',
+                    borderWidth: 2,
+                    borderDash: [10, 5],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'anthropic/claude-haiku-4-5-202/think-med',
+                    data: [{"x": 4, "y": 80.0}],
+                    borderColor: '#F8BBD0',
+                    backgroundColor: '#F8BBD020',
+                    borderWidth: 2,
+                    borderDash: [],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'anthropic/claude-sonnet-4-5-20/think-high',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#FCE4EC',
+                    backgroundColor: '#FCE4EC20',
+                    borderWidth: 2,
+                    borderDash: [],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'google/gemini-2.5-flash-lit/nothink',
+                    data: [{"x": 4, "y": 80.0}],
+                    borderColor: '#2196F3',
+                    backgroundColor: '#2196F320',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'google/gemini-2.5-flash-lit/think-low',
+                    data: [{"x": 4, "y": 80.0}],
+                    borderColor: '#64B5F6',
+                    backgroundColor: '#64B5F620',
+                    borderWidth: 2,
+                    borderDash: [10, 5],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'google/gemini-2.5-flash/think-med',
+                    data: [{"x": 4, "y": 80.0}],
+                    borderColor: '#BBDEFB',
+                    backgroundColor: '#BBDEFB20',
+                    borderWidth: 2,
+                    borderDash: [],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'google/gemini-2.5-pro/think-high',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#E3F2FD',
+                    backgroundColor: '#E3F2FD20',
+                    borderWidth: 2,
+                    borderDash: [],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'openai/gpt-5-2025-08-07/think-high',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#4CAF50',
+                    backgroundColor: '#4CAF5020',
+                    borderWidth: 2,
+                    borderDash: [],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'openai/gpt-5-2025-08-07/think-medium',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#81C784',
+                    backgroundColor: '#81C78420',
+                    borderWidth: 2,
+                    borderDash: [],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'openai/gpt-5-mini-2025-08-0/think-low',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#C8E6C9',
+                    backgroundColor: '#C8E6C920',
+                    borderWidth: 2,
+                    borderDash: [10, 5],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                datasets.push({
+                    label: 'openai/gpt-5-nano-2025-08-0/nothink',
+                    data: [{"x": 4, "y": 100.0}],
+                    borderColor: '#E8F5E9',
+                    backgroundColor: '#E8F5E920',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.1
+                });
+
+
+                new Chart(ctx, {
+                    type: 'line',
+                    data: { datasets: datasets },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'right',
+                                labels: {
+                                    boxWidth: 12,
+                                    font: { size: 10 },
+                                    padding: 8
+                                }
+                            },
+                            title: {
+                                display: false
+                            },
+                            tooltip: {
+                                mode: 'nearest',
+                                intersect: false
+                            }
+                        },
+                        scales: {
+                            x: {
+                                type: 'linear',
+                                title: {
+                                    display: true,
+                                    text: 'Maximum Variables',
+                                    font: { weight: 'bold' }
+                                },
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Accuracy (%)',
+                                    font: { weight: 'bold' }
+                                },
+                                min: 0,
+                                max: 100,
+                                ticks: {
+                                    callback: function(value) { return value + '%'; }
+                                }
+                            }
+                        },
+                        interaction: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    }
+                });
+            })();
+            </script>
+            
+            <div style="margin-top: 20px;">
+                <details>
+                    <summary style="cursor: pointer; font-weight: 600; color: #667eea; padding: 10px; background: #f7fafc; border-radius: 4px;">
+                        Show ASCII Table (fallback if chart doesn't render)
+                    </summary>
+                    <div style="background: #2d3748; color: #e2e8f0; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 0.75em; overflow-x: auto; margin-top: 10px;">
+                        <pre style="margin: 0;">
+Vars:     4
+
+
+🔴 claude-haiku-4-5-202 nothink   : 100%
+
+🔴 claude-haiku-4-5-202 think-low : 100%
+
+🔴 claude-haiku-4-5-202 think-med :  80%
+
+🔴 claude-sonnet-4-5-20 think-high: 100%
+
+🔵 gemini-2.5-flash-lit nothink   :  80%
+
+🔵 gemini-2.5-flash-lit think-low :  80%
+
+🔵 gemini-2.5-flash     think-med :  80%
+
+🔵 gemini-2.5-pro       think-high: 100%
+
+🟢 gpt-5-2025-08-07     think-high: 100%
+
+🟢 gpt-5-2025-08-07     think-medi: 100%
+
+🟢 gpt-5-mini-2025-08-0 think-low : 100%
+
+🟢 gpt-5-nano-2025-08-0 nothink   : 100%
+
+</pre>
+                        <div style="margin-top: 10px; opacity: 0.8;">🔴 Anthropic | 🔵 Google | 🟢 OpenAI</div>
+                    </div>
+                </details>
+            </div>
+
+
+        </div>
+
+
+        <script>
+        // Store full data for interactivity
+        const fullData = {"metadata": {"run_id": "smoke_20251020_2224", "runs_dir": "experiments/runs", "dataset": {"min_vars": 4, "max_vars": 4, "min_len": 2, "max_len": 3, "total_problems": 6, "horn_problems": 5, "nonhorn_problems": 1, "sat_problems": 4, "unsat_problems": 2}}, "experiments": {"cnf1_con_hornonly": {"name": "cnf1_con_hornonly", "models": {"anthropic/claude-haiku-4-5-20251001/nothink": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "thinking_mode": "nothink", "summary": {"name": "cnf1_con_hornonly", "provider": "anthropic", "model": "claude-haiku-4-5-20251001", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 4779.6, "timestamp": 1760988351}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "anthropic/claude-haiku-4-5-20251001/think-low": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "thinking_mode": "think-low", "summary": {"name": "cnf1_con_hornonly", "provider": "anthropic", "model": "claude-haiku-4-5-20251001", "run": "smoke_20251020_2224", "total": 5, "correct": 4, "accuracy": 0.8, "unclear": 0, "sat_total": 3, "sat_correct": 2, "sat_accuracy": 0.6666666666666666, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 8248.8, "timestamp": 1760988351}, "complexity_breakdown": {"4": {"accuracy": 0.8, "total": 5, "correct": 4}}}, "anthropic/claude-haiku-4-5-20251001/think-med": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "thinking_mode": "think-med", "summary": {"name": "cnf1_con_hornonly", "provider": "anthropic", "model": "claude-haiku-4-5-20251001", "run": "smoke_20251020_2224", "total": 5, "correct": 3, "accuracy": 0.6, "unclear": 0, "sat_total": 3, "sat_correct": 1, "sat_accuracy": 0.3333333333333333, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 8788.8, "timestamp": 1760988351}, "complexity_breakdown": {"4": {"accuracy": 0.6, "total": 5, "correct": 3}}}, "anthropic/claude-sonnet-4-5-20250929/think-high": {"provider": "anthropic", "model": "claude-sonnet-4-5-20250929", "thinking_mode": "think-high", "summary": {"name": "cnf1_con_hornonly", "provider": "anthropic", "model": "claude-sonnet-4-5-20250929", "run": "smoke_20251020_2224", "total": 5, "correct": 3, "accuracy": 0.6, "unclear": 0, "sat_total": 3, "sat_correct": 1, "sat_accuracy": 0.3333333333333333, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 18615.8, "timestamp": 1760988351}, "complexity_breakdown": {"4": {"accuracy": 0.6, "total": 5, "correct": 3}}}, "google/gemini-2.5-flash/think-med": {"provider": "google", "model": "gemini-2.5-flash", "thinking_mode": "think-med", "summary": {"name": "cnf1_con_hornonly", "provider": "google", "model": "gemini-2.5-flash", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 7086.4, "timestamp": 1760988351}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "google/gemini-2.5-flash-lite/nothink": {"provider": "google", "model": "gemini-2.5-flash-lite", "thinking_mode": "nothink", "summary": {"name": "cnf1_con_hornonly", "provider": "google", "model": "gemini-2.5-flash-lite", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 2300.0, "timestamp": 1760988351}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "google/gemini-2.5-flash-lite/think-low": {"provider": "google", "model": "gemini-2.5-flash-lite", "thinking_mode": "think-low", "summary": {"name": "cnf1_con_hornonly", "provider": "google", "model": "gemini-2.5-flash-lite", "run": "smoke_20251020_2224", "total": 5, "correct": 4, "accuracy": 0.8, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 1, "unsat_accuracy": 0.5, "avg_timing_ms": 3897.8, "timestamp": 1760988351}, "complexity_breakdown": {"4": {"accuracy": 0.8, "total": 5, "correct": 4}}}, "google/gemini-2.5-pro/think-high": {"provider": "google", "model": "gemini-2.5-pro", "thinking_mode": "think-high", "summary": {"name": "cnf1_con_hornonly", "provider": "google", "model": "gemini-2.5-pro", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 15769.8, "timestamp": 1760988351}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "openai/gpt-5-2025-08-07/think-high": {"provider": "openai", "model": "gpt-5-2025-08-07", "thinking_mode": "think-high", "summary": {"name": "cnf1_con_hornonly", "provider": "openai", "model": "gpt-5-2025-08-07", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 7523.6, "timestamp": 1760988351}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "openai/gpt-5-2025-08-07/think-medium": {"provider": "openai", "model": "gpt-5-2025-08-07", "thinking_mode": "think-medium", "summary": {"name": "cnf1_con_hornonly", "provider": "openai", "model": "gpt-5-2025-08-07", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 5621.8, "timestamp": 1760988351}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "openai/gpt-5-mini-2025-08-07/think-low": {"provider": "openai", "model": "gpt-5-mini-2025-08-07", "thinking_mode": "think-low", "summary": {"name": "cnf1_con_hornonly", "provider": "openai", "model": "gpt-5-mini-2025-08-07", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 4699.8, "timestamp": 1760988351}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "openai/gpt-5-nano-2025-08-07/nothink": {"provider": "openai", "model": "gpt-5-nano-2025-08-07", "thinking_mode": "nothink", "summary": {"name": "cnf1_con_hornonly", "provider": "openai", "model": "gpt-5-nano-2025-08-07", "run": "smoke_20251020_2224", "total": 5, "correct": 4, "accuracy": 0.8, "unclear": 1, "sat_total": 3, "sat_correct": 2, "sat_accuracy": 0.6666666666666666, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 9348.8, "timestamp": 1760988351}, "complexity_breakdown": {"4": {"accuracy": 0.8, "total": 5, "correct": 4}}}}, "summary": {"total_models": 12, "avg_accuracy": 0.8833333333333333, "total_unclear": 1}}, "cnf1_con_mixed": {"name": "cnf1_con_mixed", "models": {"anthropic/claude-haiku-4-5-20251001/nothink": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "thinking_mode": "nothink", "summary": {"name": "cnf1_con_mixed", "provider": "anthropic", "model": "claude-haiku-4-5-20251001", "run": "smoke_20251020_2224", "total": 5, "correct": 4, "accuracy": 0.8, "unclear": 0, "sat_total": 3, "sat_correct": 2, "sat_accuracy": 0.6666666666666666, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 4866.6, "timestamp": 1760988352}, "complexity_breakdown": {"4": {"accuracy": 0.8, "total": 5, "correct": 4}}}, "anthropic/claude-haiku-4-5-20251001/think-low": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "thinking_mode": "think-low", "summary": {"name": "cnf1_con_mixed", "provider": "anthropic", "model": "claude-haiku-4-5-20251001", "run": "smoke_20251020_2224", "total": 5, "correct": 4, "accuracy": 0.8, "unclear": 0, "sat_total": 3, "sat_correct": 2, "sat_accuracy": 0.6666666666666666, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 7149.8, "timestamp": 1760988352}, "complexity_breakdown": {"4": {"accuracy": 0.8, "total": 5, "correct": 4}}}, "anthropic/claude-haiku-4-5-20251001/think-med": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "thinking_mode": "think-med", "summary": {"name": "cnf1_con_mixed", "provider": "anthropic", "model": "claude-haiku-4-5-20251001", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 9679.8, "timestamp": 1760988352}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "anthropic/claude-sonnet-4-5-20250929/think-high": {"provider": "anthropic", "model": "claude-sonnet-4-5-20250929", "thinking_mode": "think-high", "summary": {"name": "cnf1_con_mixed", "provider": "anthropic", "model": "claude-sonnet-4-5-20250929", "run": "smoke_20251020_2224", "total": 5, "correct": 3, "accuracy": 0.6, "unclear": 0, "sat_total": 3, "sat_correct": 1, "sat_accuracy": 0.3333333333333333, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 18325.8, "timestamp": 1760988352}, "complexity_breakdown": {"4": {"accuracy": 0.6, "total": 5, "correct": 3}}}, "google/gemini-2.5-flash/think-med": {"provider": "google", "model": "gemini-2.5-flash", "thinking_mode": "think-med", "summary": {"name": "cnf1_con_mixed", "provider": "google", "model": "gemini-2.5-flash", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 5994.0, "timestamp": 1760988352}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "google/gemini-2.5-flash-lite/nothink": {"provider": "google", "model": "gemini-2.5-flash-lite", "thinking_mode": "nothink", "summary": {"name": "cnf1_con_mixed", "provider": "google", "model": "gemini-2.5-flash-lite", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 1879.4, "timestamp": 1760988352}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "google/gemini-2.5-flash-lite/think-low": {"provider": "google", "model": "gemini-2.5-flash-lite", "thinking_mode": "think-low", "summary": {"name": "cnf1_con_mixed", "provider": "google", "model": "gemini-2.5-flash-lite", "run": "smoke_20251020_2224", "total": 5, "correct": 4, "accuracy": 0.8, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 1, "unsat_accuracy": 0.5, "avg_timing_ms": 3027.4, "timestamp": 1760988352}, "complexity_breakdown": {"4": {"accuracy": 0.8, "total": 5, "correct": 4}}}, "google/gemini-2.5-pro/think-high": {"provider": "google", "model": "gemini-2.5-pro", "thinking_mode": "think-high", "summary": {"name": "cnf1_con_mixed", "provider": "google", "model": "gemini-2.5-pro", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 15218.6, "timestamp": 1760988352}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "openai/gpt-5-2025-08-07/think-high": {"provider": "openai", "model": "gpt-5-2025-08-07", "thinking_mode": "think-high", "summary": {"name": "cnf1_con_mixed", "provider": "openai", "model": "gpt-5-2025-08-07", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 9367.6, "timestamp": 1760988352}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "openai/gpt-5-2025-08-07/think-medium": {"provider": "openai", "model": "gpt-5-2025-08-07", "thinking_mode": "think-medium", "summary": {"name": "cnf1_con_mixed", "provider": "openai", "model": "gpt-5-2025-08-07", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 6422.0, "timestamp": 1760988352}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "openai/gpt-5-mini-2025-08-07/think-low": {"provider": "openai", "model": "gpt-5-mini-2025-08-07", "thinking_mode": "think-low", "summary": {"name": "cnf1_con_mixed", "provider": "openai", "model": "gpt-5-mini-2025-08-07", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 4851.0, "timestamp": 1760988352}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "openai/gpt-5-nano-2025-08-07/nothink": {"provider": "openai", "model": "gpt-5-nano-2025-08-07", "thinking_mode": "nothink", "summary": {"name": "cnf1_con_mixed", "provider": "openai", "model": "gpt-5-nano-2025-08-07", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 10095.6, "timestamp": 1760988352}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}}, "summary": {"total_models": 12, "avg_accuracy": 0.9166666666666666, "total_unclear": 0}}, "cnf2_con_hornonly": {"name": "cnf2_con_hornonly", "models": {"anthropic/claude-haiku-4-5-20251001/nothink": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "thinking_mode": "nothink", "summary": {"name": "cnf2_con_hornonly", "provider": "anthropic", "model": "claude-haiku-4-5-20251001", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 4190.4, "timestamp": 1760988377}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "anthropic/claude-haiku-4-5-20251001/think-low": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "thinking_mode": "think-low", "summary": {"name": "cnf2_con_hornonly", "provider": "anthropic", "model": "claude-haiku-4-5-20251001", "run": "smoke_20251020_2224", "total": 5, "correct": 3, "accuracy": 0.6, "unclear": 0, "sat_total": 3, "sat_correct": 1, "sat_accuracy": 0.3333333333333333, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 6507.2, "timestamp": 1760988377}, "complexity_breakdown": {"4": {"accuracy": 0.6, "total": 5, "correct": 3}}}, "anthropic/claude-haiku-4-5-20251001/think-med": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "thinking_mode": "think-med", "summary": {"name": "cnf2_con_hornonly", "provider": "anthropic", "model": "claude-haiku-4-5-20251001", "run": "smoke_20251020_2224", "total": 5, "correct": 4, "accuracy": 0.8, "unclear": 0, "sat_total": 3, "sat_correct": 2, "sat_accuracy": 0.6666666666666666, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 8946.4, "timestamp": 1760988377}, "complexity_breakdown": {"4": {"accuracy": 0.8, "total": 5, "correct": 4}}}, "anthropic/claude-sonnet-4-5-20250929/think-high": {"provider": "anthropic", "model": "claude-sonnet-4-5-20250929", "thinking_mode": "think-high", "summary": {"name": "cnf2_con_hornonly", "provider": "anthropic", "model": "claude-sonnet-4-5-20250929", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 16291.4, "timestamp": 1760988377}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "google/gemini-2.5-flash/think-med": {"provider": "google", "model": "gemini-2.5-flash", "thinking_mode": "think-med", "summary": {"name": "cnf2_con_hornonly", "provider": "google", "model": "gemini-2.5-flash", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 6932.4, "timestamp": 1760988377}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "google/gemini-2.5-flash-lite/nothink": {"provider": "google", "model": "gemini-2.5-flash-lite", "thinking_mode": "nothink", "summary": {"name": "cnf2_con_hornonly", "provider": "google", "model": "gemini-2.5-flash-lite", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 2234.0, "timestamp": 1760988377}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "google/gemini-2.5-flash-lite/think-low": {"provider": "google", "model": "gemini-2.5-flash-lite", "thinking_mode": "think-low", "summary": {"name": "cnf2_con_hornonly", "provider": "google", "model": "gemini-2.5-flash-lite", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 2765.2, "timestamp": 1760988377}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "google/gemini-2.5-pro/think-high": {"provider": "google", "model": "gemini-2.5-pro", "thinking_mode": "think-high", "summary": {"name": "cnf2_con_hornonly", "provider": "google", "model": "gemini-2.5-pro", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 15290.8, "timestamp": 1760988377}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "openai/gpt-5-2025-08-07/think-high": {"provider": "openai", "model": "gpt-5-2025-08-07", "thinking_mode": "think-high", "summary": {"name": "cnf2_con_hornonly", "provider": "openai", "model": "gpt-5-2025-08-07", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 11298.4, "timestamp": 1760988377}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "openai/gpt-5-2025-08-07/think-medium": {"provider": "openai", "model": "gpt-5-2025-08-07", "thinking_mode": "think-medium", "summary": {"name": "cnf2_con_hornonly", "provider": "openai", "model": "gpt-5-2025-08-07", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 6176.0, "timestamp": 1760988377}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "openai/gpt-5-mini-2025-08-07/think-low": {"provider": "openai", "model": "gpt-5-mini-2025-08-07", "thinking_mode": "think-low", "summary": {"name": "cnf2_con_hornonly", "provider": "openai", "model": "gpt-5-mini-2025-08-07", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 5664.8, "timestamp": 1760988377}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "openai/gpt-5-nano-2025-08-07/nothink": {"provider": "openai", "model": "gpt-5-nano-2025-08-07", "thinking_mode": "nothink", "summary": {"name": "cnf2_con_hornonly", "provider": "openai", "model": "gpt-5-nano-2025-08-07", "run": "smoke_20251020_2224", "total": 5, "correct": 0, "accuracy": 0.0, "unclear": 5, "sat_total": 3, "sat_correct": 0, "sat_accuracy": 0.0, "unsat_total": 2, "unsat_correct": 0, "unsat_accuracy": 0.0, "avg_timing_ms": 18184.0, "timestamp": 1760988377}, "complexity_breakdown": {"4": {"accuracy": 0.0, "total": 5, "correct": 0}}}}, "summary": {"total_models": 12, "avg_accuracy": 0.8666666666666667, "total_unclear": 5}}, "cnf2_con_mixed": {"name": "cnf2_con_mixed", "models": {"anthropic/claude-haiku-4-5-20251001/nothink": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "thinking_mode": "nothink", "summary": {"name": "cnf2_con_mixed", "provider": "anthropic", "model": "claude-haiku-4-5-20251001", "run": "smoke_20251020_2224", "total": 5, "correct": 4, "accuracy": 0.8, "unclear": 0, "sat_total": 3, "sat_correct": 2, "sat_accuracy": 0.6666666666666666, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 4041.4, "timestamp": 1760988349}, "complexity_breakdown": {"4": {"accuracy": 0.8, "total": 5, "correct": 4}}}, "anthropic/claude-haiku-4-5-20251001/think-low": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "thinking_mode": "think-low", "summary": {"name": "cnf2_con_mixed", "provider": "anthropic", "model": "claude-haiku-4-5-20251001", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 6640.4, "timestamp": 1760988349}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "anthropic/claude-haiku-4-5-20251001/think-med": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "thinking_mode": "think-med", "summary": {"name": "cnf2_con_mixed", "provider": "anthropic", "model": "claude-haiku-4-5-20251001", "run": "smoke_20251020_2224", "total": 5, "correct": 4, "accuracy": 0.8, "unclear": 0, "sat_total": 3, "sat_correct": 2, "sat_accuracy": 0.6666666666666666, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 9892.2, "timestamp": 1760988349}, "complexity_breakdown": {"4": {"accuracy": 0.8, "total": 5, "correct": 4}}}, "anthropic/claude-sonnet-4-5-20250929/think-high": {"provider": "anthropic", "model": "claude-sonnet-4-5-20250929", "thinking_mode": "think-high", "summary": {"name": "cnf2_con_mixed", "provider": "anthropic", "model": "claude-sonnet-4-5-20250929", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 16298.6, "timestamp": 1760988349}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "google/gemini-2.5-flash/think-med": {"provider": "google", "model": "gemini-2.5-flash", "thinking_mode": "think-med", "summary": {"name": "cnf2_con_mixed", "provider": "google", "model": "gemini-2.5-flash", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 6549.6, "timestamp": 1760988349}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "google/gemini-2.5-flash-lite/nothink": {"provider": "google", "model": "gemini-2.5-flash-lite", "thinking_mode": "nothink", "summary": {"name": "cnf2_con_mixed", "provider": "google", "model": "gemini-2.5-flash-lite", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 2576.4, "timestamp": 1760988349}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "google/gemini-2.5-flash-lite/think-low": {"provider": "google", "model": "gemini-2.5-flash-lite", "thinking_mode": "think-low", "summary": {"name": "cnf2_con_mixed", "provider": "google", "model": "gemini-2.5-flash-lite", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 2929.0, "timestamp": 1760988349}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "google/gemini-2.5-pro/think-high": {"provider": "google", "model": "gemini-2.5-pro", "thinking_mode": "think-high", "summary": {"name": "cnf2_con_mixed", "provider": "google", "model": "gemini-2.5-pro", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 14789.0, "timestamp": 1760988349}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "openai/gpt-5-2025-08-07/think-high": {"provider": "openai", "model": "gpt-5-2025-08-07", "thinking_mode": "think-high", "summary": {"name": "cnf2_con_mixed", "provider": "openai", "model": "gpt-5-2025-08-07", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 7674.2, "timestamp": 1760988349}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "openai/gpt-5-2025-08-07/think-medium": {"provider": "openai", "model": "gpt-5-2025-08-07", "thinking_mode": "think-medium", "summary": {"name": "cnf2_con_mixed", "provider": "openai", "model": "gpt-5-2025-08-07", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 4903.0, "timestamp": 1760988349}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "openai/gpt-5-mini-2025-08-07/think-low": {"provider": "openai", "model": "gpt-5-mini-2025-08-07", "thinking_mode": "think-low", "summary": {"name": "cnf2_con_mixed", "provider": "openai", "model": "gpt-5-mini-2025-08-07", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 4170.6, "timestamp": 1760988349}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "openai/gpt-5-nano-2025-08-07/nothink": {"provider": "openai", "model": "gpt-5-nano-2025-08-07", "thinking_mode": "nothink", "summary": {"name": "cnf2_con_mixed", "provider": "openai", "model": "gpt-5-nano-2025-08-07", "run": "smoke_20251020_2224", "total": 5, "correct": 2, "accuracy": 0.4, "unclear": 3, "sat_total": 3, "sat_correct": 2, "sat_accuracy": 0.6666666666666666, "unsat_total": 2, "unsat_correct": 0, "unsat_accuracy": 0.0, "avg_timing_ms": 13746.0, "timestamp": 1760988349}, "complexity_breakdown": {"4": {"accuracy": 0.4, "total": 5, "correct": 2}}}}, "summary": {"total_models": 12, "avg_accuracy": 0.9166666666666666, "total_unclear": 3}}, "horn_yn_hornonly": {"name": "horn_yn_hornonly", "models": {"anthropic/claude-haiku-4-5-20251001/nothink": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "thinking_mode": "nothink", "summary": {"name": "horn_yn_hornonly", "provider": "anthropic", "model": "claude-haiku-4-5-20251001", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 3712.4, "timestamp": 1760988323}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "anthropic/claude-haiku-4-5-20251001/think-low": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "thinking_mode": "think-low", "summary": {"name": "horn_yn_hornonly", "provider": "anthropic", "model": "claude-haiku-4-5-20251001", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 4750.2, "timestamp": 1760988323}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "anthropic/claude-haiku-4-5-20251001/think-med": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "thinking_mode": "think-med", "summary": {"name": "horn_yn_hornonly", "provider": "anthropic", "model": "claude-haiku-4-5-20251001", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 7058.2, "timestamp": 1760988323}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "anthropic/claude-sonnet-4-5-20250929/think-high": {"provider": "anthropic", "model": "claude-sonnet-4-5-20250929", "thinking_mode": "think-high", "summary": {"name": "horn_yn_hornonly", "provider": "anthropic", "model": "claude-sonnet-4-5-20250929", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 13213.0, "timestamp": 1760988323}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "google/gemini-2.5-flash/think-med": {"provider": "google", "model": "gemini-2.5-flash", "thinking_mode": "think-med", "summary": {"name": "horn_yn_hornonly", "provider": "google", "model": "gemini-2.5-flash", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 5539.8, "timestamp": 1760988323}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "google/gemini-2.5-flash-lite/nothink": {"provider": "google", "model": "gemini-2.5-flash-lite", "thinking_mode": "nothink", "summary": {"name": "horn_yn_hornonly", "provider": "google", "model": "gemini-2.5-flash-lite", "run": "smoke_20251020_2224", "total": 5, "correct": 3, "accuracy": 0.6, "unclear": 0, "sat_total": 3, "sat_correct": 2, "sat_accuracy": 0.6666666666666666, "unsat_total": 2, "unsat_correct": 1, "unsat_accuracy": 0.5, "avg_timing_ms": 678.0, "timestamp": 1760988323}, "complexity_breakdown": {"4": {"accuracy": 0.6, "total": 5, "correct": 3}}}, "google/gemini-2.5-flash-lite/think-low": {"provider": "google", "model": "gemini-2.5-flash-lite", "thinking_mode": "think-low", "summary": {"name": "horn_yn_hornonly", "provider": "google", "model": "gemini-2.5-flash-lite", "run": "smoke_20251020_2224", "total": 5, "correct": 4, "accuracy": 0.8, "unclear": 0, "sat_total": 3, "sat_correct": 2, "sat_accuracy": 0.6666666666666666, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 2379.0, "timestamp": 1760988323}, "complexity_breakdown": {"4": {"accuracy": 0.8, "total": 5, "correct": 4}}}, "google/gemini-2.5-pro/think-high": {"provider": "google", "model": "gemini-2.5-pro", "thinking_mode": "think-high", "summary": {"name": "horn_yn_hornonly", "provider": "google", "model": "gemini-2.5-pro", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 9724.6, "timestamp": 1760988323}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "openai/gpt-5-2025-08-07/think-high": {"provider": "openai", "model": "gpt-5-2025-08-07", "thinking_mode": "think-high", "summary": {"name": "horn_yn_hornonly", "provider": "openai", "model": "gpt-5-2025-08-07", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 5090.8, "timestamp": 1760988323}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "openai/gpt-5-2025-08-07/think-medium": {"provider": "openai", "model": "gpt-5-2025-08-07", "thinking_mode": "think-medium", "summary": {"name": "horn_yn_hornonly", "provider": "openai", "model": "gpt-5-2025-08-07", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 3922.2, "timestamp": 1760988323}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "openai/gpt-5-mini-2025-08-07/think-low": {"provider": "openai", "model": "gpt-5-mini-2025-08-07", "thinking_mode": "think-low", "summary": {"name": "horn_yn_hornonly", "provider": "openai", "model": "gpt-5-mini-2025-08-07", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 2982.6, "timestamp": 1760988323}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "openai/gpt-5-nano-2025-08-07/nothink": {"provider": "openai", "model": "gpt-5-nano-2025-08-07", "thinking_mode": "nothink", "summary": {"name": "horn_yn_hornonly", "provider": "openai", "model": "gpt-5-nano-2025-08-07", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 5102.0, "timestamp": 1760988323}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}}, "summary": {"total_models": 12, "avg_accuracy": 0.9500000000000001, "total_unclear": 0}}, "horn_yn_mixed": {"name": "horn_yn_mixed", "models": {"anthropic/claude-haiku-4-5-20251001/nothink": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "thinking_mode": "nothink", "summary": {"name": "horn_yn_mixed", "provider": "anthropic", "model": "claude-haiku-4-5-20251001", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 3446.8, "timestamp": 1760988415}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "anthropic/claude-haiku-4-5-20251001/think-low": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "thinking_mode": "think-low", "summary": {"name": "horn_yn_mixed", "provider": "anthropic", "model": "claude-haiku-4-5-20251001", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 4506.0, "timestamp": 1760988415}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "anthropic/claude-haiku-4-5-20251001/think-med": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "thinking_mode": "think-med", "summary": {"name": "horn_yn_mixed", "provider": "anthropic", "model": "claude-haiku-4-5-20251001", "run": "smoke_20251020_2224", "total": 5, "correct": 4, "accuracy": 0.8, "unclear": 0, "sat_total": 3, "sat_correct": 2, "sat_accuracy": 0.6666666666666666, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 7967.4, "timestamp": 1760988415}, "complexity_breakdown": {"4": {"accuracy": 0.8, "total": 5, "correct": 4}}}, "anthropic/claude-sonnet-4-5-20250929/think-high": {"provider": "anthropic", "model": "claude-sonnet-4-5-20250929", "thinking_mode": "think-high", "summary": {"name": "horn_yn_mixed", "provider": "anthropic", "model": "claude-sonnet-4-5-20250929", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 23772.0, "timestamp": 1760988415}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "google/gemini-2.5-flash/think-med": {"provider": "google", "model": "gemini-2.5-flash", "thinking_mode": "think-med", "summary": {"name": "horn_yn_mixed", "provider": "google", "model": "gemini-2.5-flash", "run": "smoke_20251020_2224", "total": 5, "correct": 4, "accuracy": 0.8, "unclear": 0, "sat_total": 3, "sat_correct": 2, "sat_accuracy": 0.6666666666666666, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 10045.0, "timestamp": 1760988415}, "complexity_breakdown": {"4": {"accuracy": 0.8, "total": 5, "correct": 4}}}, "google/gemini-2.5-flash-lite/nothink": {"provider": "google", "model": "gemini-2.5-flash-lite", "thinking_mode": "nothink", "summary": {"name": "horn_yn_mixed", "provider": "google", "model": "gemini-2.5-flash-lite", "run": "smoke_20251020_2224", "total": 5, "correct": 4, "accuracy": 0.8, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 1, "unsat_accuracy": 0.5, "avg_timing_ms": 762.8, "timestamp": 1760988415}, "complexity_breakdown": {"4": {"accuracy": 0.8, "total": 5, "correct": 4}}}, "google/gemini-2.5-flash-lite/think-low": {"provider": "google", "model": "gemini-2.5-flash-lite", "thinking_mode": "think-low", "summary": {"name": "horn_yn_mixed", "provider": "google", "model": "gemini-2.5-flash-lite", "run": "smoke_20251020_2224", "total": 5, "correct": 4, "accuracy": 0.8, "unclear": 0, "sat_total": 3, "sat_correct": 2, "sat_accuracy": 0.6666666666666666, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 2530.4, "timestamp": 1760988415}, "complexity_breakdown": {"4": {"accuracy": 0.8, "total": 5, "correct": 4}}}, "google/gemini-2.5-pro/think-high": {"provider": "google", "model": "gemini-2.5-pro", "thinking_mode": "think-high", "summary": {"name": "horn_yn_mixed", "provider": "google", "model": "gemini-2.5-pro", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 17239.0, "timestamp": 1760988415}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "openai/gpt-5-2025-08-07/think-high": {"provider": "openai", "model": "gpt-5-2025-08-07", "thinking_mode": "think-high", "summary": {"name": "horn_yn_mixed", "provider": "openai", "model": "gpt-5-2025-08-07", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 10147.0, "timestamp": 1760988415}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "openai/gpt-5-2025-08-07/think-medium": {"provider": "openai", "model": "gpt-5-2025-08-07", "thinking_mode": "think-medium", "summary": {"name": "horn_yn_mixed", "provider": "openai", "model": "gpt-5-2025-08-07", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 6356.6, "timestamp": 1760988415}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "openai/gpt-5-mini-2025-08-07/think-low": {"provider": "openai", "model": "gpt-5-mini-2025-08-07", "thinking_mode": "think-low", "summary": {"name": "horn_yn_mixed", "provider": "openai", "model": "gpt-5-mini-2025-08-07", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 3953.2, "timestamp": 1760988415}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}, "openai/gpt-5-nano-2025-08-07/nothink": {"provider": "openai", "model": "gpt-5-nano-2025-08-07", "thinking_mode": "nothink", "summary": {"name": "horn_yn_mixed", "provider": "openai", "model": "gpt-5-nano-2025-08-07", "run": "smoke_20251020_2224", "total": 5, "correct": 5, "accuracy": 1.0, "unclear": 0, "sat_total": 3, "sat_correct": 3, "sat_accuracy": 1.0, "unsat_total": 2, "unsat_correct": 2, "unsat_accuracy": 1.0, "avg_timing_ms": 6370.0, "timestamp": 1760988415}, "complexity_breakdown": {"4": {"accuracy": 1.0, "total": 5, "correct": 5}}}}, "summary": {"total_models": 12, "avg_accuracy": 0.9333333333333332, "total_unclear": 0}}}, "models": {"anthropic/claude-haiku-4-5-20251001/nothink": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "thinking_mode": "nothink", "experiments": {"cnf1_con_hornonly": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "cnf1_con_mixed": {"accuracy": 0.8, "total": 5, "correct": 4, "unclear": 0}, "cnf2_con_hornonly": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "cnf2_con_mixed": {"accuracy": 0.8, "total": 5, "correct": 4, "unclear": 0}, "horn_yn_hornonly": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "horn_yn_mixed": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}}}, "anthropic/claude-haiku-4-5-20251001/think-low": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "thinking_mode": "think-low", "experiments": {"cnf1_con_hornonly": {"accuracy": 0.8, "total": 5, "correct": 4, "unclear": 0}, "cnf1_con_mixed": {"accuracy": 0.8, "total": 5, "correct": 4, "unclear": 0}, "cnf2_con_hornonly": {"accuracy": 0.6, "total": 5, "correct": 3, "unclear": 0}, "cnf2_con_mixed": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "horn_yn_hornonly": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "horn_yn_mixed": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}}}, "anthropic/claude-haiku-4-5-20251001/think-med": {"provider": "anthropic", "model": "claude-haiku-4-5-20251001", "thinking_mode": "think-med", "experiments": {"cnf1_con_hornonly": {"accuracy": 0.6, "total": 5, "correct": 3, "unclear": 0}, "cnf1_con_mixed": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "cnf2_con_hornonly": {"accuracy": 0.8, "total": 5, "correct": 4, "unclear": 0}, "cnf2_con_mixed": {"accuracy": 0.8, "total": 5, "correct": 4, "unclear": 0}, "horn_yn_hornonly": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "horn_yn_mixed": {"accuracy": 0.8, "total": 5, "correct": 4, "unclear": 0}}}, "anthropic/claude-sonnet-4-5-20250929/think-high": {"provider": "anthropic", "model": "claude-sonnet-4-5-20250929", "thinking_mode": "think-high", "experiments": {"cnf1_con_hornonly": {"accuracy": 0.6, "total": 5, "correct": 3, "unclear": 0}, "cnf1_con_mixed": {"accuracy": 0.6, "total": 5, "correct": 3, "unclear": 0}, "cnf2_con_hornonly": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "cnf2_con_mixed": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "horn_yn_hornonly": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "horn_yn_mixed": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}}}, "google/gemini-2.5-flash/think-med": {"provider": "google", "model": "gemini-2.5-flash", "thinking_mode": "think-med", "experiments": {"cnf1_con_hornonly": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "cnf1_con_mixed": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "cnf2_con_hornonly": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "cnf2_con_mixed": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "horn_yn_hornonly": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "horn_yn_mixed": {"accuracy": 0.8, "total": 5, "correct": 4, "unclear": 0}}}, "google/gemini-2.5-flash-lite/nothink": {"provider": "google", "model": "gemini-2.5-flash-lite", "thinking_mode": "nothink", "experiments": {"cnf1_con_hornonly": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "cnf1_con_mixed": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "cnf2_con_hornonly": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "cnf2_con_mixed": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "horn_yn_hornonly": {"accuracy": 0.6, "total": 5, "correct": 3, "unclear": 0}, "horn_yn_mixed": {"accuracy": 0.8, "total": 5, "correct": 4, "unclear": 0}}}, "google/gemini-2.5-flash-lite/think-low": {"provider": "google", "model": "gemini-2.5-flash-lite", "thinking_mode": "think-low", "experiments": {"cnf1_con_hornonly": {"accuracy": 0.8, "total": 5, "correct": 4, "unclear": 0}, "cnf1_con_mixed": {"accuracy": 0.8, "total": 5, "correct": 4, "unclear": 0}, "cnf2_con_hornonly": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "cnf2_con_mixed": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "horn_yn_hornonly": {"accuracy": 0.8, "total": 5, "correct": 4, "unclear": 0}, "horn_yn_mixed": {"accuracy": 0.8, "total": 5, "correct": 4, "unclear": 0}}}, "google/gemini-2.5-pro/think-high": {"provider": "google", "model": "gemini-2.5-pro", "thinking_mode": "think-high", "experiments": {"cnf1_con_hornonly": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "cnf1_con_mixed": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "cnf2_con_hornonly": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "cnf2_con_mixed": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "horn_yn_hornonly": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "horn_yn_mixed": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}}}, "openai/gpt-5-2025-08-07/think-high": {"provider": "openai", "model": "gpt-5-2025-08-07", "thinking_mode": "think-high", "experiments": {"cnf1_con_hornonly": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "cnf1_con_mixed": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "cnf2_con_hornonly": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "cnf2_con_mixed": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "horn_yn_hornonly": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "horn_yn_mixed": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}}}, "openai/gpt-5-2025-08-07/think-medium": {"provider": "openai", "model": "gpt-5-2025-08-07", "thinking_mode": "think-medium", "experiments": {"cnf1_con_hornonly": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "cnf1_con_mixed": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "cnf2_con_hornonly": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "cnf2_con_mixed": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "horn_yn_hornonly": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "horn_yn_mixed": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}}}, "openai/gpt-5-mini-2025-08-07/think-low": {"provider": "openai", "model": "gpt-5-mini-2025-08-07", "thinking_mode": "think-low", "experiments": {"cnf1_con_hornonly": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "cnf1_con_mixed": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "cnf2_con_hornonly": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "cnf2_con_mixed": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "horn_yn_hornonly": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "horn_yn_mixed": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}}}, "openai/gpt-5-nano-2025-08-07/nothink": {"provider": "openai", "model": "gpt-5-nano-2025-08-07", "thinking_mode": "nothink", "experiments": {"cnf1_con_hornonly": {"accuracy": 0.8, "total": 5, "correct": 4, "unclear": 1}, "cnf1_con_mixed": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "cnf2_con_hornonly": {"accuracy": 0.0, "total": 5, "correct": 0, "unclear": 5}, "cnf2_con_mixed": {"accuracy": 0.4, "total": 5, "correct": 2, "unclear": 3}, "horn_yn_hornonly": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}, "horn_yn_mixed": {"accuracy": 1.0, "total": 5, "correct": 5, "unclear": 0}}}}, "summary": {"total_experiments": 6, "total_models": 12, "total_problems_processed": 0}};
+        
+        function transposeHeatmap() {
+            const viewMode = document.getElementById('viewMode').value;
+            const metric = document.getElementById('metricSelect').value;
+            
+            const table = document.getElementById('heatmapTable');
+            const experiments = fullData.experiments;
+            const models = fullData.models;
+            
+            const expNames = Object.keys(experiments).sort();
+            const modelKeys = Object.keys(models).sort();
+            
+            let html = '';
+            
+            if (viewMode === 'model-rows') {
+                // Transpose: Models as rows, Experiments as columns
+                html += '<thead><tr><th style="text-align: left;">Model</th>';
+                
+                for (const exp of expNames) {
+                    html += `<th style="min-width: 100px;">${exp}</th>`;
+                }
+                html += '<th>Average</th></tr></thead><tbody>';
+                
+                for (const modelKey of modelKeys) {
+                    html += '<tr>';
+                    html += `<td style="text-align: left; font-weight: 500;">${modelKey}</td>`;
+                    
+                    const accs = [];
+                    for (const expName of expNames) {
+                        const modelData = experiments[expName]?.models?.[modelKey];
+                        if (modelData) {
+                            const value = getMetricValue(modelData, metric);
+                            const cssClass = getCellClass(modelData.summary.accuracy * 100);
+                            html += `<td class="${cssClass} clickable-cell" title="${modelData.summary.correct}/${modelData.summary.total} correct, ${modelData.summary.unclear} unclear" onclick="showDetails('${expName}', '${modelKey}')">${value}</td>`;
+                            accs.push(modelData.summary.accuracy * 100);
+                        } else {
+                            html += '<td>—</td>';
+                        }
+                    }
+                    
+                    const avgAcc = accs.length > 0 ? accs.reduce((a,b) => a+b, 0) / accs.length : 0;
+                    const avgClass = getCellClass(avgAcc);
+                    html += `<td class="${avgClass}"><strong>${metric === 'accuracy' ? avgAcc.toFixed(0) + '%' : avgAcc.toFixed(0)}</strong></td>`;
+                    html += '</tr>';
+                }
+                
+                html += '</tbody>';
+            } else {
+                // Original: Experiments as rows, Models as columns
+                html += '<thead><tr><th style="text-align: left;">Experiment</th>';
+                
+                for (const modelKey of modelKeys) {
+                    const parts = modelKey.split('/');
+                    const label = `${parts[0].substr(0,3)}/${parts[1].substr(0,20)}/${parts[2]}`;
+                    html += `<th><div class="model-header">${label}</div></th>`;
+                }
+                html += '</tr></thead><tbody>';
+                
+                for (const expName of expNames) {
+                    const expDesc = fullData.experiments[expName].name || expName;
+                    html += `<tr><td class="exp-name">${expName}<div class="exp-description">${getExpDescription(expName)}</div></td>`;
+                    
+                    for (const modelKey of modelKeys) {
+                        const modelData = experiments[expName]?.models?.[modelKey];
+                        if (modelData) {
+                            const value = getMetricValue(modelData, metric);
+                            const cssClass = getCellClass(modelData.summary.accuracy * 100);
+                            html += `<td class="${cssClass} clickable-cell" title="${modelData.summary.correct}/${modelData.summary.total} correct, ${modelData.summary.unclear} unclear" onclick="showDetails('${expName}', '${modelKey}')">${value}</td>`;
+                        } else {
+                            html += '<td>—</td>';
+                        }
+                    }
+                    html += '</tr>';
+                }
+                
+                html += '</tbody>';
+            }
+            
+            table.innerHTML = html;
+        }
+        
+        function getMetricValue(modelData, metric) {
+            const summary = modelData.summary;
+            switch(metric) {
+                case 'accuracy':
+                    return (summary.accuracy * 100).toFixed(0) + '%';
+                case 'correct':
+                    return `${summary.correct}/${summary.total}`;
+                case 'unclear':
+                    return summary.unclear.toString();
+                default:
+                    return (summary.accuracy * 100).toFixed(0) + '%';
+            }
+        }
+        
+        function getCellClass(accPct) {
+            if (accPct >= 95) return 'acc-100';
+            if (accPct >= 85) return 'acc-90';
+            if (accPct >= 70) return 'acc-75';
+            if (accPct >= 50) return 'acc-50';
+            return 'acc-low';
+        }
+        
+        function getExpDescription(expName) {
+            const descriptions = {
+                "horn_yn_hornonly": "Goal-directed entailment task with matched Horn representation (baseline control)",
+                "horn_yn_mixed": "Representation mismatch condition: Horn encoding on mixed problem set (tests robustness)",
+                "cnf1_con_mixed": "Natural language CNF satisfiability (verbose encoding, tests NL scaffolding)",
+                "cnf2_con_mixed": "Symbolic CNF satisfiability (compact encoding, tests symbolic reasoning)",
+                "cnf1_con_hornonly": "NL-CNF on Horn subset (tests representation flexibility)",
+                "cnf2_con_hornonly": "Symbolic-CNF on Horn subset (tests abstraction capability)",
+            };
+            return descriptions[expName] || '';
+        }
+        
+        function updateMetric() {
+            transposeHeatmap(); // Just rebuild table with new metric
+        }
+        
+        function showDetails(exp, model) {
+            alert(`Details for ${exp} - ${model}\n\nSee degradation charts below for performance across complexity levels.`);
+        }
+        
+        function toggleRQ(rqId) {
+            const details = document.getElementById(rqId + '-details');
+            const icon = document.getElementById(rqId + '-icon');
+            
+            if (details.classList.contains('expanded')) {
+                details.classList.remove('expanded');
+                icon.classList.remove('expanded');
+                icon.textContent = '▶';
+            } else {
+                details.classList.add('expanded');
+                icon.classList.add('expanded');
+                icon.textContent = '▼';
+            }
+        }
+        
+        // Add chart legend interactivity hint
+        document.addEventListener('DOMContentLoaded', function() {
+            const chartSections = document.querySelectorAll('.section h2');
+            for (const section of chartSections) {
+                if (section.textContent.includes('Degradation')) {
+                    const note = document.createElement('div');
+                    note.className = 'note';
+                    note.innerHTML = '<strong>Interactive Charts:</strong> Click legend items to show/hide models. Hover over lines to see exact accuracy values.';
+                    section.parentElement.insertBefore(note, section.nextSibling);
+                    break;
+                }
+            }
+        });
+        </script>
+
+
+        <div class="footer">
+            <p>Generated from run: <strong>smoke_20251020_2224</strong></p>
+            <p>To update with new data: <code>python -m experiments.aggregate_results --run-id YOUR_RUN --output results.json && python -m experiments.generate_dashboard --input results.json --output dashboard.html</code></p>
+        </div>
+    </div>
+</body>
+</html>

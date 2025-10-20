@@ -1,0 +1,2762 @@
+{
+  "metadata": {
+    "run_id": "smoke_20251020_2224",
+    "runs_dir": "experiments/runs",
+    "dataset": {
+      "min_vars": 4,
+      "max_vars": 4,
+      "min_len": 2,
+      "max_len": 3,
+      "total_problems": 6,
+      "horn_problems": 5,
+      "nonhorn_problems": 1,
+      "sat_problems": 4,
+      "unsat_problems": 2
+    }
+  },
+  "experiments": {
+    "cnf1_con_hornonly": {
+      "name": "cnf1_con_hornonly",
+      "models": {
+        "anthropic/claude-haiku-4-5-20251001/nothink": {
+          "provider": "anthropic",
+          "model": "claude-haiku-4-5-20251001",
+          "thinking_mode": "nothink",
+          "summary": {
+            "name": "cnf1_con_hornonly",
+            "provider": "anthropic",
+            "model": "claude-haiku-4-5-20251001",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 4779.6,
+            "timestamp": 1760988351
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "anthropic/claude-haiku-4-5-20251001/think-low": {
+          "provider": "anthropic",
+          "model": "claude-haiku-4-5-20251001",
+          "thinking_mode": "think-low",
+          "summary": {
+            "name": "cnf1_con_hornonly",
+            "provider": "anthropic",
+            "model": "claude-haiku-4-5-20251001",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 4,
+            "accuracy": 0.8,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 2,
+            "sat_accuracy": 0.6666666666666666,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 8248.8,
+            "timestamp": 1760988351
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.8,
+              "total": 5,
+              "correct": 4
+            }
+          }
+        },
+        "anthropic/claude-haiku-4-5-20251001/think-med": {
+          "provider": "anthropic",
+          "model": "claude-haiku-4-5-20251001",
+          "thinking_mode": "think-med",
+          "summary": {
+            "name": "cnf1_con_hornonly",
+            "provider": "anthropic",
+            "model": "claude-haiku-4-5-20251001",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 3,
+            "accuracy": 0.6,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 1,
+            "sat_accuracy": 0.3333333333333333,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 8788.8,
+            "timestamp": 1760988351
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.6,
+              "total": 5,
+              "correct": 3
+            }
+          }
+        },
+        "anthropic/claude-sonnet-4-5-20250929/think-high": {
+          "provider": "anthropic",
+          "model": "claude-sonnet-4-5-20250929",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "cnf1_con_hornonly",
+            "provider": "anthropic",
+            "model": "claude-sonnet-4-5-20250929",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 3,
+            "accuracy": 0.6,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 1,
+            "sat_accuracy": 0.3333333333333333,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 18615.8,
+            "timestamp": 1760988351
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.6,
+              "total": 5,
+              "correct": 3
+            }
+          }
+        },
+        "google/gemini-2.5-flash/think-med": {
+          "provider": "google",
+          "model": "gemini-2.5-flash",
+          "thinking_mode": "think-med",
+          "summary": {
+            "name": "cnf1_con_hornonly",
+            "provider": "google",
+            "model": "gemini-2.5-flash",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 7086.4,
+            "timestamp": 1760988351
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "google/gemini-2.5-flash-lite/nothink": {
+          "provider": "google",
+          "model": "gemini-2.5-flash-lite",
+          "thinking_mode": "nothink",
+          "summary": {
+            "name": "cnf1_con_hornonly",
+            "provider": "google",
+            "model": "gemini-2.5-flash-lite",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 2300.0,
+            "timestamp": 1760988351
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "google/gemini-2.5-flash-lite/think-low": {
+          "provider": "google",
+          "model": "gemini-2.5-flash-lite",
+          "thinking_mode": "think-low",
+          "summary": {
+            "name": "cnf1_con_hornonly",
+            "provider": "google",
+            "model": "gemini-2.5-flash-lite",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 4,
+            "accuracy": 0.8,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 1,
+            "unsat_accuracy": 0.5,
+            "avg_timing_ms": 3897.8,
+            "timestamp": 1760988351
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.8,
+              "total": 5,
+              "correct": 4
+            }
+          }
+        },
+        "google/gemini-2.5-pro/think-high": {
+          "provider": "google",
+          "model": "gemini-2.5-pro",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "cnf1_con_hornonly",
+            "provider": "google",
+            "model": "gemini-2.5-pro",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 15769.8,
+            "timestamp": 1760988351
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "openai/gpt-5-2025-08-07/think-high": {
+          "provider": "openai",
+          "model": "gpt-5-2025-08-07",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "cnf1_con_hornonly",
+            "provider": "openai",
+            "model": "gpt-5-2025-08-07",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 7523.6,
+            "timestamp": 1760988351
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "openai/gpt-5-2025-08-07/think-medium": {
+          "provider": "openai",
+          "model": "gpt-5-2025-08-07",
+          "thinking_mode": "think-medium",
+          "summary": {
+            "name": "cnf1_con_hornonly",
+            "provider": "openai",
+            "model": "gpt-5-2025-08-07",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 5621.8,
+            "timestamp": 1760988351
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "openai/gpt-5-mini-2025-08-07/think-low": {
+          "provider": "openai",
+          "model": "gpt-5-mini-2025-08-07",
+          "thinking_mode": "think-low",
+          "summary": {
+            "name": "cnf1_con_hornonly",
+            "provider": "openai",
+            "model": "gpt-5-mini-2025-08-07",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 4699.8,
+            "timestamp": 1760988351
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "openai/gpt-5-nano-2025-08-07/nothink": {
+          "provider": "openai",
+          "model": "gpt-5-nano-2025-08-07",
+          "thinking_mode": "nothink",
+          "summary": {
+            "name": "cnf1_con_hornonly",
+            "provider": "openai",
+            "model": "gpt-5-nano-2025-08-07",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 4,
+            "accuracy": 0.8,
+            "unclear": 1,
+            "sat_total": 3,
+            "sat_correct": 2,
+            "sat_accuracy": 0.6666666666666666,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 9348.8,
+            "timestamp": 1760988351
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.8,
+              "total": 5,
+              "correct": 4
+            }
+          }
+        }
+      },
+      "summary": {
+        "total_models": 12,
+        "avg_accuracy": 0.8833333333333333,
+        "total_unclear": 1
+      }
+    },
+    "cnf1_con_mixed": {
+      "name": "cnf1_con_mixed",
+      "models": {
+        "anthropic/claude-haiku-4-5-20251001/nothink": {
+          "provider": "anthropic",
+          "model": "claude-haiku-4-5-20251001",
+          "thinking_mode": "nothink",
+          "summary": {
+            "name": "cnf1_con_mixed",
+            "provider": "anthropic",
+            "model": "claude-haiku-4-5-20251001",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 4,
+            "accuracy": 0.8,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 2,
+            "sat_accuracy": 0.6666666666666666,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 4866.6,
+            "timestamp": 1760988352
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.8,
+              "total": 5,
+              "correct": 4
+            }
+          }
+        },
+        "anthropic/claude-haiku-4-5-20251001/think-low": {
+          "provider": "anthropic",
+          "model": "claude-haiku-4-5-20251001",
+          "thinking_mode": "think-low",
+          "summary": {
+            "name": "cnf1_con_mixed",
+            "provider": "anthropic",
+            "model": "claude-haiku-4-5-20251001",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 4,
+            "accuracy": 0.8,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 2,
+            "sat_accuracy": 0.6666666666666666,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 7149.8,
+            "timestamp": 1760988352
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.8,
+              "total": 5,
+              "correct": 4
+            }
+          }
+        },
+        "anthropic/claude-haiku-4-5-20251001/think-med": {
+          "provider": "anthropic",
+          "model": "claude-haiku-4-5-20251001",
+          "thinking_mode": "think-med",
+          "summary": {
+            "name": "cnf1_con_mixed",
+            "provider": "anthropic",
+            "model": "claude-haiku-4-5-20251001",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 9679.8,
+            "timestamp": 1760988352
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "anthropic/claude-sonnet-4-5-20250929/think-high": {
+          "provider": "anthropic",
+          "model": "claude-sonnet-4-5-20250929",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "cnf1_con_mixed",
+            "provider": "anthropic",
+            "model": "claude-sonnet-4-5-20250929",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 3,
+            "accuracy": 0.6,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 1,
+            "sat_accuracy": 0.3333333333333333,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 18325.8,
+            "timestamp": 1760988352
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.6,
+              "total": 5,
+              "correct": 3
+            }
+          }
+        },
+        "google/gemini-2.5-flash/think-med": {
+          "provider": "google",
+          "model": "gemini-2.5-flash",
+          "thinking_mode": "think-med",
+          "summary": {
+            "name": "cnf1_con_mixed",
+            "provider": "google",
+            "model": "gemini-2.5-flash",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 5994.0,
+            "timestamp": 1760988352
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "google/gemini-2.5-flash-lite/nothink": {
+          "provider": "google",
+          "model": "gemini-2.5-flash-lite",
+          "thinking_mode": "nothink",
+          "summary": {
+            "name": "cnf1_con_mixed",
+            "provider": "google",
+            "model": "gemini-2.5-flash-lite",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 1879.4,
+            "timestamp": 1760988352
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "google/gemini-2.5-flash-lite/think-low": {
+          "provider": "google",
+          "model": "gemini-2.5-flash-lite",
+          "thinking_mode": "think-low",
+          "summary": {
+            "name": "cnf1_con_mixed",
+            "provider": "google",
+            "model": "gemini-2.5-flash-lite",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 4,
+            "accuracy": 0.8,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 1,
+            "unsat_accuracy": 0.5,
+            "avg_timing_ms": 3027.4,
+            "timestamp": 1760988352
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.8,
+              "total": 5,
+              "correct": 4
+            }
+          }
+        },
+        "google/gemini-2.5-pro/think-high": {
+          "provider": "google",
+          "model": "gemini-2.5-pro",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "cnf1_con_mixed",
+            "provider": "google",
+            "model": "gemini-2.5-pro",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 15218.6,
+            "timestamp": 1760988352
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "openai/gpt-5-2025-08-07/think-high": {
+          "provider": "openai",
+          "model": "gpt-5-2025-08-07",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "cnf1_con_mixed",
+            "provider": "openai",
+            "model": "gpt-5-2025-08-07",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 9367.6,
+            "timestamp": 1760988352
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "openai/gpt-5-2025-08-07/think-medium": {
+          "provider": "openai",
+          "model": "gpt-5-2025-08-07",
+          "thinking_mode": "think-medium",
+          "summary": {
+            "name": "cnf1_con_mixed",
+            "provider": "openai",
+            "model": "gpt-5-2025-08-07",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 6422.0,
+            "timestamp": 1760988352
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "openai/gpt-5-mini-2025-08-07/think-low": {
+          "provider": "openai",
+          "model": "gpt-5-mini-2025-08-07",
+          "thinking_mode": "think-low",
+          "summary": {
+            "name": "cnf1_con_mixed",
+            "provider": "openai",
+            "model": "gpt-5-mini-2025-08-07",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 4851.0,
+            "timestamp": 1760988352
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "openai/gpt-5-nano-2025-08-07/nothink": {
+          "provider": "openai",
+          "model": "gpt-5-nano-2025-08-07",
+          "thinking_mode": "nothink",
+          "summary": {
+            "name": "cnf1_con_mixed",
+            "provider": "openai",
+            "model": "gpt-5-nano-2025-08-07",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 10095.6,
+            "timestamp": 1760988352
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        }
+      },
+      "summary": {
+        "total_models": 12,
+        "avg_accuracy": 0.9166666666666666,
+        "total_unclear": 0
+      }
+    },
+    "cnf2_con_hornonly": {
+      "name": "cnf2_con_hornonly",
+      "models": {
+        "anthropic/claude-haiku-4-5-20251001/nothink": {
+          "provider": "anthropic",
+          "model": "claude-haiku-4-5-20251001",
+          "thinking_mode": "nothink",
+          "summary": {
+            "name": "cnf2_con_hornonly",
+            "provider": "anthropic",
+            "model": "claude-haiku-4-5-20251001",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 4190.4,
+            "timestamp": 1760988377
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "anthropic/claude-haiku-4-5-20251001/think-low": {
+          "provider": "anthropic",
+          "model": "claude-haiku-4-5-20251001",
+          "thinking_mode": "think-low",
+          "summary": {
+            "name": "cnf2_con_hornonly",
+            "provider": "anthropic",
+            "model": "claude-haiku-4-5-20251001",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 3,
+            "accuracy": 0.6,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 1,
+            "sat_accuracy": 0.3333333333333333,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 6507.2,
+            "timestamp": 1760988377
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.6,
+              "total": 5,
+              "correct": 3
+            }
+          }
+        },
+        "anthropic/claude-haiku-4-5-20251001/think-med": {
+          "provider": "anthropic",
+          "model": "claude-haiku-4-5-20251001",
+          "thinking_mode": "think-med",
+          "summary": {
+            "name": "cnf2_con_hornonly",
+            "provider": "anthropic",
+            "model": "claude-haiku-4-5-20251001",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 4,
+            "accuracy": 0.8,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 2,
+            "sat_accuracy": 0.6666666666666666,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 8946.4,
+            "timestamp": 1760988377
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.8,
+              "total": 5,
+              "correct": 4
+            }
+          }
+        },
+        "anthropic/claude-sonnet-4-5-20250929/think-high": {
+          "provider": "anthropic",
+          "model": "claude-sonnet-4-5-20250929",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "cnf2_con_hornonly",
+            "provider": "anthropic",
+            "model": "claude-sonnet-4-5-20250929",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 16291.4,
+            "timestamp": 1760988377
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "google/gemini-2.5-flash/think-med": {
+          "provider": "google",
+          "model": "gemini-2.5-flash",
+          "thinking_mode": "think-med",
+          "summary": {
+            "name": "cnf2_con_hornonly",
+            "provider": "google",
+            "model": "gemini-2.5-flash",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 6932.4,
+            "timestamp": 1760988377
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "google/gemini-2.5-flash-lite/nothink": {
+          "provider": "google",
+          "model": "gemini-2.5-flash-lite",
+          "thinking_mode": "nothink",
+          "summary": {
+            "name": "cnf2_con_hornonly",
+            "provider": "google",
+            "model": "gemini-2.5-flash-lite",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 2234.0,
+            "timestamp": 1760988377
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "google/gemini-2.5-flash-lite/think-low": {
+          "provider": "google",
+          "model": "gemini-2.5-flash-lite",
+          "thinking_mode": "think-low",
+          "summary": {
+            "name": "cnf2_con_hornonly",
+            "provider": "google",
+            "model": "gemini-2.5-flash-lite",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 2765.2,
+            "timestamp": 1760988377
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "google/gemini-2.5-pro/think-high": {
+          "provider": "google",
+          "model": "gemini-2.5-pro",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "cnf2_con_hornonly",
+            "provider": "google",
+            "model": "gemini-2.5-pro",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 15290.8,
+            "timestamp": 1760988377
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "openai/gpt-5-2025-08-07/think-high": {
+          "provider": "openai",
+          "model": "gpt-5-2025-08-07",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "cnf2_con_hornonly",
+            "provider": "openai",
+            "model": "gpt-5-2025-08-07",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 11298.4,
+            "timestamp": 1760988377
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "openai/gpt-5-2025-08-07/think-medium": {
+          "provider": "openai",
+          "model": "gpt-5-2025-08-07",
+          "thinking_mode": "think-medium",
+          "summary": {
+            "name": "cnf2_con_hornonly",
+            "provider": "openai",
+            "model": "gpt-5-2025-08-07",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 6176.0,
+            "timestamp": 1760988377
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "openai/gpt-5-mini-2025-08-07/think-low": {
+          "provider": "openai",
+          "model": "gpt-5-mini-2025-08-07",
+          "thinking_mode": "think-low",
+          "summary": {
+            "name": "cnf2_con_hornonly",
+            "provider": "openai",
+            "model": "gpt-5-mini-2025-08-07",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 5664.8,
+            "timestamp": 1760988377
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "openai/gpt-5-nano-2025-08-07/nothink": {
+          "provider": "openai",
+          "model": "gpt-5-nano-2025-08-07",
+          "thinking_mode": "nothink",
+          "summary": {
+            "name": "cnf2_con_hornonly",
+            "provider": "openai",
+            "model": "gpt-5-nano-2025-08-07",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 0,
+            "accuracy": 0.0,
+            "unclear": 5,
+            "sat_total": 3,
+            "sat_correct": 0,
+            "sat_accuracy": 0.0,
+            "unsat_total": 2,
+            "unsat_correct": 0,
+            "unsat_accuracy": 0.0,
+            "avg_timing_ms": 18184.0,
+            "timestamp": 1760988377
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.0,
+              "total": 5,
+              "correct": 0
+            }
+          }
+        }
+      },
+      "summary": {
+        "total_models": 12,
+        "avg_accuracy": 0.8666666666666667,
+        "total_unclear": 5
+      }
+    },
+    "cnf2_con_mixed": {
+      "name": "cnf2_con_mixed",
+      "models": {
+        "anthropic/claude-haiku-4-5-20251001/nothink": {
+          "provider": "anthropic",
+          "model": "claude-haiku-4-5-20251001",
+          "thinking_mode": "nothink",
+          "summary": {
+            "name": "cnf2_con_mixed",
+            "provider": "anthropic",
+            "model": "claude-haiku-4-5-20251001",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 4,
+            "accuracy": 0.8,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 2,
+            "sat_accuracy": 0.6666666666666666,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 4041.4,
+            "timestamp": 1760988349
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.8,
+              "total": 5,
+              "correct": 4
+            }
+          }
+        },
+        "anthropic/claude-haiku-4-5-20251001/think-low": {
+          "provider": "anthropic",
+          "model": "claude-haiku-4-5-20251001",
+          "thinking_mode": "think-low",
+          "summary": {
+            "name": "cnf2_con_mixed",
+            "provider": "anthropic",
+            "model": "claude-haiku-4-5-20251001",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 6640.4,
+            "timestamp": 1760988349
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "anthropic/claude-haiku-4-5-20251001/think-med": {
+          "provider": "anthropic",
+          "model": "claude-haiku-4-5-20251001",
+          "thinking_mode": "think-med",
+          "summary": {
+            "name": "cnf2_con_mixed",
+            "provider": "anthropic",
+            "model": "claude-haiku-4-5-20251001",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 4,
+            "accuracy": 0.8,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 2,
+            "sat_accuracy": 0.6666666666666666,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 9892.2,
+            "timestamp": 1760988349
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.8,
+              "total": 5,
+              "correct": 4
+            }
+          }
+        },
+        "anthropic/claude-sonnet-4-5-20250929/think-high": {
+          "provider": "anthropic",
+          "model": "claude-sonnet-4-5-20250929",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "cnf2_con_mixed",
+            "provider": "anthropic",
+            "model": "claude-sonnet-4-5-20250929",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 16298.6,
+            "timestamp": 1760988349
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "google/gemini-2.5-flash/think-med": {
+          "provider": "google",
+          "model": "gemini-2.5-flash",
+          "thinking_mode": "think-med",
+          "summary": {
+            "name": "cnf2_con_mixed",
+            "provider": "google",
+            "model": "gemini-2.5-flash",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 6549.6,
+            "timestamp": 1760988349
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "google/gemini-2.5-flash-lite/nothink": {
+          "provider": "google",
+          "model": "gemini-2.5-flash-lite",
+          "thinking_mode": "nothink",
+          "summary": {
+            "name": "cnf2_con_mixed",
+            "provider": "google",
+            "model": "gemini-2.5-flash-lite",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 2576.4,
+            "timestamp": 1760988349
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "google/gemini-2.5-flash-lite/think-low": {
+          "provider": "google",
+          "model": "gemini-2.5-flash-lite",
+          "thinking_mode": "think-low",
+          "summary": {
+            "name": "cnf2_con_mixed",
+            "provider": "google",
+            "model": "gemini-2.5-flash-lite",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 2929.0,
+            "timestamp": 1760988349
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "google/gemini-2.5-pro/think-high": {
+          "provider": "google",
+          "model": "gemini-2.5-pro",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "cnf2_con_mixed",
+            "provider": "google",
+            "model": "gemini-2.5-pro",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 14789.0,
+            "timestamp": 1760988349
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "openai/gpt-5-2025-08-07/think-high": {
+          "provider": "openai",
+          "model": "gpt-5-2025-08-07",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "cnf2_con_mixed",
+            "provider": "openai",
+            "model": "gpt-5-2025-08-07",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 7674.2,
+            "timestamp": 1760988349
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "openai/gpt-5-2025-08-07/think-medium": {
+          "provider": "openai",
+          "model": "gpt-5-2025-08-07",
+          "thinking_mode": "think-medium",
+          "summary": {
+            "name": "cnf2_con_mixed",
+            "provider": "openai",
+            "model": "gpt-5-2025-08-07",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 4903.0,
+            "timestamp": 1760988349
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "openai/gpt-5-mini-2025-08-07/think-low": {
+          "provider": "openai",
+          "model": "gpt-5-mini-2025-08-07",
+          "thinking_mode": "think-low",
+          "summary": {
+            "name": "cnf2_con_mixed",
+            "provider": "openai",
+            "model": "gpt-5-mini-2025-08-07",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 4170.6,
+            "timestamp": 1760988349
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "openai/gpt-5-nano-2025-08-07/nothink": {
+          "provider": "openai",
+          "model": "gpt-5-nano-2025-08-07",
+          "thinking_mode": "nothink",
+          "summary": {
+            "name": "cnf2_con_mixed",
+            "provider": "openai",
+            "model": "gpt-5-nano-2025-08-07",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 2,
+            "accuracy": 0.4,
+            "unclear": 3,
+            "sat_total": 3,
+            "sat_correct": 2,
+            "sat_accuracy": 0.6666666666666666,
+            "unsat_total": 2,
+            "unsat_correct": 0,
+            "unsat_accuracy": 0.0,
+            "avg_timing_ms": 13746.0,
+            "timestamp": 1760988349
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.4,
+              "total": 5,
+              "correct": 2
+            }
+          }
+        }
+      },
+      "summary": {
+        "total_models": 12,
+        "avg_accuracy": 0.9166666666666666,
+        "total_unclear": 3
+      }
+    },
+    "horn_yn_hornonly": {
+      "name": "horn_yn_hornonly",
+      "models": {
+        "anthropic/claude-haiku-4-5-20251001/nothink": {
+          "provider": "anthropic",
+          "model": "claude-haiku-4-5-20251001",
+          "thinking_mode": "nothink",
+          "summary": {
+            "name": "horn_yn_hornonly",
+            "provider": "anthropic",
+            "model": "claude-haiku-4-5-20251001",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 3712.4,
+            "timestamp": 1760988323
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "anthropic/claude-haiku-4-5-20251001/think-low": {
+          "provider": "anthropic",
+          "model": "claude-haiku-4-5-20251001",
+          "thinking_mode": "think-low",
+          "summary": {
+            "name": "horn_yn_hornonly",
+            "provider": "anthropic",
+            "model": "claude-haiku-4-5-20251001",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 4750.2,
+            "timestamp": 1760988323
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "anthropic/claude-haiku-4-5-20251001/think-med": {
+          "provider": "anthropic",
+          "model": "claude-haiku-4-5-20251001",
+          "thinking_mode": "think-med",
+          "summary": {
+            "name": "horn_yn_hornonly",
+            "provider": "anthropic",
+            "model": "claude-haiku-4-5-20251001",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 7058.2,
+            "timestamp": 1760988323
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "anthropic/claude-sonnet-4-5-20250929/think-high": {
+          "provider": "anthropic",
+          "model": "claude-sonnet-4-5-20250929",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "horn_yn_hornonly",
+            "provider": "anthropic",
+            "model": "claude-sonnet-4-5-20250929",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 13213.0,
+            "timestamp": 1760988323
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "google/gemini-2.5-flash/think-med": {
+          "provider": "google",
+          "model": "gemini-2.5-flash",
+          "thinking_mode": "think-med",
+          "summary": {
+            "name": "horn_yn_hornonly",
+            "provider": "google",
+            "model": "gemini-2.5-flash",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 5539.8,
+            "timestamp": 1760988323
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "google/gemini-2.5-flash-lite/nothink": {
+          "provider": "google",
+          "model": "gemini-2.5-flash-lite",
+          "thinking_mode": "nothink",
+          "summary": {
+            "name": "horn_yn_hornonly",
+            "provider": "google",
+            "model": "gemini-2.5-flash-lite",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 3,
+            "accuracy": 0.6,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 2,
+            "sat_accuracy": 0.6666666666666666,
+            "unsat_total": 2,
+            "unsat_correct": 1,
+            "unsat_accuracy": 0.5,
+            "avg_timing_ms": 678.0,
+            "timestamp": 1760988323
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.6,
+              "total": 5,
+              "correct": 3
+            }
+          }
+        },
+        "google/gemini-2.5-flash-lite/think-low": {
+          "provider": "google",
+          "model": "gemini-2.5-flash-lite",
+          "thinking_mode": "think-low",
+          "summary": {
+            "name": "horn_yn_hornonly",
+            "provider": "google",
+            "model": "gemini-2.5-flash-lite",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 4,
+            "accuracy": 0.8,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 2,
+            "sat_accuracy": 0.6666666666666666,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 2379.0,
+            "timestamp": 1760988323
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.8,
+              "total": 5,
+              "correct": 4
+            }
+          }
+        },
+        "google/gemini-2.5-pro/think-high": {
+          "provider": "google",
+          "model": "gemini-2.5-pro",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "horn_yn_hornonly",
+            "provider": "google",
+            "model": "gemini-2.5-pro",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 9724.6,
+            "timestamp": 1760988323
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "openai/gpt-5-2025-08-07/think-high": {
+          "provider": "openai",
+          "model": "gpt-5-2025-08-07",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "horn_yn_hornonly",
+            "provider": "openai",
+            "model": "gpt-5-2025-08-07",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 5090.8,
+            "timestamp": 1760988323
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "openai/gpt-5-2025-08-07/think-medium": {
+          "provider": "openai",
+          "model": "gpt-5-2025-08-07",
+          "thinking_mode": "think-medium",
+          "summary": {
+            "name": "horn_yn_hornonly",
+            "provider": "openai",
+            "model": "gpt-5-2025-08-07",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 3922.2,
+            "timestamp": 1760988323
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "openai/gpt-5-mini-2025-08-07/think-low": {
+          "provider": "openai",
+          "model": "gpt-5-mini-2025-08-07",
+          "thinking_mode": "think-low",
+          "summary": {
+            "name": "horn_yn_hornonly",
+            "provider": "openai",
+            "model": "gpt-5-mini-2025-08-07",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 2982.6,
+            "timestamp": 1760988323
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "openai/gpt-5-nano-2025-08-07/nothink": {
+          "provider": "openai",
+          "model": "gpt-5-nano-2025-08-07",
+          "thinking_mode": "nothink",
+          "summary": {
+            "name": "horn_yn_hornonly",
+            "provider": "openai",
+            "model": "gpt-5-nano-2025-08-07",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 5102.0,
+            "timestamp": 1760988323
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        }
+      },
+      "summary": {
+        "total_models": 12,
+        "avg_accuracy": 0.9500000000000001,
+        "total_unclear": 0
+      }
+    },
+    "horn_yn_mixed": {
+      "name": "horn_yn_mixed",
+      "models": {
+        "anthropic/claude-haiku-4-5-20251001/nothink": {
+          "provider": "anthropic",
+          "model": "claude-haiku-4-5-20251001",
+          "thinking_mode": "nothink",
+          "summary": {
+            "name": "horn_yn_mixed",
+            "provider": "anthropic",
+            "model": "claude-haiku-4-5-20251001",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 3446.8,
+            "timestamp": 1760988415
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "anthropic/claude-haiku-4-5-20251001/think-low": {
+          "provider": "anthropic",
+          "model": "claude-haiku-4-5-20251001",
+          "thinking_mode": "think-low",
+          "summary": {
+            "name": "horn_yn_mixed",
+            "provider": "anthropic",
+            "model": "claude-haiku-4-5-20251001",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 4506.0,
+            "timestamp": 1760988415
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "anthropic/claude-haiku-4-5-20251001/think-med": {
+          "provider": "anthropic",
+          "model": "claude-haiku-4-5-20251001",
+          "thinking_mode": "think-med",
+          "summary": {
+            "name": "horn_yn_mixed",
+            "provider": "anthropic",
+            "model": "claude-haiku-4-5-20251001",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 4,
+            "accuracy": 0.8,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 2,
+            "sat_accuracy": 0.6666666666666666,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 7967.4,
+            "timestamp": 1760988415
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.8,
+              "total": 5,
+              "correct": 4
+            }
+          }
+        },
+        "anthropic/claude-sonnet-4-5-20250929/think-high": {
+          "provider": "anthropic",
+          "model": "claude-sonnet-4-5-20250929",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "horn_yn_mixed",
+            "provider": "anthropic",
+            "model": "claude-sonnet-4-5-20250929",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 23772.0,
+            "timestamp": 1760988415
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "google/gemini-2.5-flash/think-med": {
+          "provider": "google",
+          "model": "gemini-2.5-flash",
+          "thinking_mode": "think-med",
+          "summary": {
+            "name": "horn_yn_mixed",
+            "provider": "google",
+            "model": "gemini-2.5-flash",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 4,
+            "accuracy": 0.8,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 2,
+            "sat_accuracy": 0.6666666666666666,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 10045.0,
+            "timestamp": 1760988415
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.8,
+              "total": 5,
+              "correct": 4
+            }
+          }
+        },
+        "google/gemini-2.5-flash-lite/nothink": {
+          "provider": "google",
+          "model": "gemini-2.5-flash-lite",
+          "thinking_mode": "nothink",
+          "summary": {
+            "name": "horn_yn_mixed",
+            "provider": "google",
+            "model": "gemini-2.5-flash-lite",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 4,
+            "accuracy": 0.8,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 1,
+            "unsat_accuracy": 0.5,
+            "avg_timing_ms": 762.8,
+            "timestamp": 1760988415
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.8,
+              "total": 5,
+              "correct": 4
+            }
+          }
+        },
+        "google/gemini-2.5-flash-lite/think-low": {
+          "provider": "google",
+          "model": "gemini-2.5-flash-lite",
+          "thinking_mode": "think-low",
+          "summary": {
+            "name": "horn_yn_mixed",
+            "provider": "google",
+            "model": "gemini-2.5-flash-lite",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 4,
+            "accuracy": 0.8,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 2,
+            "sat_accuracy": 0.6666666666666666,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 2530.4,
+            "timestamp": 1760988415
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.8,
+              "total": 5,
+              "correct": 4
+            }
+          }
+        },
+        "google/gemini-2.5-pro/think-high": {
+          "provider": "google",
+          "model": "gemini-2.5-pro",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "horn_yn_mixed",
+            "provider": "google",
+            "model": "gemini-2.5-pro",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 17239.0,
+            "timestamp": 1760988415
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "openai/gpt-5-2025-08-07/think-high": {
+          "provider": "openai",
+          "model": "gpt-5-2025-08-07",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "horn_yn_mixed",
+            "provider": "openai",
+            "model": "gpt-5-2025-08-07",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 10147.0,
+            "timestamp": 1760988415
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "openai/gpt-5-2025-08-07/think-medium": {
+          "provider": "openai",
+          "model": "gpt-5-2025-08-07",
+          "thinking_mode": "think-medium",
+          "summary": {
+            "name": "horn_yn_mixed",
+            "provider": "openai",
+            "model": "gpt-5-2025-08-07",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 6356.6,
+            "timestamp": 1760988415
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "openai/gpt-5-mini-2025-08-07/think-low": {
+          "provider": "openai",
+          "model": "gpt-5-mini-2025-08-07",
+          "thinking_mode": "think-low",
+          "summary": {
+            "name": "horn_yn_mixed",
+            "provider": "openai",
+            "model": "gpt-5-mini-2025-08-07",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 3953.2,
+            "timestamp": 1760988415
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "openai/gpt-5-nano-2025-08-07/nothink": {
+          "provider": "openai",
+          "model": "gpt-5-nano-2025-08-07",
+          "thinking_mode": "nothink",
+          "summary": {
+            "name": "horn_yn_mixed",
+            "provider": "openai",
+            "model": "gpt-5-nano-2025-08-07",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 6370.0,
+            "timestamp": 1760988415
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        }
+      },
+      "summary": {
+        "total_models": 12,
+        "avg_accuracy": 0.9333333333333332,
+        "total_unclear": 0
+      }
+    }
+  },
+  "models": {
+    "anthropic/claude-haiku-4-5-20251001/nothink": {
+      "provider": "anthropic",
+      "model": "claude-haiku-4-5-20251001",
+      "thinking_mode": "nothink",
+      "experiments": {
+        "cnf1_con_hornonly": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "cnf1_con_mixed": {
+          "accuracy": 0.8,
+          "total": 5,
+          "correct": 4,
+          "unclear": 0
+        },
+        "cnf2_con_hornonly": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "cnf2_con_mixed": {
+          "accuracy": 0.8,
+          "total": 5,
+          "correct": 4,
+          "unclear": 0
+        },
+        "horn_yn_hornonly": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "horn_yn_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        }
+      }
+    },
+    "anthropic/claude-haiku-4-5-20251001/think-low": {
+      "provider": "anthropic",
+      "model": "claude-haiku-4-5-20251001",
+      "thinking_mode": "think-low",
+      "experiments": {
+        "cnf1_con_hornonly": {
+          "accuracy": 0.8,
+          "total": 5,
+          "correct": 4,
+          "unclear": 0
+        },
+        "cnf1_con_mixed": {
+          "accuracy": 0.8,
+          "total": 5,
+          "correct": 4,
+          "unclear": 0
+        },
+        "cnf2_con_hornonly": {
+          "accuracy": 0.6,
+          "total": 5,
+          "correct": 3,
+          "unclear": 0
+        },
+        "cnf2_con_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "horn_yn_hornonly": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "horn_yn_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        }
+      }
+    },
+    "anthropic/claude-haiku-4-5-20251001/think-med": {
+      "provider": "anthropic",
+      "model": "claude-haiku-4-5-20251001",
+      "thinking_mode": "think-med",
+      "experiments": {
+        "cnf1_con_hornonly": {
+          "accuracy": 0.6,
+          "total": 5,
+          "correct": 3,
+          "unclear": 0
+        },
+        "cnf1_con_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "cnf2_con_hornonly": {
+          "accuracy": 0.8,
+          "total": 5,
+          "correct": 4,
+          "unclear": 0
+        },
+        "cnf2_con_mixed": {
+          "accuracy": 0.8,
+          "total": 5,
+          "correct": 4,
+          "unclear": 0
+        },
+        "horn_yn_hornonly": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "horn_yn_mixed": {
+          "accuracy": 0.8,
+          "total": 5,
+          "correct": 4,
+          "unclear": 0
+        }
+      }
+    },
+    "anthropic/claude-sonnet-4-5-20250929/think-high": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-4-5-20250929",
+      "thinking_mode": "think-high",
+      "experiments": {
+        "cnf1_con_hornonly": {
+          "accuracy": 0.6,
+          "total": 5,
+          "correct": 3,
+          "unclear": 0
+        },
+        "cnf1_con_mixed": {
+          "accuracy": 0.6,
+          "total": 5,
+          "correct": 3,
+          "unclear": 0
+        },
+        "cnf2_con_hornonly": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "cnf2_con_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "horn_yn_hornonly": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "horn_yn_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        }
+      }
+    },
+    "google/gemini-2.5-flash/think-med": {
+      "provider": "google",
+      "model": "gemini-2.5-flash",
+      "thinking_mode": "think-med",
+      "experiments": {
+        "cnf1_con_hornonly": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "cnf1_con_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "cnf2_con_hornonly": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "cnf2_con_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "horn_yn_hornonly": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "horn_yn_mixed": {
+          "accuracy": 0.8,
+          "total": 5,
+          "correct": 4,
+          "unclear": 0
+        }
+      }
+    },
+    "google/gemini-2.5-flash-lite/nothink": {
+      "provider": "google",
+      "model": "gemini-2.5-flash-lite",
+      "thinking_mode": "nothink",
+      "experiments": {
+        "cnf1_con_hornonly": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "cnf1_con_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "cnf2_con_hornonly": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "cnf2_con_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "horn_yn_hornonly": {
+          "accuracy": 0.6,
+          "total": 5,
+          "correct": 3,
+          "unclear": 0
+        },
+        "horn_yn_mixed": {
+          "accuracy": 0.8,
+          "total": 5,
+          "correct": 4,
+          "unclear": 0
+        }
+      }
+    },
+    "google/gemini-2.5-flash-lite/think-low": {
+      "provider": "google",
+      "model": "gemini-2.5-flash-lite",
+      "thinking_mode": "think-low",
+      "experiments": {
+        "cnf1_con_hornonly": {
+          "accuracy": 0.8,
+          "total": 5,
+          "correct": 4,
+          "unclear": 0
+        },
+        "cnf1_con_mixed": {
+          "accuracy": 0.8,
+          "total": 5,
+          "correct": 4,
+          "unclear": 0
+        },
+        "cnf2_con_hornonly": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "cnf2_con_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "horn_yn_hornonly": {
+          "accuracy": 0.8,
+          "total": 5,
+          "correct": 4,
+          "unclear": 0
+        },
+        "horn_yn_mixed": {
+          "accuracy": 0.8,
+          "total": 5,
+          "correct": 4,
+          "unclear": 0
+        }
+      }
+    },
+    "google/gemini-2.5-pro/think-high": {
+      "provider": "google",
+      "model": "gemini-2.5-pro",
+      "thinking_mode": "think-high",
+      "experiments": {
+        "cnf1_con_hornonly": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "cnf1_con_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "cnf2_con_hornonly": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "cnf2_con_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "horn_yn_hornonly": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "horn_yn_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        }
+      }
+    },
+    "openai/gpt-5-2025-08-07/think-high": {
+      "provider": "openai",
+      "model": "gpt-5-2025-08-07",
+      "thinking_mode": "think-high",
+      "experiments": {
+        "cnf1_con_hornonly": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "cnf1_con_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "cnf2_con_hornonly": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "cnf2_con_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "horn_yn_hornonly": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "horn_yn_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        }
+      }
+    },
+    "openai/gpt-5-2025-08-07/think-medium": {
+      "provider": "openai",
+      "model": "gpt-5-2025-08-07",
+      "thinking_mode": "think-medium",
+      "experiments": {
+        "cnf1_con_hornonly": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "cnf1_con_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "cnf2_con_hornonly": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "cnf2_con_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "horn_yn_hornonly": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "horn_yn_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        }
+      }
+    },
+    "openai/gpt-5-mini-2025-08-07/think-low": {
+      "provider": "openai",
+      "model": "gpt-5-mini-2025-08-07",
+      "thinking_mode": "think-low",
+      "experiments": {
+        "cnf1_con_hornonly": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "cnf1_con_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "cnf2_con_hornonly": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "cnf2_con_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "horn_yn_hornonly": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "horn_yn_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        }
+      }
+    },
+    "openai/gpt-5-nano-2025-08-07/nothink": {
+      "provider": "openai",
+      "model": "gpt-5-nano-2025-08-07",
+      "thinking_mode": "nothink",
+      "experiments": {
+        "cnf1_con_hornonly": {
+          "accuracy": 0.8,
+          "total": 5,
+          "correct": 4,
+          "unclear": 1
+        },
+        "cnf1_con_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "cnf2_con_hornonly": {
+          "accuracy": 0.0,
+          "total": 5,
+          "correct": 0,
+          "unclear": 5
+        },
+        "cnf2_con_mixed": {
+          "accuracy": 0.4,
+          "total": 5,
+          "correct": 2,
+          "unclear": 3
+        },
+        "horn_yn_hornonly": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "horn_yn_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        }
+      }
+    }
+  },
+  "summary": {
+    "total_experiments": 6,
+    "total_models": 12,
+    "total_problems_processed": 0
+  }
+}
