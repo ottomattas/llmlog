@@ -78,7 +78,11 @@ def render_prompt(problem: List[Any], template_text: str, style: Optional[str]) 
                 prem = " and ".join([f"p{0 - el}" for el in neg])
                 lines.append(f"if {prem} then p{pos[0]}.")
             else:
-                raise RuntimeError(f"Cannot handle clause (maybe not horn?): {clause}")
+                # Non-Horn clause: render in compact CNF within Horn block (hybrid)
+                parts: List[str] = []
+                for var in clause:
+                    parts.append(f"p{var}" if var > 0 else f"not(p{0 - var})")
+                lines.append(" or ".join(parts) + ".")
         body = "\n".join(lines)
         return template_text.replace("{{ clauses }}", body)
     elif style == "cnf_v1":
@@ -107,6 +111,11 @@ def render_prompt(problem: List[Any], template_text: str, style: Optional[str]) 
     else:
         raise RuntimeError(f"Unknown prompt style: {style}")
 
+
+"""
+Note: Non-Horn clauses are rendered in CNF-compact form when style is horn_if_then,
+allowing prompts to be generated for mixed datasets without errors.
+"""
 
 def parse_output(text: str, parse_cfg) -> int:
     if parse_cfg.type == "yes_no":
@@ -692,7 +701,15 @@ def run_target(
                 if pid in processed_ids:
                     continue
 
-                prompt = render_prompt(problem, tmpl, cfg.prompt.style)
+                # Handle representation mismatch for horn_if_then if configured
+                if cfg.prompt.style in (None, "horn_if_then") and not _is_horn_problem(problem):
+                    policy = getattr(cfg.prompt, "mismatch_policy", None)
+                    if policy == "fallback_cnf":
+                        prompt = render_prompt(problem, tmpl, "cnf_v2")
+                    else:
+                        prompt = None  # will be treated as mismatch below
+                else:
+                    prompt = render_prompt(problem, tmpl, cfg.prompt.style)
                 sysprompt = None
 
                 if dry_run:
@@ -753,7 +770,7 @@ def run_target(
                             wait_s = backoff[min(attempts - 1, len(backoff) - 1)]
                             time.sleep(wait_s)
 
-                parsed = parse_output(text, cfg.parse) if (not dry_run and not err_msg) else 2
+                parsed = (parse_output(text, cfg.parse) if (not dry_run and not err_msg) else 2)
                 norm = ("yes" if parsed == 0 else ("no" if parsed == 1 else None))
                 gt = None
                 try:
