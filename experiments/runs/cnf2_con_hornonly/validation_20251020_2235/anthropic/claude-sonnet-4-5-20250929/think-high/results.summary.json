@@ -1,0 +1,18 @@
+{
+  "name": "cnf2_con_hornonly",
+  "provider": "anthropic",
+  "model": "claude-sonnet-4-5-20250929",
+  "run": "validation_20251020_2235",
+  "total": 272,
+  "correct": 166,
+  "accuracy": 0.6102941176470589,
+  "unclear": 95,
+  "sat_total": 136,
+  "sat_correct": 78,
+  "sat_accuracy": 0.5735294117647058,
+  "unsat_total": 136,
+  "unsat_correct": 88,
+  "unsat_accuracy": 0.6470588235294118,
+  "avg_timing_ms": 42525.90395480226,
+  "timestamp": 1761011582
+}

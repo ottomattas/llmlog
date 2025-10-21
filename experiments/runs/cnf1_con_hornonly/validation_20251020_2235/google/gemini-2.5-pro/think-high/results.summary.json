@@ -1,0 +1,18 @@
+{
+  "name": "cnf1_con_hornonly",
+  "provider": "google",
+  "model": "gemini-2.5-pro",
+  "run": "validation_20251020_2235",
+  "total": 272,
+  "correct": 184,
+  "accuracy": 0.6764705882352942,
+  "unclear": 78,
+  "sat_total": 136,
+  "sat_correct": 67,
+  "sat_accuracy": 0.49264705882352944,
+  "unsat_total": 136,
+  "unsat_correct": 117,
+  "unsat_accuracy": 0.8602941176470589,
+  "avg_timing_ms": 35181.92268041237,
+  "timestamp": 1761013707
+}

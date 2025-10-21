@@ -1,0 +1,18 @@
+{
+  "name": "cnf1_con_hornonly",
+  "provider": "openai",
+  "model": "gpt-5-nano-2025-08-07",
+  "run": "validation_20251020_2235",
+  "total": 272,
+  "correct": 73,
+  "accuracy": 0.26838235294117646,
+  "unclear": 199,
+  "sat_total": 136,
+  "sat_correct": 27,
+  "sat_accuracy": 0.19852941176470587,
+  "unsat_total": 136,
+  "unsat_correct": 46,
+  "unsat_accuracy": 0.3382352941176471,
+  "avg_timing_ms": 16652.739644970414,
+  "timestamp": 1761013707
+}

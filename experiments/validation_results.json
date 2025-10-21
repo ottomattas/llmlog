@@ -1,0 +1,6612 @@
+{
+  "metadata": {
+    "run_id": "",
+    "runs_dir": "experiments/runs",
+    "dataset": {
+      "min_vars": 3,
+      "max_vars": 20,
+      "min_len": 2,
+      "max_len": 5,
+      "total_problems": 628,
+      "horn_problems": 624,
+      "nonhorn_problems": 4,
+      "sat_problems": 314,
+      "unsat_problems": 314
+    }
+  },
+  "experiments": {
+    "cnf1_con_hornonly": {
+      "name": "cnf1_con_hornonly",
+      "models": {
+        "anthropic/claude-haiku-4-5-20251001/nothink": {
+          "provider": "anthropic",
+          "model": "claude-haiku-4-5-20251001",
+          "thinking_mode": "nothink",
+          "summary": {
+            "name": "cnf1_con_hornonly",
+            "provider": "anthropic",
+            "model": "claude-haiku-4-5-20251001",
+            "run": "validation_20251020_2235",
+            "total": 272,
+            "correct": 133,
+            "accuracy": 0.4889705882352941,
+            "unclear": 105,
+            "sat_total": 136,
+            "sat_correct": 66,
+            "sat_accuracy": 0.4852941176470588,
+            "unsat_total": 136,
+            "unsat_correct": 67,
+            "unsat_accuracy": 0.49264705882352944,
+            "avg_timing_ms": 6207.48502994012,
+            "timestamp": 1761013707
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "5": {
+              "accuracy": 0.6875,
+              "total": 16,
+              "correct": 11
+            },
+            "6": {
+              "accuracy": 0.875,
+              "total": 16,
+              "correct": 14
+            },
+            "7": {
+              "accuracy": 0.625,
+              "total": 16,
+              "correct": 10
+            },
+            "8": {
+              "accuracy": 0.8125,
+              "total": 16,
+              "correct": 13
+            },
+            "9": {
+              "accuracy": 0.8125,
+              "total": 16,
+              "correct": 13
+            },
+            "10": {
+              "accuracy": 0.6875,
+              "total": 16,
+              "correct": 11
+            },
+            "11": {
+              "accuracy": 0.875,
+              "total": 16,
+              "correct": 14
+            },
+            "12": {
+              "accuracy": 0.75,
+              "total": 16,
+              "correct": 12
+            },
+            "13": {
+              "accuracy": 0.8125,
+              "total": 16,
+              "correct": 13
+            },
+            "14": {
+              "accuracy": 0.4375,
+              "total": 16,
+              "correct": 7
+            },
+            "15": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "16": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "17": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "18": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "19": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "20": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            }
+          }
+        },
+        "anthropic/claude-haiku-4-5-20251001/think-low": {
+          "provider": "anthropic",
+          "model": "claude-haiku-4-5-20251001",
+          "thinking_mode": "think-low",
+          "summary": {
+            "name": "cnf1_con_hornonly",
+            "provider": "anthropic",
+            "model": "claude-haiku-4-5-20251001",
+            "run": "validation_20251020_2235",
+            "total": 272,
+            "correct": 114,
+            "accuracy": 0.41911764705882354,
+            "unclear": 105,
+            "sat_total": 136,
+            "sat_correct": 58,
+            "sat_accuracy": 0.4264705882352941,
+            "unsat_total": 136,
+            "unsat_correct": 56,
+            "unsat_accuracy": 0.4117647058823529,
+            "avg_timing_ms": 9407.107784431138,
+            "timestamp": 1761013707
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.75,
+              "total": 16,
+              "correct": 12
+            },
+            "5": {
+              "accuracy": 0.75,
+              "total": 16,
+              "correct": 12
+            },
+            "6": {
+              "accuracy": 0.625,
+              "total": 16,
+              "correct": 10
+            },
+            "7": {
+              "accuracy": 0.75,
+              "total": 16,
+              "correct": 12
+            },
+            "8": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "9": {
+              "accuracy": 0.5625,
+              "total": 16,
+              "correct": 9
+            },
+            "10": {
+              "accuracy": 0.625,
+              "total": 16,
+              "correct": 10
+            },
+            "11": {
+              "accuracy": 0.75,
+              "total": 16,
+              "correct": 12
+            },
+            "12": {
+              "accuracy": 0.4375,
+              "total": 16,
+              "correct": 7
+            },
+            "13": {
+              "accuracy": 0.625,
+              "total": 16,
+              "correct": 10
+            },
+            "14": {
+              "accuracy": 0.3125,
+              "total": 16,
+              "correct": 5
+            },
+            "15": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "16": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "17": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "18": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "19": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "20": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            }
+          }
+        },
+        "anthropic/claude-opus-4-1-20250805/think-med": {
+          "provider": "anthropic",
+          "model": "claude-opus-4-1-20250805",
+          "thinking_mode": "think-med",
+          "summary": {
+            "name": "cnf1_con_hornonly",
+            "provider": "anthropic",
+            "model": "claude-opus-4-1-20250805",
+            "run": "smoke_20251020_2037",
+            "total": 8,
+            "correct": 8,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 4,
+            "sat_correct": 4,
+            "sat_accuracy": 1.0,
+            "unsat_total": 4,
+            "unsat_correct": 4,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 24083.375,
+            "timestamp": 1760983664
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 8,
+              "correct": 8
+            }
+          }
+        },
+        "anthropic/claude-sonnet-4-5-20250929/think-high": {
+          "provider": "anthropic",
+          "model": "claude-sonnet-4-5-20250929",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "cnf1_con_hornonly",
+            "provider": "anthropic",
+            "model": "claude-sonnet-4-5-20250929",
+            "run": "validation_20251020_2235",
+            "total": 272,
+            "correct": 157,
+            "accuracy": 0.5772058823529411,
+            "unclear": 105,
+            "sat_total": 136,
+            "sat_correct": 74,
+            "sat_accuracy": 0.5441176470588235,
+            "unsat_total": 136,
+            "unsat_correct": 83,
+            "unsat_accuracy": 0.6102941176470589,
+            "avg_timing_ms": 44318.754491017964,
+            "timestamp": 1761013707
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.75,
+              "total": 16,
+              "correct": 12
+            },
+            "5": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "6": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "7": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "8": {
+              "accuracy": 0.875,
+              "total": 16,
+              "correct": 14
+            },
+            "9": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "10": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "11": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "12": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "13": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "14": {
+              "accuracy": 0.4375,
+              "total": 16,
+              "correct": 7
+            },
+            "15": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "16": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "17": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "18": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "19": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "20": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            }
+          }
+        },
+        "google/gemini-2.5-flash/think-med": {
+          "provider": "google",
+          "model": "gemini-2.5-flash",
+          "thinking_mode": "think-med",
+          "summary": {
+            "name": "cnf1_con_hornonly",
+            "provider": "google",
+            "model": "gemini-2.5-flash",
+            "run": "validation_20251020_2235",
+            "total": 272,
+            "correct": 211,
+            "accuracy": 0.7757352941176471,
+            "unclear": 44,
+            "sat_total": 136,
+            "sat_correct": 91,
+            "sat_accuracy": 0.6691176470588235,
+            "unsat_total": 136,
+            "unsat_correct": 120,
+            "unsat_accuracy": 0.8823529411764706,
+            "avg_timing_ms": 31166.816176470587,
+            "timestamp": 1761013707
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "5": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "6": {
+              "accuracy": 0.875,
+              "total": 16,
+              "correct": 14
+            },
+            "7": {
+              "accuracy": 0.875,
+              "total": 16,
+              "correct": 14
+            },
+            "8": {
+              "accuracy": 0.75,
+              "total": 16,
+              "correct": 12
+            },
+            "9": {
+              "accuracy": 0.875,
+              "total": 16,
+              "correct": 14
+            },
+            "10": {
+              "accuracy": 0.875,
+              "total": 16,
+              "correct": 14
+            },
+            "11": {
+              "accuracy": 0.8125,
+              "total": 16,
+              "correct": 13
+            },
+            "12": {
+              "accuracy": 0.6875,
+              "total": 16,
+              "correct": 11
+            },
+            "13": {
+              "accuracy": 0.75,
+              "total": 16,
+              "correct": 12
+            },
+            "14": {
+              "accuracy": 0.6875,
+              "total": 16,
+              "correct": 11
+            },
+            "15": {
+              "accuracy": 0.75,
+              "total": 16,
+              "correct": 12
+            },
+            "16": {
+              "accuracy": 0.625,
+              "total": 16,
+              "correct": 10
+            },
+            "17": {
+              "accuracy": 0.8125,
+              "total": 16,
+              "correct": 13
+            },
+            "18": {
+              "accuracy": 0.6875,
+              "total": 16,
+              "correct": 11
+            },
+            "19": {
+              "accuracy": 0.625,
+              "total": 16,
+              "correct": 10
+            },
+            "20": {
+              "accuracy": 0.5,
+              "total": 16,
+              "correct": 8
+            }
+          }
+        },
+        "google/gemini-2.5-flash-lite/nothink": {
+          "provider": "google",
+          "model": "gemini-2.5-flash-lite",
+          "thinking_mode": "nothink",
+          "summary": {
+            "name": "cnf1_con_hornonly",
+            "provider": "google",
+            "model": "gemini-2.5-flash-lite",
+            "run": "validation_20251020_2235",
+            "total": 272,
+            "correct": 163,
+            "accuracy": 0.5992647058823529,
+            "unclear": 34,
+            "sat_total": 136,
+            "sat_correct": 63,
+            "sat_accuracy": 0.4632352941176471,
+            "unsat_total": 136,
+            "unsat_correct": 100,
+            "unsat_accuracy": 0.7352941176470589,
+            "avg_timing_ms": 3701.5625,
+            "timestamp": 1761013707
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.8125,
+              "total": 16,
+              "correct": 13
+            },
+            "5": {
+              "accuracy": 0.8125,
+              "total": 16,
+              "correct": 13
+            },
+            "6": {
+              "accuracy": 0.5,
+              "total": 16,
+              "correct": 8
+            },
+            "7": {
+              "accuracy": 0.625,
+              "total": 16,
+              "correct": 10
+            },
+            "8": {
+              "accuracy": 0.875,
+              "total": 16,
+              "correct": 14
+            },
+            "9": {
+              "accuracy": 0.5,
+              "total": 16,
+              "correct": 8
+            },
+            "10": {
+              "accuracy": 0.625,
+              "total": 16,
+              "correct": 10
+            },
+            "11": {
+              "accuracy": 0.6875,
+              "total": 16,
+              "correct": 11
+            },
+            "12": {
+              "accuracy": 0.5625,
+              "total": 16,
+              "correct": 9
+            },
+            "13": {
+              "accuracy": 0.75,
+              "total": 16,
+              "correct": 12
+            },
+            "14": {
+              "accuracy": 0.4375,
+              "total": 16,
+              "correct": 7
+            },
+            "15": {
+              "accuracy": 0.5,
+              "total": 16,
+              "correct": 8
+            },
+            "16": {
+              "accuracy": 0.375,
+              "total": 16,
+              "correct": 6
+            },
+            "17": {
+              "accuracy": 0.4375,
+              "total": 16,
+              "correct": 7
+            },
+            "18": {
+              "accuracy": 0.75,
+              "total": 16,
+              "correct": 12
+            },
+            "19": {
+              "accuracy": 0.3125,
+              "total": 16,
+              "correct": 5
+            },
+            "20": {
+              "accuracy": 0.625,
+              "total": 16,
+              "correct": 10
+            }
+          }
+        },
+        "google/gemini-2.5-flash-lite/think-low": {
+          "provider": "google",
+          "model": "gemini-2.5-flash-lite",
+          "thinking_mode": "think-low",
+          "summary": {
+            "name": "cnf1_con_hornonly",
+            "provider": "google",
+            "model": "gemini-2.5-flash-lite",
+            "run": "validation_20251020_2235",
+            "total": 272,
+            "correct": 148,
+            "accuracy": 0.5441176470588235,
+            "unclear": 48,
+            "sat_total": 136,
+            "sat_correct": 79,
+            "sat_accuracy": 0.5808823529411765,
+            "unsat_total": 136,
+            "unsat_correct": 69,
+            "unsat_accuracy": 0.5073529411764706,
+            "avg_timing_ms": 4672.944852941177,
+            "timestamp": 1761013707
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.8125,
+              "total": 16,
+              "correct": 13
+            },
+            "5": {
+              "accuracy": 0.75,
+              "total": 16,
+              "correct": 12
+            },
+            "6": {
+              "accuracy": 0.625,
+              "total": 16,
+              "correct": 10
+            },
+            "7": {
+              "accuracy": 0.5,
+              "total": 16,
+              "correct": 8
+            },
+            "8": {
+              "accuracy": 0.5625,
+              "total": 16,
+              "correct": 9
+            },
+            "9": {
+              "accuracy": 0.4375,
+              "total": 16,
+              "correct": 7
+            },
+            "10": {
+              "accuracy": 0.5625,
+              "total": 16,
+              "correct": 9
+            },
+            "11": {
+              "accuracy": 0.6875,
+              "total": 16,
+              "correct": 11
+            },
+            "12": {
+              "accuracy": 0.6875,
+              "total": 16,
+              "correct": 11
+            },
+            "13": {
+              "accuracy": 0.5,
+              "total": 16,
+              "correct": 8
+            },
+            "14": {
+              "accuracy": 0.375,
+              "total": 16,
+              "correct": 6
+            },
+            "15": {
+              "accuracy": 0.5625,
+              "total": 16,
+              "correct": 9
+            },
+            "16": {
+              "accuracy": 0.375,
+              "total": 16,
+              "correct": 6
+            },
+            "17": {
+              "accuracy": 0.375,
+              "total": 16,
+              "correct": 6
+            },
+            "18": {
+              "accuracy": 0.5,
+              "total": 16,
+              "correct": 8
+            },
+            "19": {
+              "accuracy": 0.5,
+              "total": 16,
+              "correct": 8
+            },
+            "20": {
+              "accuracy": 0.4375,
+              "total": 16,
+              "correct": 7
+            }
+          }
+        },
+        "google/gemini-2.5-pro/think-high": {
+          "provider": "google",
+          "model": "gemini-2.5-pro",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "cnf1_con_hornonly",
+            "provider": "google",
+            "model": "gemini-2.5-pro",
+            "run": "validation_20251020_2235",
+            "total": 272,
+            "correct": 184,
+            "accuracy": 0.6764705882352942,
+            "unclear": 78,
+            "sat_total": 136,
+            "sat_correct": 67,
+            "sat_accuracy": 0.49264705882352944,
+            "unsat_total": 136,
+            "unsat_correct": 117,
+            "unsat_accuracy": 0.8602941176470589,
+            "avg_timing_ms": 35181.92268041237,
+            "timestamp": 1761013707
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "5": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "6": {
+              "accuracy": 0.75,
+              "total": 16,
+              "correct": 12
+            },
+            "7": {
+              "accuracy": 0.875,
+              "total": 16,
+              "correct": 14
+            },
+            "8": {
+              "accuracy": 0.8125,
+              "total": 16,
+              "correct": 13
+            },
+            "9": {
+              "accuracy": 0.6875,
+              "total": 16,
+              "correct": 11
+            },
+            "10": {
+              "accuracy": 0.8125,
+              "total": 16,
+              "correct": 13
+            },
+            "11": {
+              "accuracy": 0.6875,
+              "total": 16,
+              "correct": 11
+            },
+            "12": {
+              "accuracy": 0.75,
+              "total": 16,
+              "correct": 12
+            },
+            "13": {
+              "accuracy": 0.625,
+              "total": 16,
+              "correct": 10
+            },
+            "14": {
+              "accuracy": 0.5625,
+              "total": 16,
+              "correct": 9
+            },
+            "15": {
+              "accuracy": 0.6875,
+              "total": 16,
+              "correct": 11
+            },
+            "16": {
+              "accuracy": 0.6875,
+              "total": 16,
+              "correct": 11
+            },
+            "17": {
+              "accuracy": 0.4375,
+              "total": 16,
+              "correct": 7
+            },
+            "18": {
+              "accuracy": 0.4375,
+              "total": 16,
+              "correct": 7
+            },
+            "19": {
+              "accuracy": 0.375,
+              "total": 16,
+              "correct": 6
+            },
+            "20": {
+              "accuracy": 0.4375,
+              "total": 16,
+              "correct": 7
+            }
+          }
+        },
+        "openai/gpt-5-2025-08-07/think-medium": {
+          "provider": "openai",
+          "model": "gpt-5-2025-08-07",
+          "thinking_mode": "think-medium",
+          "summary": {
+            "name": "cnf1_con_hornonly",
+            "provider": "openai",
+            "model": "gpt-5-2025-08-07",
+            "run": "validation_20251020_2235",
+            "total": 272,
+            "correct": 168,
+            "accuracy": 0.6176470588235294,
+            "unclear": 104,
+            "sat_total": 136,
+            "sat_correct": 84,
+            "sat_accuracy": 0.6176470588235294,
+            "unsat_total": 136,
+            "unsat_correct": 84,
+            "unsat_accuracy": 0.6176470588235294,
+            "avg_timing_ms": 20669.01785714286,
+            "timestamp": 1761013707
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "5": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "6": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "7": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "8": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "9": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "10": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "11": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "12": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "13": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "14": {
+              "accuracy": 0.5625,
+              "total": 16,
+              "correct": 9
+            },
+            "15": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "16": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "17": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "18": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "19": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "20": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            }
+          }
+        },
+        "openai/gpt-5-mini-2025-08-07/think-low": {
+          "provider": "openai",
+          "model": "gpt-5-mini-2025-08-07",
+          "thinking_mode": "think-low",
+          "summary": {
+            "name": "cnf1_con_hornonly",
+            "provider": "openai",
+            "model": "gpt-5-mini-2025-08-07",
+            "run": "validation_20251020_2235",
+            "total": 272,
+            "correct": 159,
+            "accuracy": 0.5845588235294118,
+            "unclear": 106,
+            "sat_total": 136,
+            "sat_correct": 83,
+            "sat_accuracy": 0.6102941176470589,
+            "unsat_total": 136,
+            "unsat_correct": 76,
+            "unsat_accuracy": 0.5588235294117647,
+            "avg_timing_ms": 12952.686390532544,
+            "timestamp": 1761013707
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "5": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "6": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "7": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "8": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "9": {
+              "accuracy": 0.8125,
+              "total": 16,
+              "correct": 13
+            },
+            "10": {
+              "accuracy": 0.875,
+              "total": 16,
+              "correct": 14
+            },
+            "11": {
+              "accuracy": 0.875,
+              "total": 16,
+              "correct": 14
+            },
+            "12": {
+              "accuracy": 0.875,
+              "total": 16,
+              "correct": 14
+            },
+            "13": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "14": {
+              "accuracy": 0.5625,
+              "total": 16,
+              "correct": 9
+            },
+            "15": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "16": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "17": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "18": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "19": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "20": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            }
+          }
+        },
+        "openai/gpt-5-nano-2025-08-07/nothink": {
+          "provider": "openai",
+          "model": "gpt-5-nano-2025-08-07",
+          "thinking_mode": "nothink",
+          "summary": {
+            "name": "cnf1_con_hornonly",
+            "provider": "openai",
+            "model": "gpt-5-nano-2025-08-07",
+            "run": "validation_20251020_2235",
+            "total": 272,
+            "correct": 73,
+            "accuracy": 0.26838235294117646,
+            "unclear": 199,
+            "sat_total": 136,
+            "sat_correct": 27,
+            "sat_accuracy": 0.19852941176470587,
+            "unsat_total": 136,
+            "unsat_correct": 46,
+            "unsat_accuracy": 0.3382352941176471,
+            "avg_timing_ms": 16652.739644970414,
+            "timestamp": 1761013707
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.75,
+              "total": 16,
+              "correct": 12
+            },
+            "5": {
+              "accuracy": 0.5,
+              "total": 16,
+              "correct": 8
+            },
+            "6": {
+              "accuracy": 0.4375,
+              "total": 16,
+              "correct": 7
+            },
+            "7": {
+              "accuracy": 0.5,
+              "total": 16,
+              "correct": 8
+            },
+            "8": {
+              "accuracy": 0.5625,
+              "total": 16,
+              "correct": 9
+            },
+            "9": {
+              "accuracy": 0.4375,
+              "total": 16,
+              "correct": 7
+            },
+            "10": {
+              "accuracy": 0.3125,
+              "total": 16,
+              "correct": 5
+            },
+            "11": {
+              "accuracy": 0.4375,
+              "total": 16,
+              "correct": 7
+            },
+            "12": {
+              "accuracy": 0.3125,
+              "total": 16,
+              "correct": 5
+            },
+            "13": {
+              "accuracy": 0.25,
+              "total": 16,
+              "correct": 4
+            },
+            "14": {
+              "accuracy": 0.0625,
+              "total": 16,
+              "correct": 1
+            },
+            "15": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "16": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "17": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "18": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "19": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "20": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            }
+          }
+        },
+        "openai/gpt-5-pro-2025-10-06/think-high": {
+          "provider": "openai",
+          "model": "gpt-5-pro-2025-10-06",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "cnf1_con_hornonly",
+            "provider": "openai",
+            "model": "gpt-5-pro-2025-10-06",
+            "run": "smoke_20251020_2037",
+            "total": 8,
+            "correct": 7,
+            "accuracy": 0.875,
+            "unclear": 1,
+            "sat_total": 4,
+            "sat_correct": 3,
+            "sat_accuracy": 0.75,
+            "unsat_total": 4,
+            "unsat_correct": 4,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 43145.0,
+            "timestamp": 1760983664
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.875,
+              "total": 8,
+              "correct": 7
+            }
+          }
+        },
+        "anthropic/claude-haiku-4-5-20251001/think-med": {
+          "provider": "anthropic",
+          "model": "claude-haiku-4-5-20251001",
+          "thinking_mode": "think-med",
+          "summary": {
+            "name": "cnf1_con_hornonly",
+            "provider": "anthropic",
+            "model": "claude-haiku-4-5-20251001",
+            "run": "validation_20251020_2235",
+            "total": 272,
+            "correct": 154,
+            "accuracy": 0.5661764705882353,
+            "unclear": 105,
+            "sat_total": 136,
+            "sat_correct": 71,
+            "sat_accuracy": 0.5220588235294118,
+            "unsat_total": 136,
+            "unsat_correct": 83,
+            "unsat_accuracy": 0.6102941176470589,
+            "avg_timing_ms": 19966.29341317365,
+            "timestamp": 1761013707
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "5": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "6": {
+              "accuracy": 0.875,
+              "total": 16,
+              "correct": 14
+            },
+            "7": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "8": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "9": {
+              "accuracy": 0.875,
+              "total": 16,
+              "correct": 14
+            },
+            "10": {
+              "accuracy": 0.875,
+              "total": 16,
+              "correct": 14
+            },
+            "11": {
+              "accuracy": 0.875,
+              "total": 16,
+              "correct": 14
+            },
+            "12": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "13": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "14": {
+              "accuracy": 0.375,
+              "total": 16,
+              "correct": 6
+            },
+            "15": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "16": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "17": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "18": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "19": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "20": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            }
+          }
+        },
+        "openai/gpt-5-2025-08-07/think-high": {
+          "provider": "openai",
+          "model": "gpt-5-2025-08-07",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "cnf1_con_hornonly",
+            "provider": "openai",
+            "model": "gpt-5-2025-08-07",
+            "run": "validation_20251020_2235",
+            "total": 272,
+            "correct": 163,
+            "accuracy": 0.5992647058823529,
+            "unclear": 109,
+            "sat_total": 136,
+            "sat_correct": 80,
+            "sat_accuracy": 0.5882352941176471,
+            "unsat_total": 136,
+            "unsat_correct": 83,
+            "unsat_accuracy": 0.6102941176470589,
+            "avg_timing_ms": 28381.006134969324,
+            "timestamp": 1761013707
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "5": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "6": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "7": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "8": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "9": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "10": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "11": {
+              "accuracy": 0.875,
+              "total": 16,
+              "correct": 14
+            },
+            "12": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "13": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "14": {
+              "accuracy": 0.5625,
+              "total": 16,
+              "correct": 9
+            },
+            "15": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "16": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "17": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "18": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "19": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "20": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            }
+          }
+        }
+      },
+      "summary": {
+        "total_models": 60,
+        "avg_accuracy": 0.6137079831932774,
+        "total_unclear": 1143
+      }
+    },
+    "cnf1_con_mixed": {
+      "name": "cnf1_con_mixed",
+      "models": {
+        "anthropic/claude-haiku-4-5-20251001/nothink": {
+          "provider": "anthropic",
+          "model": "claude-haiku-4-5-20251001",
+          "thinking_mode": "nothink",
+          "summary": {
+            "name": "cnf1_con_mixed",
+            "provider": "anthropic",
+            "model": "claude-haiku-4-5-20251001",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 4,
+            "accuracy": 0.8,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 2,
+            "sat_accuracy": 0.6666666666666666,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 4866.6,
+            "timestamp": 1760988352
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.8,
+              "total": 5,
+              "correct": 4
+            }
+          }
+        },
+        "anthropic/claude-haiku-4-5-20251001/think-low": {
+          "provider": "anthropic",
+          "model": "claude-haiku-4-5-20251001",
+          "thinking_mode": "think-low",
+          "summary": {
+            "name": "cnf1_con_mixed",
+            "provider": "anthropic",
+            "model": "claude-haiku-4-5-20251001",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 4,
+            "accuracy": 0.8,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 2,
+            "sat_accuracy": 0.6666666666666666,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 7149.8,
+            "timestamp": 1760988352
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.8,
+              "total": 5,
+              "correct": 4
+            }
+          }
+        },
+        "anthropic/claude-opus-4-1-20250805/think-med": {
+          "provider": "anthropic",
+          "model": "claude-opus-4-1-20250805",
+          "thinking_mode": "think-med",
+          "summary": {
+            "name": "cnf1_con_mixed",
+            "provider": "anthropic",
+            "model": "claude-opus-4-1-20250805",
+            "run": "smoke_20251020_2037",
+            "total": 8,
+            "correct": 8,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 4,
+            "sat_correct": 4,
+            "sat_accuracy": 1.0,
+            "unsat_total": 4,
+            "unsat_correct": 4,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 20573.375,
+            "timestamp": 1760984176
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 8,
+              "correct": 8
+            }
+          }
+        },
+        "anthropic/claude-sonnet-4-5-20250929/think-high": {
+          "provider": "anthropic",
+          "model": "claude-sonnet-4-5-20250929",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "cnf1_con_mixed",
+            "provider": "anthropic",
+            "model": "claude-sonnet-4-5-20250929",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 3,
+            "accuracy": 0.6,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 1,
+            "sat_accuracy": 0.3333333333333333,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 18325.8,
+            "timestamp": 1760988352
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.6,
+              "total": 5,
+              "correct": 3
+            }
+          }
+        },
+        "google/gemini-2.5-flash/think-med": {
+          "provider": "google",
+          "model": "gemini-2.5-flash",
+          "thinking_mode": "think-med",
+          "summary": {
+            "name": "cnf1_con_mixed",
+            "provider": "google",
+            "model": "gemini-2.5-flash",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 5994.0,
+            "timestamp": 1760988352
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "google/gemini-2.5-flash-lite/nothink": {
+          "provider": "google",
+          "model": "gemini-2.5-flash-lite",
+          "thinking_mode": "nothink",
+          "summary": {
+            "name": "cnf1_con_mixed",
+            "provider": "google",
+            "model": "gemini-2.5-flash-lite",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 1879.4,
+            "timestamp": 1760988352
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "google/gemini-2.5-flash-lite/think-low": {
+          "provider": "google",
+          "model": "gemini-2.5-flash-lite",
+          "thinking_mode": "think-low",
+          "summary": {
+            "name": "cnf1_con_mixed",
+            "provider": "google",
+            "model": "gemini-2.5-flash-lite",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 4,
+            "accuracy": 0.8,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 1,
+            "unsat_accuracy": 0.5,
+            "avg_timing_ms": 3027.4,
+            "timestamp": 1760988352
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.8,
+              "total": 5,
+              "correct": 4
+            }
+          }
+        },
+        "google/gemini-2.5-pro/think-high": {
+          "provider": "google",
+          "model": "gemini-2.5-pro",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "cnf1_con_mixed",
+            "provider": "google",
+            "model": "gemini-2.5-pro",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 15218.6,
+            "timestamp": 1760988352
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "openai/gpt-5-2025-08-07/think-medium": {
+          "provider": "openai",
+          "model": "gpt-5-2025-08-07",
+          "thinking_mode": "think-medium",
+          "summary": {
+            "name": "cnf1_con_mixed",
+            "provider": "openai",
+            "model": "gpt-5-2025-08-07",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 6422.0,
+            "timestamp": 1760988352
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "openai/gpt-5-mini-2025-08-07/think-low": {
+          "provider": "openai",
+          "model": "gpt-5-mini-2025-08-07",
+          "thinking_mode": "think-low",
+          "summary": {
+            "name": "cnf1_con_mixed",
+            "provider": "openai",
+            "model": "gpt-5-mini-2025-08-07",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 4851.0,
+            "timestamp": 1760988352
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "openai/gpt-5-nano-2025-08-07/nothink": {
+          "provider": "openai",
+          "model": "gpt-5-nano-2025-08-07",
+          "thinking_mode": "nothink",
+          "summary": {
+            "name": "cnf1_con_mixed",
+            "provider": "openai",
+            "model": "gpt-5-nano-2025-08-07",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 10095.6,
+            "timestamp": 1760988352
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "openai/gpt-5-pro-2025-10-06/think-high": {
+          "provider": "openai",
+          "model": "gpt-5-pro-2025-10-06",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "cnf1_con_mixed",
+            "provider": "openai",
+            "model": "gpt-5-pro-2025-10-06",
+            "run": "smoke_20251020_2037",
+            "total": 8,
+            "correct": 8,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 4,
+            "sat_correct": 4,
+            "sat_accuracy": 1.0,
+            "unsat_total": 4,
+            "unsat_correct": 4,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 40235.75,
+            "timestamp": 1760984176
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 8,
+              "correct": 8
+            }
+          }
+        },
+        "anthropic/claude-haiku-4-5-20251001/think-med": {
+          "provider": "anthropic",
+          "model": "claude-haiku-4-5-20251001",
+          "thinking_mode": "think-med",
+          "summary": {
+            "name": "cnf1_con_mixed",
+            "provider": "anthropic",
+            "model": "claude-haiku-4-5-20251001",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 9679.8,
+            "timestamp": 1760988352
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "openai/gpt-5-2025-08-07/think-high": {
+          "provider": "openai",
+          "model": "gpt-5-2025-08-07",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "cnf1_con_mixed",
+            "provider": "openai",
+            "model": "gpt-5-2025-08-07",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 9367.6,
+            "timestamp": 1760988352
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        }
+      },
+      "summary": {
+        "total_models": 60,
+        "avg_accuracy": 0.9285714285714286,
+        "total_unclear": 0
+      }
+    },
+    "cnf2_con_hornonly": {
+      "name": "cnf2_con_hornonly",
+      "models": {
+        "anthropic/claude-haiku-4-5-20251001/nothink": {
+          "provider": "anthropic",
+          "model": "claude-haiku-4-5-20251001",
+          "thinking_mode": "nothink",
+          "summary": {
+            "name": "cnf2_con_hornonly",
+            "provider": "anthropic",
+            "model": "claude-haiku-4-5-20251001",
+            "run": "validation_20251020_2235",
+            "total": 272,
+            "correct": 151,
+            "accuracy": 0.5551470588235294,
+            "unclear": 95,
+            "sat_total": 136,
+            "sat_correct": 68,
+            "sat_accuracy": 0.5,
+            "unsat_total": 136,
+            "unsat_correct": 83,
+            "unsat_accuracy": 0.6102941176470589,
+            "avg_timing_ms": 5929.344632768361,
+            "timestamp": 1761011582
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.75,
+              "total": 16,
+              "correct": 12
+            },
+            "5": {
+              "accuracy": 0.8125,
+              "total": 16,
+              "correct": 13
+            },
+            "6": {
+              "accuracy": 0.875,
+              "total": 16,
+              "correct": 14
+            },
+            "7": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "8": {
+              "accuracy": 0.8125,
+              "total": 16,
+              "correct": 13
+            },
+            "9": {
+              "accuracy": 0.75,
+              "total": 16,
+              "correct": 12
+            },
+            "10": {
+              "accuracy": 0.8125,
+              "total": 16,
+              "correct": 13
+            },
+            "11": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "12": {
+              "accuracy": 0.875,
+              "total": 16,
+              "correct": 14
+            },
+            "13": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "14": {
+              "accuracy": 0.8125,
+              "total": 16,
+              "correct": 13
+            },
+            "15": {
+              "accuracy": 0.0625,
+              "total": 16,
+              "correct": 1
+            },
+            "16": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "17": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "18": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "19": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "20": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            }
+          }
+        },
+        "anthropic/claude-haiku-4-5-20251001/think-low": {
+          "provider": "anthropic",
+          "model": "claude-haiku-4-5-20251001",
+          "thinking_mode": "think-low",
+          "summary": {
+            "name": "cnf2_con_hornonly",
+            "provider": "anthropic",
+            "model": "claude-haiku-4-5-20251001",
+            "run": "validation_20251020_2235",
+            "total": 272,
+            "correct": 136,
+            "accuracy": 0.5,
+            "unclear": 95,
+            "sat_total": 136,
+            "sat_correct": 65,
+            "sat_accuracy": 0.47794117647058826,
+            "unsat_total": 136,
+            "unsat_correct": 71,
+            "unsat_accuracy": 0.5220588235294118,
+            "avg_timing_ms": 8593.124293785311,
+            "timestamp": 1761011582
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.8125,
+              "total": 16,
+              "correct": 13
+            },
+            "5": {
+              "accuracy": 0.8125,
+              "total": 16,
+              "correct": 13
+            },
+            "6": {
+              "accuracy": 0.8125,
+              "total": 16,
+              "correct": 13
+            },
+            "7": {
+              "accuracy": 0.875,
+              "total": 16,
+              "correct": 14
+            },
+            "8": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "9": {
+              "accuracy": 0.6875,
+              "total": 16,
+              "correct": 11
+            },
+            "10": {
+              "accuracy": 0.75,
+              "total": 16,
+              "correct": 12
+            },
+            "11": {
+              "accuracy": 0.8125,
+              "total": 16,
+              "correct": 13
+            },
+            "12": {
+              "accuracy": 0.625,
+              "total": 16,
+              "correct": 10
+            },
+            "13": {
+              "accuracy": 0.6875,
+              "total": 16,
+              "correct": 11
+            },
+            "14": {
+              "accuracy": 0.625,
+              "total": 16,
+              "correct": 10
+            },
+            "15": {
+              "accuracy": 0.0625,
+              "total": 16,
+              "correct": 1
+            },
+            "16": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "17": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "18": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "19": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "20": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            }
+          }
+        },
+        "anthropic/claude-opus-4-1-20250805/think-med": {
+          "provider": "anthropic",
+          "model": "claude-opus-4-1-20250805",
+          "thinking_mode": "think-med",
+          "summary": {
+            "name": "cnf2_con_hornonly",
+            "provider": "anthropic",
+            "model": "claude-opus-4-1-20250805",
+            "run": "smoke_20251020_2037",
+            "total": 8,
+            "correct": 8,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 4,
+            "sat_correct": 4,
+            "sat_accuracy": 1.0,
+            "unsat_total": 4,
+            "unsat_correct": 4,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 22625.625,
+            "timestamp": 1760984736
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 8,
+              "correct": 8
+            }
+          }
+        },
+        "anthropic/claude-sonnet-4-5-20250929/think-high": {
+          "provider": "anthropic",
+          "model": "claude-sonnet-4-5-20250929",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "cnf2_con_hornonly",
+            "provider": "anthropic",
+            "model": "claude-sonnet-4-5-20250929",
+            "run": "validation_20251020_2235",
+            "total": 272,
+            "correct": 166,
+            "accuracy": 0.6102941176470589,
+            "unclear": 95,
+            "sat_total": 136,
+            "sat_correct": 78,
+            "sat_accuracy": 0.5735294117647058,
+            "unsat_total": 136,
+            "unsat_correct": 88,
+            "unsat_accuracy": 0.6470588235294118,
+            "avg_timing_ms": 42525.90395480226,
+            "timestamp": 1761011582
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.8125,
+              "total": 16,
+              "correct": 13
+            },
+            "5": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "6": {
+              "accuracy": 0.875,
+              "total": 16,
+              "correct": 14
+            },
+            "7": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "8": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "9": {
+              "accuracy": 0.875,
+              "total": 16,
+              "correct": 14
+            },
+            "10": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "11": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "12": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "13": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "14": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "15": {
+              "accuracy": 0.0625,
+              "total": 16,
+              "correct": 1
+            },
+            "16": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "17": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "18": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "19": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "20": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            }
+          }
+        },
+        "google/gemini-2.5-flash/think-med": {
+          "provider": "google",
+          "model": "gemini-2.5-flash",
+          "thinking_mode": "think-med",
+          "summary": {
+            "name": "cnf2_con_hornonly",
+            "provider": "google",
+            "model": "gemini-2.5-flash",
+            "run": "validation_20251020_2235",
+            "total": 272,
+            "correct": 208,
+            "accuracy": 0.7647058823529411,
+            "unclear": 37,
+            "sat_total": 136,
+            "sat_correct": 90,
+            "sat_accuracy": 0.6617647058823529,
+            "unsat_total": 136,
+            "unsat_correct": 118,
+            "unsat_accuracy": 0.8676470588235294,
+            "avg_timing_ms": 30402.430147058825,
+            "timestamp": 1761011582
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "5": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "6": {
+              "accuracy": 0.8125,
+              "total": 16,
+              "correct": 13
+            },
+            "7": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "8": {
+              "accuracy": 0.875,
+              "total": 16,
+              "correct": 14
+            },
+            "9": {
+              "accuracy": 0.875,
+              "total": 16,
+              "correct": 14
+            },
+            "10": {
+              "accuracy": 0.875,
+              "total": 16,
+              "correct": 14
+            },
+            "11": {
+              "accuracy": 0.8125,
+              "total": 16,
+              "correct": 13
+            },
+            "12": {
+              "accuracy": 0.6875,
+              "total": 16,
+              "correct": 11
+            },
+            "13": {
+              "accuracy": 0.75,
+              "total": 16,
+              "correct": 12
+            },
+            "14": {
+              "accuracy": 0.625,
+              "total": 16,
+              "correct": 10
+            },
+            "15": {
+              "accuracy": 0.625,
+              "total": 16,
+              "correct": 10
+            },
+            "16": {
+              "accuracy": 0.625,
+              "total": 16,
+              "correct": 10
+            },
+            "17": {
+              "accuracy": 0.625,
+              "total": 16,
+              "correct": 10
+            },
+            "18": {
+              "accuracy": 0.5625,
+              "total": 16,
+              "correct": 9
+            },
+            "19": {
+              "accuracy": 0.75,
+              "total": 16,
+              "correct": 12
+            },
+            "20": {
+              "accuracy": 0.625,
+              "total": 16,
+              "correct": 10
+            }
+          }
+        },
+        "google/gemini-2.5-flash-lite/nothink": {
+          "provider": "google",
+          "model": "gemini-2.5-flash-lite",
+          "thinking_mode": "nothink",
+          "summary": {
+            "name": "cnf2_con_hornonly",
+            "provider": "google",
+            "model": "gemini-2.5-flash-lite",
+            "run": "validation_20251020_2235",
+            "total": 272,
+            "correct": 170,
+            "accuracy": 0.625,
+            "unclear": 55,
+            "sat_total": 136,
+            "sat_correct": 67,
+            "sat_accuracy": 0.49264705882352944,
+            "unsat_total": 136,
+            "unsat_correct": 103,
+            "unsat_accuracy": 0.7573529411764706,
+            "avg_timing_ms": 4612.356617647059,
+            "timestamp": 1761011582
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "5": {
+              "accuracy": 0.625,
+              "total": 16,
+              "correct": 10
+            },
+            "6": {
+              "accuracy": 0.625,
+              "total": 16,
+              "correct": 10
+            },
+            "7": {
+              "accuracy": 0.8125,
+              "total": 16,
+              "correct": 13
+            },
+            "8": {
+              "accuracy": 0.8125,
+              "total": 16,
+              "correct": 13
+            },
+            "9": {
+              "accuracy": 0.5625,
+              "total": 16,
+              "correct": 9
+            },
+            "10": {
+              "accuracy": 0.5625,
+              "total": 16,
+              "correct": 9
+            },
+            "11": {
+              "accuracy": 0.625,
+              "total": 16,
+              "correct": 10
+            },
+            "12": {
+              "accuracy": 0.625,
+              "total": 16,
+              "correct": 10
+            },
+            "13": {
+              "accuracy": 0.6875,
+              "total": 16,
+              "correct": 11
+            },
+            "14": {
+              "accuracy": 0.5625,
+              "total": 16,
+              "correct": 9
+            },
+            "15": {
+              "accuracy": 0.8125,
+              "total": 16,
+              "correct": 13
+            },
+            "16": {
+              "accuracy": 0.375,
+              "total": 16,
+              "correct": 6
+            },
+            "17": {
+              "accuracy": 0.5,
+              "total": 16,
+              "correct": 8
+            },
+            "18": {
+              "accuracy": 0.4375,
+              "total": 16,
+              "correct": 7
+            },
+            "19": {
+              "accuracy": 0.375,
+              "total": 16,
+              "correct": 6
+            },
+            "20": {
+              "accuracy": 0.6875,
+              "total": 16,
+              "correct": 11
+            }
+          }
+        },
+        "google/gemini-2.5-flash-lite/think-low": {
+          "provider": "google",
+          "model": "gemini-2.5-flash-lite",
+          "thinking_mode": "think-low",
+          "summary": {
+            "name": "cnf2_con_hornonly",
+            "provider": "google",
+            "model": "gemini-2.5-flash-lite",
+            "run": "validation_20251020_2235",
+            "total": 272,
+            "correct": 134,
+            "accuracy": 0.49264705882352944,
+            "unclear": 81,
+            "sat_total": 136,
+            "sat_correct": 68,
+            "sat_accuracy": 0.5,
+            "unsat_total": 136,
+            "unsat_correct": 66,
+            "unsat_accuracy": 0.4852941176470588,
+            "avg_timing_ms": 4628.735294117647,
+            "timestamp": 1761011582
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.8125,
+              "total": 16,
+              "correct": 13
+            },
+            "5": {
+              "accuracy": 0.6875,
+              "total": 16,
+              "correct": 11
+            },
+            "6": {
+              "accuracy": 0.3125,
+              "total": 16,
+              "correct": 5
+            },
+            "7": {
+              "accuracy": 0.5625,
+              "total": 16,
+              "correct": 9
+            },
+            "8": {
+              "accuracy": 0.5625,
+              "total": 16,
+              "correct": 9
+            },
+            "9": {
+              "accuracy": 0.5,
+              "total": 16,
+              "correct": 8
+            },
+            "10": {
+              "accuracy": 0.5,
+              "total": 16,
+              "correct": 8
+            },
+            "11": {
+              "accuracy": 0.5625,
+              "total": 16,
+              "correct": 9
+            },
+            "12": {
+              "accuracy": 0.375,
+              "total": 16,
+              "correct": 6
+            },
+            "13": {
+              "accuracy": 0.5625,
+              "total": 16,
+              "correct": 9
+            },
+            "14": {
+              "accuracy": 0.625,
+              "total": 16,
+              "correct": 10
+            },
+            "15": {
+              "accuracy": 0.6875,
+              "total": 16,
+              "correct": 11
+            },
+            "16": {
+              "accuracy": 0.5,
+              "total": 16,
+              "correct": 8
+            },
+            "17": {
+              "accuracy": 0.375,
+              "total": 16,
+              "correct": 6
+            },
+            "18": {
+              "accuracy": 0.3125,
+              "total": 16,
+              "correct": 5
+            },
+            "19": {
+              "accuracy": 0.375,
+              "total": 16,
+              "correct": 6
+            },
+            "20": {
+              "accuracy": 0.0625,
+              "total": 16,
+              "correct": 1
+            }
+          }
+        },
+        "google/gemini-2.5-pro/think-high": {
+          "provider": "google",
+          "model": "gemini-2.5-pro",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "cnf2_con_hornonly",
+            "provider": "google",
+            "model": "gemini-2.5-pro",
+            "run": "validation_20251020_2235",
+            "total": 272,
+            "correct": 195,
+            "accuracy": 0.7169117647058824,
+            "unclear": 65,
+            "sat_total": 136,
+            "sat_correct": 76,
+            "sat_accuracy": 0.5588235294117647,
+            "unsat_total": 136,
+            "unsat_correct": 119,
+            "unsat_accuracy": 0.875,
+            "avg_timing_ms": 33271.67149758454,
+            "timestamp": 1761011582
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "5": {
+              "accuracy": 0.875,
+              "total": 16,
+              "correct": 14
+            },
+            "6": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "7": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "8": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "9": {
+              "accuracy": 0.8125,
+              "total": 16,
+              "correct": 13
+            },
+            "10": {
+              "accuracy": 0.625,
+              "total": 16,
+              "correct": 10
+            },
+            "11": {
+              "accuracy": 0.6875,
+              "total": 16,
+              "correct": 11
+            },
+            "12": {
+              "accuracy": 0.75,
+              "total": 16,
+              "correct": 12
+            },
+            "13": {
+              "accuracy": 0.6875,
+              "total": 16,
+              "correct": 11
+            },
+            "14": {
+              "accuracy": 0.6875,
+              "total": 16,
+              "correct": 11
+            },
+            "15": {
+              "accuracy": 0.5625,
+              "total": 16,
+              "correct": 9
+            },
+            "16": {
+              "accuracy": 0.625,
+              "total": 16,
+              "correct": 10
+            },
+            "17": {
+              "accuracy": 0.5625,
+              "total": 16,
+              "correct": 9
+            },
+            "18": {
+              "accuracy": 0.625,
+              "total": 16,
+              "correct": 10
+            },
+            "19": {
+              "accuracy": 0.375,
+              "total": 16,
+              "correct": 6
+            },
+            "20": {
+              "accuracy": 0.5,
+              "total": 16,
+              "correct": 8
+            }
+          }
+        },
+        "openai/gpt-5-2025-08-07/think-medium": {
+          "provider": "openai",
+          "model": "gpt-5-2025-08-07",
+          "thinking_mode": "think-medium",
+          "summary": {
+            "name": "cnf2_con_hornonly",
+            "provider": "openai",
+            "model": "gpt-5-2025-08-07",
+            "run": "validation_20251020_2235",
+            "total": 272,
+            "correct": 184,
+            "accuracy": 0.6764705882352942,
+            "unclear": 88,
+            "sat_total": 136,
+            "sat_correct": 93,
+            "sat_accuracy": 0.6838235294117647,
+            "unsat_total": 136,
+            "unsat_correct": 91,
+            "unsat_accuracy": 0.6691176470588235,
+            "avg_timing_ms": 21480.842391304348,
+            "timestamp": 1761011582
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "5": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "6": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "7": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "8": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "9": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "10": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "11": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "12": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "13": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "14": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "15": {
+              "accuracy": 0.5625,
+              "total": 16,
+              "correct": 9
+            },
+            "16": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "17": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "18": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "19": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "20": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            }
+          }
+        },
+        "openai/gpt-5-mini-2025-08-07/think-low": {
+          "provider": "openai",
+          "model": "gpt-5-mini-2025-08-07",
+          "thinking_mode": "think-low",
+          "summary": {
+            "name": "cnf2_con_hornonly",
+            "provider": "openai",
+            "model": "gpt-5-mini-2025-08-07",
+            "run": "validation_20251020_2235",
+            "total": 272,
+            "correct": 180,
+            "accuracy": 0.6617647058823529,
+            "unclear": 87,
+            "sat_total": 136,
+            "sat_correct": 90,
+            "sat_accuracy": 0.6617647058823529,
+            "unsat_total": 136,
+            "unsat_correct": 90,
+            "unsat_accuracy": 0.6617647058823529,
+            "avg_timing_ms": 11727.313513513514,
+            "timestamp": 1761011582
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "5": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "6": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "7": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "8": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "9": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "10": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "11": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "12": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "13": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "14": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "15": {
+              "accuracy": 0.5,
+              "total": 16,
+              "correct": 8
+            },
+            "16": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "17": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "18": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "19": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "20": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            }
+          }
+        },
+        "openai/gpt-5-nano-2025-08-07/nothink": {
+          "provider": "openai",
+          "model": "gpt-5-nano-2025-08-07",
+          "thinking_mode": "nothink",
+          "summary": {
+            "name": "cnf2_con_hornonly",
+            "provider": "openai",
+            "model": "gpt-5-nano-2025-08-07",
+            "run": "validation_20251020_2235",
+            "total": 272,
+            "correct": 28,
+            "accuracy": 0.10294117647058823,
+            "unclear": 243,
+            "sat_total": 136,
+            "sat_correct": 11,
+            "sat_accuracy": 0.08088235294117647,
+            "unsat_total": 136,
+            "unsat_correct": 17,
+            "unsat_accuracy": 0.125,
+            "avg_timing_ms": 15620.935135135134,
+            "timestamp": 1761011582
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.1875,
+              "total": 16,
+              "correct": 3
+            },
+            "5": {
+              "accuracy": 0.25,
+              "total": 16,
+              "correct": 4
+            },
+            "6": {
+              "accuracy": 0.125,
+              "total": 16,
+              "correct": 2
+            },
+            "7": {
+              "accuracy": 0.3125,
+              "total": 16,
+              "correct": 5
+            },
+            "8": {
+              "accuracy": 0.125,
+              "total": 16,
+              "correct": 2
+            },
+            "9": {
+              "accuracy": 0.125,
+              "total": 16,
+              "correct": 2
+            },
+            "10": {
+              "accuracy": 0.25,
+              "total": 16,
+              "correct": 4
+            },
+            "11": {
+              "accuracy": 0.125,
+              "total": 16,
+              "correct": 2
+            },
+            "12": {
+              "accuracy": 0.0625,
+              "total": 16,
+              "correct": 1
+            },
+            "13": {
+              "accuracy": 0.125,
+              "total": 16,
+              "correct": 2
+            },
+            "14": {
+              "accuracy": 0.0625,
+              "total": 16,
+              "correct": 1
+            },
+            "15": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "16": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "17": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "18": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "19": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "20": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            }
+          }
+        },
+        "openai/gpt-5-pro-2025-10-06/think-high": {
+          "provider": "openai",
+          "model": "gpt-5-pro-2025-10-06",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "cnf2_con_hornonly",
+            "provider": "openai",
+            "model": "gpt-5-pro-2025-10-06",
+            "run": "smoke_20251020_2037",
+            "total": 8,
+            "correct": 8,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 4,
+            "sat_correct": 4,
+            "sat_accuracy": 1.0,
+            "unsat_total": 4,
+            "unsat_correct": 4,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 46228.75,
+            "timestamp": 1760984736
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 8,
+              "correct": 8
+            }
+          }
+        },
+        "anthropic/claude-haiku-4-5-20251001/think-med": {
+          "provider": "anthropic",
+          "model": "claude-haiku-4-5-20251001",
+          "thinking_mode": "think-med",
+          "summary": {
+            "name": "cnf2_con_hornonly",
+            "provider": "anthropic",
+            "model": "claude-haiku-4-5-20251001",
+            "run": "validation_20251020_2235",
+            "total": 272,
+            "correct": 162,
+            "accuracy": 0.5955882352941176,
+            "unclear": 95,
+            "sat_total": 136,
+            "sat_correct": 74,
+            "sat_accuracy": 0.5441176470588235,
+            "unsat_total": 136,
+            "unsat_correct": 88,
+            "unsat_accuracy": 0.6470588235294118,
+            "avg_timing_ms": 17129.926553672318,
+            "timestamp": 1761011582
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.75,
+              "total": 16,
+              "correct": 12
+            },
+            "5": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "6": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "7": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "8": {
+              "accuracy": 0.8125,
+              "total": 16,
+              "correct": 13
+            },
+            "9": {
+              "accuracy": 0.875,
+              "total": 16,
+              "correct": 14
+            },
+            "10": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "11": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "12": {
+              "accuracy": 0.875,
+              "total": 16,
+              "correct": 14
+            },
+            "13": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "14": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "15": {
+              "accuracy": 0.0625,
+              "total": 16,
+              "correct": 1
+            },
+            "16": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "17": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "18": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "19": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "20": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            }
+          }
+        },
+        "openai/gpt-5-2025-08-07/think-high": {
+          "provider": "openai",
+          "model": "gpt-5-2025-08-07",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "cnf2_con_hornonly",
+            "provider": "openai",
+            "model": "gpt-5-2025-08-07",
+            "run": "validation_20251020_2235",
+            "total": 272,
+            "correct": 180,
+            "accuracy": 0.6617647058823529,
+            "unclear": 92,
+            "sat_total": 136,
+            "sat_correct": 90,
+            "sat_accuracy": 0.6617647058823529,
+            "unsat_total": 136,
+            "unsat_correct": 90,
+            "unsat_accuracy": 0.6617647058823529,
+            "avg_timing_ms": 28096.45,
+            "timestamp": 1761011582
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "5": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "6": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "7": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "8": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "9": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "10": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "11": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "12": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "13": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "14": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "15": {
+              "accuracy": 0.5625,
+              "total": 16,
+              "correct": 9
+            },
+            "16": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "17": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "18": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "19": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            },
+            "20": {
+              "accuracy": 0.0,
+              "total": 16,
+              "correct": 0
+            }
+          }
+        }
+      },
+      "summary": {
+        "total_models": 60,
+        "avg_accuracy": 0.6402310924369747,
+        "total_unclear": 1128
+      }
+    },
+    "cnf2_con_mixed": {
+      "name": "cnf2_con_mixed",
+      "models": {
+        "anthropic/claude-haiku-4-5-20251001/nothink": {
+          "provider": "anthropic",
+          "model": "claude-haiku-4-5-20251001",
+          "thinking_mode": "nothink",
+          "summary": {
+            "name": "cnf2_con_mixed",
+            "provider": "anthropic",
+            "model": "claude-haiku-4-5-20251001",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 4,
+            "accuracy": 0.8,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 2,
+            "sat_accuracy": 0.6666666666666666,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 4041.4,
+            "timestamp": 1760988349
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.8,
+              "total": 5,
+              "correct": 4
+            }
+          }
+        },
+        "anthropic/claude-haiku-4-5-20251001/think-low": {
+          "provider": "anthropic",
+          "model": "claude-haiku-4-5-20251001",
+          "thinking_mode": "think-low",
+          "summary": {
+            "name": "cnf2_con_mixed",
+            "provider": "anthropic",
+            "model": "claude-haiku-4-5-20251001",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 6640.4,
+            "timestamp": 1760988349
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "anthropic/claude-opus-4-1-20250805/think-med": {
+          "provider": "anthropic",
+          "model": "claude-opus-4-1-20250805",
+          "thinking_mode": "think-med",
+          "summary": {
+            "name": "cnf2_con_mixed",
+            "provider": "anthropic",
+            "model": "claude-opus-4-1-20250805",
+            "run": "smoke_20251020_2037",
+            "total": 8,
+            "correct": 8,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 4,
+            "sat_correct": 4,
+            "sat_accuracy": 1.0,
+            "unsat_total": 4,
+            "unsat_correct": 4,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 19547.375,
+            "timestamp": 1760985102
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 8,
+              "correct": 8
+            }
+          }
+        },
+        "anthropic/claude-sonnet-4-5-20250929/think-high": {
+          "provider": "anthropic",
+          "model": "claude-sonnet-4-5-20250929",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "cnf2_con_mixed",
+            "provider": "anthropic",
+            "model": "claude-sonnet-4-5-20250929",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 16298.6,
+            "timestamp": 1760988349
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "google/gemini-2.5-flash/think-med": {
+          "provider": "google",
+          "model": "gemini-2.5-flash",
+          "thinking_mode": "think-med",
+          "summary": {
+            "name": "cnf2_con_mixed",
+            "provider": "google",
+            "model": "gemini-2.5-flash",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 6549.6,
+            "timestamp": 1760988349
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "google/gemini-2.5-flash-lite/nothink": {
+          "provider": "google",
+          "model": "gemini-2.5-flash-lite",
+          "thinking_mode": "nothink",
+          "summary": {
+            "name": "cnf2_con_mixed",
+            "provider": "google",
+            "model": "gemini-2.5-flash-lite",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 2576.4,
+            "timestamp": 1760988349
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "google/gemini-2.5-flash-lite/think-low": {
+          "provider": "google",
+          "model": "gemini-2.5-flash-lite",
+          "thinking_mode": "think-low",
+          "summary": {
+            "name": "cnf2_con_mixed",
+            "provider": "google",
+            "model": "gemini-2.5-flash-lite",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 2929.0,
+            "timestamp": 1760988349
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "google/gemini-2.5-pro/think-high": {
+          "provider": "google",
+          "model": "gemini-2.5-pro",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "cnf2_con_mixed",
+            "provider": "google",
+            "model": "gemini-2.5-pro",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 14789.0,
+            "timestamp": 1760988349
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "openai/gpt-5-2025-08-07/think-medium": {
+          "provider": "openai",
+          "model": "gpt-5-2025-08-07",
+          "thinking_mode": "think-medium",
+          "summary": {
+            "name": "cnf2_con_mixed",
+            "provider": "openai",
+            "model": "gpt-5-2025-08-07",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 4903.0,
+            "timestamp": 1760988349
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "openai/gpt-5-mini-2025-08-07/think-low": {
+          "provider": "openai",
+          "model": "gpt-5-mini-2025-08-07",
+          "thinking_mode": "think-low",
+          "summary": {
+            "name": "cnf2_con_mixed",
+            "provider": "openai",
+            "model": "gpt-5-mini-2025-08-07",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 4170.6,
+            "timestamp": 1760988349
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "openai/gpt-5-nano-2025-08-07/nothink": {
+          "provider": "openai",
+          "model": "gpt-5-nano-2025-08-07",
+          "thinking_mode": "nothink",
+          "summary": {
+            "name": "cnf2_con_mixed",
+            "provider": "openai",
+            "model": "gpt-5-nano-2025-08-07",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 2,
+            "accuracy": 0.4,
+            "unclear": 3,
+            "sat_total": 3,
+            "sat_correct": 2,
+            "sat_accuracy": 0.6666666666666666,
+            "unsat_total": 2,
+            "unsat_correct": 0,
+            "unsat_accuracy": 0.0,
+            "avg_timing_ms": 13746.0,
+            "timestamp": 1760988349
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.4,
+              "total": 5,
+              "correct": 2
+            }
+          }
+        },
+        "openai/gpt-5-pro-2025-10-06/think-high": {
+          "provider": "openai",
+          "model": "gpt-5-pro-2025-10-06",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "cnf2_con_mixed",
+            "provider": "openai",
+            "model": "gpt-5-pro-2025-10-06",
+            "run": "smoke_20251020_2037",
+            "total": 8,
+            "correct": 8,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 4,
+            "sat_correct": 4,
+            "sat_accuracy": 1.0,
+            "unsat_total": 4,
+            "unsat_correct": 4,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 45681.125,
+            "timestamp": 1760985102
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 8,
+              "correct": 8
+            }
+          }
+        },
+        "anthropic/claude-haiku-4-5-20251001/think-med": {
+          "provider": "anthropic",
+          "model": "claude-haiku-4-5-20251001",
+          "thinking_mode": "think-med",
+          "summary": {
+            "name": "cnf2_con_mixed",
+            "provider": "anthropic",
+            "model": "claude-haiku-4-5-20251001",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 4,
+            "accuracy": 0.8,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 2,
+            "sat_accuracy": 0.6666666666666666,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 9892.2,
+            "timestamp": 1760988349
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.8,
+              "total": 5,
+              "correct": 4
+            }
+          }
+        },
+        "openai/gpt-5-2025-08-07/think-high": {
+          "provider": "openai",
+          "model": "gpt-5-2025-08-07",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "cnf2_con_mixed",
+            "provider": "openai",
+            "model": "gpt-5-2025-08-07",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 7674.2,
+            "timestamp": 1760988349
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        }
+      },
+      "summary": {
+        "total_models": 48,
+        "avg_accuracy": 0.9285714285714286,
+        "total_unclear": 3
+      }
+    },
+    "horn_yn_hornonly": {
+      "name": "horn_yn_hornonly",
+      "models": {
+        "anthropic/claude-haiku-4-5-20251001/nothink": {
+          "provider": "anthropic",
+          "model": "claude-haiku-4-5-20251001",
+          "thinking_mode": "nothink",
+          "summary": {
+            "name": "horn_yn_hornonly",
+            "provider": "anthropic",
+            "model": "claude-haiku-4-5-20251001",
+            "run": "validation_dryrun",
+            "total": 3,
+            "correct": 0,
+            "accuracy": 0.0,
+            "unclear": 3,
+            "sat_total": 2,
+            "sat_correct": 0,
+            "sat_accuracy": 0.0,
+            "unsat_total": 1,
+            "unsat_correct": 0,
+            "unsat_accuracy": 0.0,
+            "avg_timing_ms": 0.0,
+            "timestamp": 1760567621
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.0,
+              "total": 3,
+              "correct": 0
+            }
+          }
+        },
+        "anthropic/claude-haiku-4-5-20251001/think-low": {
+          "provider": "anthropic",
+          "model": "claude-haiku-4-5-20251001",
+          "thinking_mode": "think-low",
+          "summary": {
+            "name": "horn_yn_hornonly",
+            "provider": "anthropic",
+            "model": "claude-haiku-4-5-20251001",
+            "run": "validation_dryrun",
+            "total": 3,
+            "correct": 0,
+            "accuracy": 0.0,
+            "unclear": 3,
+            "sat_total": 2,
+            "sat_correct": 0,
+            "sat_accuracy": 0.0,
+            "unsat_total": 1,
+            "unsat_correct": 0,
+            "unsat_accuracy": 0.0,
+            "avg_timing_ms": 0.0,
+            "timestamp": 1760567621
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.0,
+              "total": 3,
+              "correct": 0
+            }
+          }
+        },
+        "anthropic/claude-opus-4-1-20250805/think-med": {
+          "provider": "anthropic",
+          "model": "claude-opus-4-1-20250805",
+          "thinking_mode": "think-med",
+          "summary": {
+            "name": "horn_yn_hornonly",
+            "provider": "anthropic",
+            "model": "claude-opus-4-1-20250805",
+            "run": "validation_dryrun",
+            "total": 3,
+            "correct": 0,
+            "accuracy": 0.0,
+            "unclear": 3,
+            "sat_total": 2,
+            "sat_correct": 0,
+            "sat_accuracy": 0.0,
+            "unsat_total": 1,
+            "unsat_correct": 0,
+            "unsat_accuracy": 0.0,
+            "avg_timing_ms": 0.0,
+            "timestamp": 1760567621
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.0,
+              "total": 3,
+              "correct": 0
+            }
+          }
+        },
+        "anthropic/claude-sonnet-4-5-20250929/think-high": {
+          "provider": "anthropic",
+          "model": "claude-sonnet-4-5-20250929",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "horn_yn_hornonly",
+            "provider": "anthropic",
+            "model": "claude-sonnet-4-5-20250929",
+            "run": "validation_dryrun",
+            "total": 3,
+            "correct": 0,
+            "accuracy": 0.0,
+            "unclear": 3,
+            "sat_total": 2,
+            "sat_correct": 0,
+            "sat_accuracy": 0.0,
+            "unsat_total": 1,
+            "unsat_correct": 0,
+            "unsat_accuracy": 0.0,
+            "avg_timing_ms": 0.0,
+            "timestamp": 1760567621
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.0,
+              "total": 3,
+              "correct": 0
+            }
+          }
+        },
+        "google/gemini-2.5-flash/think-med": {
+          "provider": "google",
+          "model": "gemini-2.5-flash",
+          "thinking_mode": "think-med",
+          "summary": {
+            "name": "horn_yn_hornonly",
+            "provider": "google",
+            "model": "gemini-2.5-flash",
+            "run": "validation_dryrun",
+            "total": 3,
+            "correct": 0,
+            "accuracy": 0.0,
+            "unclear": 3,
+            "sat_total": 2,
+            "sat_correct": 0,
+            "sat_accuracy": 0.0,
+            "unsat_total": 1,
+            "unsat_correct": 0,
+            "unsat_accuracy": 0.0,
+            "avg_timing_ms": 0.0,
+            "timestamp": 1760567621
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.0,
+              "total": 3,
+              "correct": 0
+            }
+          }
+        },
+        "google/gemini-2.5-flash-lite/nothink": {
+          "provider": "google",
+          "model": "gemini-2.5-flash-lite",
+          "thinking_mode": "nothink",
+          "summary": {
+            "name": "horn_yn_hornonly",
+            "provider": "google",
+            "model": "gemini-2.5-flash-lite",
+            "run": "validation_dryrun",
+            "total": 3,
+            "correct": 0,
+            "accuracy": 0.0,
+            "unclear": 3,
+            "sat_total": 2,
+            "sat_correct": 0,
+            "sat_accuracy": 0.0,
+            "unsat_total": 1,
+            "unsat_correct": 0,
+            "unsat_accuracy": 0.0,
+            "avg_timing_ms": 0.0,
+            "timestamp": 1760567621
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.0,
+              "total": 3,
+              "correct": 0
+            }
+          }
+        },
+        "google/gemini-2.5-flash-lite/think-low": {
+          "provider": "google",
+          "model": "gemini-2.5-flash-lite",
+          "thinking_mode": "think-low",
+          "summary": {
+            "name": "horn_yn_hornonly",
+            "provider": "google",
+            "model": "gemini-2.5-flash-lite",
+            "run": "validation_dryrun",
+            "total": 3,
+            "correct": 0,
+            "accuracy": 0.0,
+            "unclear": 3,
+            "sat_total": 2,
+            "sat_correct": 0,
+            "sat_accuracy": 0.0,
+            "unsat_total": 1,
+            "unsat_correct": 0,
+            "unsat_accuracy": 0.0,
+            "avg_timing_ms": 0.0,
+            "timestamp": 1760567621
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.0,
+              "total": 3,
+              "correct": 0
+            }
+          }
+        },
+        "google/gemini-2.5-pro/think-high": {
+          "provider": "google",
+          "model": "gemini-2.5-pro",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "horn_yn_hornonly",
+            "provider": "google",
+            "model": "gemini-2.5-pro",
+            "run": "validation_dryrun",
+            "total": 3,
+            "correct": 0,
+            "accuracy": 0.0,
+            "unclear": 3,
+            "sat_total": 2,
+            "sat_correct": 0,
+            "sat_accuracy": 0.0,
+            "unsat_total": 1,
+            "unsat_correct": 0,
+            "unsat_accuracy": 0.0,
+            "avg_timing_ms": 0.0,
+            "timestamp": 1760567621
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.0,
+              "total": 3,
+              "correct": 0
+            }
+          }
+        },
+        "openai/gpt-5-2025-08-07/think-medium": {
+          "provider": "openai",
+          "model": "gpt-5-2025-08-07",
+          "thinking_mode": "think-medium",
+          "summary": {
+            "name": "horn_yn_hornonly",
+            "provider": "openai",
+            "model": "gpt-5-2025-08-07",
+            "run": "validation_dryrun",
+            "total": 3,
+            "correct": 0,
+            "accuracy": 0.0,
+            "unclear": 3,
+            "sat_total": 2,
+            "sat_correct": 0,
+            "sat_accuracy": 0.0,
+            "unsat_total": 1,
+            "unsat_correct": 0,
+            "unsat_accuracy": 0.0,
+            "avg_timing_ms": 0.0,
+            "timestamp": 1760567621
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.0,
+              "total": 3,
+              "correct": 0
+            }
+          }
+        },
+        "openai/gpt-5-mini-2025-08-07/think-low": {
+          "provider": "openai",
+          "model": "gpt-5-mini-2025-08-07",
+          "thinking_mode": "think-low",
+          "summary": {
+            "name": "horn_yn_hornonly",
+            "provider": "openai",
+            "model": "gpt-5-mini-2025-08-07",
+            "run": "validation_dryrun",
+            "total": 3,
+            "correct": 0,
+            "accuracy": 0.0,
+            "unclear": 3,
+            "sat_total": 2,
+            "sat_correct": 0,
+            "sat_accuracy": 0.0,
+            "unsat_total": 1,
+            "unsat_correct": 0,
+            "unsat_accuracy": 0.0,
+            "avg_timing_ms": 0.0,
+            "timestamp": 1760567621
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.0,
+              "total": 3,
+              "correct": 0
+            }
+          }
+        },
+        "openai/gpt-5-nano-2025-08-07/nothink": {
+          "provider": "openai",
+          "model": "gpt-5-nano-2025-08-07",
+          "thinking_mode": "nothink",
+          "summary": {
+            "name": "horn_yn_hornonly",
+            "provider": "openai",
+            "model": "gpt-5-nano-2025-08-07",
+            "run": "validation_dryrun",
+            "total": 3,
+            "correct": 0,
+            "accuracy": 0.0,
+            "unclear": 3,
+            "sat_total": 2,
+            "sat_correct": 0,
+            "sat_accuracy": 0.0,
+            "unsat_total": 1,
+            "unsat_correct": 0,
+            "unsat_accuracy": 0.0,
+            "avg_timing_ms": 0.0,
+            "timestamp": 1760567621
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.0,
+              "total": 3,
+              "correct": 0
+            }
+          }
+        },
+        "openai/gpt-5-pro-2025-10-06/think-high": {
+          "provider": "openai",
+          "model": "gpt-5-pro-2025-10-06",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "horn_yn_hornonly",
+            "provider": "openai",
+            "model": "gpt-5-pro-2025-10-06",
+            "run": "validation_dryrun",
+            "total": 3,
+            "correct": 0,
+            "accuracy": 0.0,
+            "unclear": 3,
+            "sat_total": 2,
+            "sat_correct": 0,
+            "sat_accuracy": 0.0,
+            "unsat_total": 1,
+            "unsat_correct": 0,
+            "unsat_accuracy": 0.0,
+            "avg_timing_ms": 0.0,
+            "timestamp": 1760567621
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.0,
+              "total": 3,
+              "correct": 0
+            }
+          }
+        },
+        "anthropic/claude-haiku-4-5-20251001/think-med": {
+          "provider": "anthropic",
+          "model": "claude-haiku-4-5-20251001",
+          "thinking_mode": "think-med",
+          "summary": {
+            "name": "horn_yn_hornonly",
+            "provider": "anthropic",
+            "model": "claude-haiku-4-5-20251001",
+            "run": "validation_20251020_2235",
+            "total": 272,
+            "correct": 271,
+            "accuracy": 0.9963235294117647,
+            "unclear": 0,
+            "sat_total": 136,
+            "sat_correct": 136,
+            "sat_accuracy": 1.0,
+            "unsat_total": 136,
+            "unsat_correct": 135,
+            "unsat_accuracy": 0.9926470588235294,
+            "avg_timing_ms": 14916.069852941177,
+            "timestamp": 1761000789
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "5": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "6": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "7": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "8": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "9": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "10": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "11": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "12": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "13": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "14": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "15": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "16": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "17": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "18": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "19": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "20": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            }
+          }
+        },
+        "openai/gpt-5-2025-08-07/think-high": {
+          "provider": "openai",
+          "model": "gpt-5-2025-08-07",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "horn_yn_hornonly",
+            "provider": "openai",
+            "model": "gpt-5-2025-08-07",
+            "run": "validation_20251020_2235",
+            "total": 272,
+            "correct": 269,
+            "accuracy": 0.9889705882352942,
+            "unclear": 3,
+            "sat_total": 136,
+            "sat_correct": 133,
+            "sat_accuracy": 0.9779411764705882,
+            "unsat_total": 136,
+            "unsat_correct": 136,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 19248.79182156134,
+            "timestamp": 1761000789
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "5": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "6": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "7": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "8": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "9": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "10": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "11": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "12": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "13": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "14": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "15": {
+              "accuracy": 0.875,
+              "total": 16,
+              "correct": 14
+            },
+            "16": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "17": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "18": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            },
+            "19": {
+              "accuracy": 0.9375,
+              "total": 16,
+              "correct": 15
+            },
+            "20": {
+              "accuracy": 1.0,
+              "total": 16,
+              "correct": 16
+            }
+          }
+        }
+      },
+      "summary": {
+        "total_models": 108,
+        "avg_accuracy": 0.14180672268907563,
+        "total_unclear": 39
+      }
+    },
+    "horn_yn_mixed": {
+      "name": "horn_yn_mixed",
+      "models": {
+        "anthropic/claude-haiku-4-5-20251001/nothink": {
+          "provider": "anthropic",
+          "model": "claude-haiku-4-5-20251001",
+          "thinking_mode": "nothink",
+          "summary": {
+            "name": "horn_yn_mixed",
+            "provider": "anthropic",
+            "model": "claude-haiku-4-5-20251001",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 3446.8,
+            "timestamp": 1760988415
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "anthropic/claude-haiku-4-5-20251001/think-low": {
+          "provider": "anthropic",
+          "model": "claude-haiku-4-5-20251001",
+          "thinking_mode": "think-low",
+          "summary": {
+            "name": "horn_yn_mixed",
+            "provider": "anthropic",
+            "model": "claude-haiku-4-5-20251001",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 4506.0,
+            "timestamp": 1760988415
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "anthropic/claude-opus-4-1-20250805/think-med": {
+          "provider": "anthropic",
+          "model": "claude-opus-4-1-20250805",
+          "thinking_mode": "think-med",
+          "summary": {
+            "name": "horn_yn_mixed",
+            "provider": "anthropic",
+            "model": "claude-opus-4-1-20250805",
+            "run": "smoke_20251020_2037",
+            "total": 8,
+            "correct": 8,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 4,
+            "sat_correct": 4,
+            "sat_accuracy": 1.0,
+            "unsat_total": 4,
+            "unsat_correct": 4,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 21224.625,
+            "timestamp": 1760983111
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 8,
+              "correct": 8
+            }
+          }
+        },
+        "anthropic/claude-sonnet-4-5-20250929/think-high": {
+          "provider": "anthropic",
+          "model": "claude-sonnet-4-5-20250929",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "horn_yn_mixed",
+            "provider": "anthropic",
+            "model": "claude-sonnet-4-5-20250929",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 23772.0,
+            "timestamp": 1760988415
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "google/gemini-2.5-flash/think-med": {
+          "provider": "google",
+          "model": "gemini-2.5-flash",
+          "thinking_mode": "think-med",
+          "summary": {
+            "name": "horn_yn_mixed",
+            "provider": "google",
+            "model": "gemini-2.5-flash",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 4,
+            "accuracy": 0.8,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 2,
+            "sat_accuracy": 0.6666666666666666,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 10045.0,
+            "timestamp": 1760988415
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.8,
+              "total": 5,
+              "correct": 4
+            }
+          }
+        },
+        "google/gemini-2.5-flash-lite/nothink": {
+          "provider": "google",
+          "model": "gemini-2.5-flash-lite",
+          "thinking_mode": "nothink",
+          "summary": {
+            "name": "horn_yn_mixed",
+            "provider": "google",
+            "model": "gemini-2.5-flash-lite",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 4,
+            "accuracy": 0.8,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 1,
+            "unsat_accuracy": 0.5,
+            "avg_timing_ms": 762.8,
+            "timestamp": 1760988415
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.8,
+              "total": 5,
+              "correct": 4
+            }
+          }
+        },
+        "google/gemini-2.5-flash-lite/think-low": {
+          "provider": "google",
+          "model": "gemini-2.5-flash-lite",
+          "thinking_mode": "think-low",
+          "summary": {
+            "name": "horn_yn_mixed",
+            "provider": "google",
+            "model": "gemini-2.5-flash-lite",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 4,
+            "accuracy": 0.8,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 2,
+            "sat_accuracy": 0.6666666666666666,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 2530.4,
+            "timestamp": 1760988415
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.8,
+              "total": 5,
+              "correct": 4
+            }
+          }
+        },
+        "google/gemini-2.5-pro/think-high": {
+          "provider": "google",
+          "model": "gemini-2.5-pro",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "horn_yn_mixed",
+            "provider": "google",
+            "model": "gemini-2.5-pro",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 17239.0,
+            "timestamp": 1760988415
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "openai/gpt-5-2025-08-07/think-medium": {
+          "provider": "openai",
+          "model": "gpt-5-2025-08-07",
+          "thinking_mode": "think-medium",
+          "summary": {
+            "name": "horn_yn_mixed",
+            "provider": "openai",
+            "model": "gpt-5-2025-08-07",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 6356.6,
+            "timestamp": 1760988415
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "openai/gpt-5-mini-2025-08-07/think-low": {
+          "provider": "openai",
+          "model": "gpt-5-mini-2025-08-07",
+          "thinking_mode": "think-low",
+          "summary": {
+            "name": "horn_yn_mixed",
+            "provider": "openai",
+            "model": "gpt-5-mini-2025-08-07",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 3953.2,
+            "timestamp": 1760988415
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "openai/gpt-5-nano-2025-08-07/nothink": {
+          "provider": "openai",
+          "model": "gpt-5-nano-2025-08-07",
+          "thinking_mode": "nothink",
+          "summary": {
+            "name": "horn_yn_mixed",
+            "provider": "openai",
+            "model": "gpt-5-nano-2025-08-07",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 6370.0,
+            "timestamp": 1760988415
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        },
+        "openai/gpt-5-pro-2025-10-06/think-high": {
+          "provider": "openai",
+          "model": "gpt-5-pro-2025-10-06",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "horn_yn_mixed",
+            "provider": "openai",
+            "model": "gpt-5-pro-2025-10-06",
+            "run": "smoke_20251020_2037",
+            "total": 8,
+            "correct": 4,
+            "accuracy": 0.5,
+            "unclear": 4,
+            "sat_total": 4,
+            "sat_correct": 2,
+            "sat_accuracy": 0.5,
+            "unsat_total": 4,
+            "unsat_correct": 2,
+            "unsat_accuracy": 0.5,
+            "avg_timing_ms": 35651.5,
+            "timestamp": 1760983111
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.5,
+              "total": 8,
+              "correct": 4
+            }
+          }
+        },
+        "anthropic/claude-haiku-4-5-20251001/think-med": {
+          "provider": "anthropic",
+          "model": "claude-haiku-4-5-20251001",
+          "thinking_mode": "think-med",
+          "summary": {
+            "name": "horn_yn_mixed",
+            "provider": "anthropic",
+            "model": "claude-haiku-4-5-20251001",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 4,
+            "accuracy": 0.8,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 2,
+            "sat_accuracy": 0.6666666666666666,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 7967.4,
+            "timestamp": 1760988415
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 0.8,
+              "total": 5,
+              "correct": 4
+            }
+          }
+        },
+        "openai/gpt-5-2025-08-07/think-high": {
+          "provider": "openai",
+          "model": "gpt-5-2025-08-07",
+          "thinking_mode": "think-high",
+          "summary": {
+            "name": "horn_yn_mixed",
+            "provider": "openai",
+            "model": "gpt-5-2025-08-07",
+            "run": "smoke_20251020_2224",
+            "total": 5,
+            "correct": 5,
+            "accuracy": 1.0,
+            "unclear": 0,
+            "sat_total": 3,
+            "sat_correct": 3,
+            "sat_accuracy": 1.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 10147.0,
+            "timestamp": 1760988415
+          },
+          "complexity_breakdown": {
+            "4": {
+              "accuracy": 1.0,
+              "total": 5,
+              "correct": 5
+            }
+          }
+        }
+      },
+      "summary": {
+        "total_models": 48,
+        "avg_accuracy": 0.9071428571428571,
+        "total_unclear": 4
+      }
+    },
+    "legacy_samples": {
+      "name": "legacy_samples",
+      "models": {
+        "full-20250929-1349/anthropic/claude-3-5-haiku-20241022": {
+          "provider": "full-20250929-1349",
+          "model": "anthropic",
+          "thinking_mode": "claude-3-5-haiku-20241022",
+          "summary": {
+            "name": "exp6_horn_yesno",
+            "provider": "anthropic",
+            "model": "claude-3-5-haiku-20241022",
+            "run": "full-20250929-1349",
+            "total": 520,
+            "correct": 286,
+            "accuracy": 0.55,
+            "unclear": 7,
+            "sat_total": 260,
+            "sat_correct": 55,
+            "sat_accuracy": 0.21153846153846154,
+            "unsat_total": 260,
+            "unsat_correct": 231,
+            "unsat_accuracy": 0.8884615384615384,
+            "avg_timing_ms": 4521.1910331384015,
+            "timestamp": 1759160727
+          },
+          "complexity_breakdown": {
+            "3": {
+              "accuracy": 0.725,
+              "total": 40,
+              "correct": 29
+            },
+            "4": {
+              "accuracy": 0.6,
+              "total": 40,
+              "correct": 24
+            },
+            "5": {
+              "accuracy": 0.625,
+              "total": 40,
+              "correct": 25
+            },
+            "6": {
+              "accuracy": 0.55,
+              "total": 40,
+              "correct": 22
+            },
+            "7": {
+              "accuracy": 0.575,
+              "total": 40,
+              "correct": 23
+            },
+            "8": {
+              "accuracy": 0.5,
+              "total": 40,
+              "correct": 20
+            },
+            "9": {
+              "accuracy": 0.575,
+              "total": 40,
+              "correct": 23
+            },
+            "10": {
+              "accuracy": 0.6,
+              "total": 40,
+              "correct": 24
+            },
+            "11": {
+              "accuracy": 0.5,
+              "total": 40,
+              "correct": 20
+            },
+            "12": {
+              "accuracy": 0.525,
+              "total": 40,
+              "correct": 21
+            },
+            "13": {
+              "accuracy": 0.375,
+              "total": 40,
+              "correct": 15
+            },
+            "14": {
+              "accuracy": 0.5,
+              "total": 40,
+              "correct": 20
+            },
+            "15": {
+              "accuracy": 0.5,
+              "total": 40,
+              "correct": 20
+            }
+          }
+        },
+        "full-20250929-1349/anthropic/claude-opus-4-1-20250805": {
+          "provider": "full-20250929-1349",
+          "model": "anthropic",
+          "thinking_mode": "claude-opus-4-1-20250805",
+          "summary": {
+            "name": "exp6_horn_yesno",
+            "provider": "anthropic",
+            "model": "claude-opus-4-1-20250805",
+            "run": "full-20250929-1349",
+            "total": 520,
+            "correct": 515,
+            "accuracy": 0.9903846153846154,
+            "unclear": 5,
+            "sat_total": 260,
+            "sat_correct": 257,
+            "sat_accuracy": 0.9884615384615385,
+            "unsat_total": 260,
+            "unsat_correct": 258,
+            "unsat_accuracy": 0.9923076923076923,
+            "avg_timing_ms": 23039.009708737864,
+            "timestamp": 1759160727
+          },
+          "complexity_breakdown": {
+            "3": {
+              "accuracy": 1.0,
+              "total": 40,
+              "correct": 40
+            },
+            "4": {
+              "accuracy": 1.0,
+              "total": 40,
+              "correct": 40
+            },
+            "5": {
+              "accuracy": 1.0,
+              "total": 40,
+              "correct": 40
+            },
+            "6": {
+              "accuracy": 1.0,
+              "total": 40,
+              "correct": 40
+            },
+            "7": {
+              "accuracy": 0.875,
+              "total": 40,
+              "correct": 35
+            },
+            "8": {
+              "accuracy": 1.0,
+              "total": 40,
+              "correct": 40
+            },
+            "9": {
+              "accuracy": 1.0,
+              "total": 40,
+              "correct": 40
+            },
+            "10": {
+              "accuracy": 1.0,
+              "total": 40,
+              "correct": 40
+            },
+            "11": {
+              "accuracy": 1.0,
+              "total": 40,
+              "correct": 40
+            },
+            "12": {
+              "accuracy": 1.0,
+              "total": 40,
+              "correct": 40
+            },
+            "13": {
+              "accuracy": 1.0,
+              "total": 40,
+              "correct": 40
+            },
+            "14": {
+              "accuracy": 1.0,
+              "total": 40,
+              "correct": 40
+            },
+            "15": {
+              "accuracy": 1.0,
+              "total": 40,
+              "correct": 40
+            }
+          }
+        },
+        "full-20250929-1349/anthropic/claude-sonnet-4-20250514": {
+          "provider": "full-20250929-1349",
+          "model": "anthropic",
+          "thinking_mode": "claude-sonnet-4-20250514",
+          "summary": {
+            "name": "exp6_horn_yesno",
+            "provider": "anthropic",
+            "model": "claude-sonnet-4-20250514",
+            "run": "full-20250929-1349",
+            "total": 520,
+            "correct": 514,
+            "accuracy": 0.9884615384615385,
+            "unclear": 5,
+            "sat_total": 260,
+            "sat_correct": 257,
+            "sat_accuracy": 0.9884615384615385,
+            "unsat_total": 260,
+            "unsat_correct": 257,
+            "unsat_accuracy": 0.9884615384615385,
+            "avg_timing_ms": 14509.271844660194,
+            "timestamp": 1759160727
+          },
+          "complexity_breakdown": {
+            "3": {
+              "accuracy": 1.0,
+              "total": 40,
+              "correct": 40
+            },
+            "4": {
+              "accuracy": 1.0,
+              "total": 40,
+              "correct": 40
+            },
+            "5": {
+              "accuracy": 1.0,
+              "total": 40,
+              "correct": 40
+            },
+            "6": {
+              "accuracy": 1.0,
+              "total": 40,
+              "correct": 40
+            },
+            "7": {
+              "accuracy": 0.875,
+              "total": 40,
+              "correct": 35
+            },
+            "8": {
+              "accuracy": 1.0,
+              "total": 40,
+              "correct": 40
+            },
+            "9": {
+              "accuracy": 1.0,
+              "total": 40,
+              "correct": 40
+            },
+            "10": {
+              "accuracy": 1.0,
+              "total": 40,
+              "correct": 40
+            },
+            "11": {
+              "accuracy": 1.0,
+              "total": 40,
+              "correct": 40
+            },
+            "12": {
+              "accuracy": 1.0,
+              "total": 40,
+              "correct": 40
+            },
+            "13": {
+              "accuracy": 1.0,
+              "total": 40,
+              "correct": 40
+            },
+            "14": {
+              "accuracy": 0.975,
+              "total": 40,
+              "correct": 39
+            },
+            "15": {
+              "accuracy": 1.0,
+              "total": 40,
+              "correct": 40
+            }
+          }
+        },
+        "full-20250929-1349/google/gemini-2.5-flash": {
+          "provider": "full-20250929-1349",
+          "model": "google",
+          "thinking_mode": "gemini-2.5-flash",
+          "summary": {
+            "name": "exp6_horn_yesno",
+            "provider": "google",
+            "model": "gemini-2.5-flash",
+            "run": "full-20250929-1349",
+            "total": 520,
+            "correct": 330,
+            "accuracy": 0.6346153846153846,
+            "unclear": 0,
+            "sat_total": 260,
+            "sat_correct": 84,
+            "sat_accuracy": 0.3230769230769231,
+            "unsat_total": 260,
+            "unsat_correct": 246,
+            "unsat_accuracy": 0.9461538461538461,
+            "avg_timing_ms": 503.6826923076923,
+            "timestamp": 1759160727
+          },
+          "complexity_breakdown": {
+            "3": {
+              "accuracy": 0.725,
+              "total": 40,
+              "correct": 29
+            },
+            "4": {
+              "accuracy": 0.65,
+              "total": 40,
+              "correct": 26
+            },
+            "5": {
+              "accuracy": 0.65,
+              "total": 40,
+              "correct": 26
+            },
+            "6": {
+              "accuracy": 0.65,
+              "total": 40,
+              "correct": 26
+            },
+            "7": {
+              "accuracy": 0.55,
+              "total": 40,
+              "correct": 22
+            },
+            "8": {
+              "accuracy": 0.6,
+              "total": 40,
+              "correct": 24
+            },
+            "9": {
+              "accuracy": 0.7,
+              "total": 40,
+              "correct": 28
+            },
+            "10": {
+              "accuracy": 0.6,
+              "total": 40,
+              "correct": 24
+            },
+            "11": {
+              "accuracy": 0.625,
+              "total": 40,
+              "correct": 25
+            },
+            "12": {
+              "accuracy": 0.7,
+              "total": 40,
+              "correct": 28
+            },
+            "13": {
+              "accuracy": 0.575,
+              "total": 40,
+              "correct": 23
+            },
+            "14": {
+              "accuracy": 0.675,
+              "total": 40,
+              "correct": 27
+            },
+            "15": {
+              "accuracy": 0.55,
+              "total": 40,
+              "correct": 22
+            }
+          }
+        },
+        "full-20250929-1349/google/gemini-2.5-flash-lite": {
+          "provider": "full-20250929-1349",
+          "model": "google",
+          "thinking_mode": "gemini-2.5-flash-lite",
+          "summary": {
+            "name": "exp6_horn_yesno",
+            "provider": "google",
+            "model": "gemini-2.5-flash-lite",
+            "run": "full-20250929-1349",
+            "total": 520,
+            "correct": 413,
+            "accuracy": 0.7942307692307692,
+            "unclear": 66,
+            "sat_total": 260,
+            "sat_correct": 175,
+            "sat_accuracy": 0.6730769230769231,
+            "unsat_total": 260,
+            "unsat_correct": 238,
+            "unsat_accuracy": 0.9153846153846154,
+            "avg_timing_ms": 2280.0730769230768,
+            "timestamp": 1759160727
+          },
+          "complexity_breakdown": {
+            "3": {
+              "accuracy": 0.825,
+              "total": 40,
+              "correct": 33
+            },
+            "4": {
+              "accuracy": 0.8,
+              "total": 40,
+              "correct": 32
+            },
+            "5": {
+              "accuracy": 0.875,
+              "total": 40,
+              "correct": 35
+            },
+            "6": {
+              "accuracy": 0.8,
+              "total": 40,
+              "correct": 32
+            },
+            "7": {
+              "accuracy": 0.925,
+              "total": 40,
+              "correct": 37
+            },
+            "8": {
+              "accuracy": 0.775,
+              "total": 40,
+              "correct": 31
+            },
+            "9": {
+              "accuracy": 0.85,
+              "total": 40,
+              "correct": 34
+            },
+            "10": {
+              "accuracy": 0.775,
+              "total": 40,
+              "correct": 31
+            },
+            "11": {
+              "accuracy": 0.775,
+              "total": 40,
+              "correct": 31
+            },
+            "12": {
+              "accuracy": 0.775,
+              "total": 40,
+              "correct": 31
+            },
+            "13": {
+              "accuracy": 0.75,
+              "total": 40,
+              "correct": 30
+            },
+            "14": {
+              "accuracy": 0.775,
+              "total": 40,
+              "correct": 31
+            },
+            "15": {
+              "accuracy": 0.625,
+              "total": 40,
+              "correct": 25
+            }
+          }
+        },
+        "full-20250929-1349/google/gemini-2.5-pro": {
+          "provider": "full-20250929-1349",
+          "model": "google",
+          "thinking_mode": "gemini-2.5-pro",
+          "summary": {
+            "name": "exp6_horn_yesno",
+            "provider": "google",
+            "model": "gemini-2.5-pro",
+            "run": "full-20250929-1349",
+            "total": 520,
+            "correct": 412,
+            "accuracy": 0.7923076923076923,
+            "unclear": 97,
+            "sat_total": 260,
+            "sat_correct": 183,
+            "sat_accuracy": 0.7038461538461539,
+            "unsat_total": 260,
+            "unsat_correct": 229,
+            "unsat_accuracy": 0.8807692307692307,
+            "avg_timing_ms": 18946.401923076923,
+            "timestamp": 1759160727
+          },
+          "complexity_breakdown": {
+            "3": {
+              "accuracy": 0.975,
+              "total": 40,
+              "correct": 39
+            },
+            "4": {
+              "accuracy": 1.0,
+              "total": 40,
+              "correct": 40
+            },
+            "5": {
+              "accuracy": 0.975,
+              "total": 40,
+              "correct": 39
+            },
+            "6": {
+              "accuracy": 0.875,
+              "total": 40,
+              "correct": 35
+            },
+            "7": {
+              "accuracy": 0.75,
+              "total": 40,
+              "correct": 30
+            },
+            "8": {
+              "accuracy": 0.75,
+              "total": 40,
+              "correct": 30
+            },
+            "9": {
+              "accuracy": 0.75,
+              "total": 40,
+              "correct": 30
+            },
+            "10": {
+              "accuracy": 0.7,
+              "total": 40,
+              "correct": 28
+            },
+            "11": {
+              "accuracy": 0.725,
+              "total": 40,
+              "correct": 29
+            },
+            "12": {
+              "accuracy": 0.675,
+              "total": 40,
+              "correct": 27
+            },
+            "13": {
+              "accuracy": 0.7,
+              "total": 40,
+              "correct": 28
+            },
+            "14": {
+              "accuracy": 0.775,
+              "total": 40,
+              "correct": 31
+            },
+            "15": {
+              "accuracy": 0.65,
+              "total": 40,
+              "correct": 26
+            }
+          }
+        },
+        "full-20250929-1349/openai/gpt-5-2025-08-07": {
+          "provider": "full-20250929-1349",
+          "model": "openai",
+          "thinking_mode": "gpt-5-2025-08-07",
+          "summary": {
+            "name": "exp6_horn_yesno",
+            "provider": "openai",
+            "model": "gpt-5-2025-08-07",
+            "run": "full-20250929-1349",
+            "total": 520,
+            "correct": 434,
+            "accuracy": 0.8346153846153846,
+            "unclear": 86,
+            "sat_total": 260,
+            "sat_correct": 175,
+            "sat_accuracy": 0.6730769230769231,
+            "unsat_total": 260,
+            "unsat_correct": 259,
+            "unsat_accuracy": 0.9961538461538462,
+            "avg_timing_ms": 14885.666666666666,
+            "timestamp": 1759160727
+          },
+          "complexity_breakdown": {
+            "3": {
+              "accuracy": 1.0,
+              "total": 40,
+              "correct": 40
+            },
+            "4": {
+              "accuracy": 1.0,
+              "total": 40,
+              "correct": 40
+            },
+            "5": {
+              "accuracy": 0.975,
+              "total": 40,
+              "correct": 39
+            },
+            "6": {
+              "accuracy": 0.925,
+              "total": 40,
+              "correct": 37
+            },
+            "7": {
+              "accuracy": 0.9,
+              "total": 40,
+              "correct": 36
+            },
+            "8": {
+              "accuracy": 0.9,
+              "total": 40,
+              "correct": 36
+            },
+            "9": {
+              "accuracy": 0.85,
+              "total": 40,
+              "correct": 34
+            },
+            "10": {
+              "accuracy": 0.8,
+              "total": 40,
+              "correct": 32
+            },
+            "11": {
+              "accuracy": 0.775,
+              "total": 40,
+              "correct": 31
+            },
+            "12": {
+              "accuracy": 0.675,
+              "total": 40,
+              "correct": 27
+            },
+            "13": {
+              "accuracy": 0.75,
+              "total": 40,
+              "correct": 30
+            },
+            "14": {
+              "accuracy": 0.675,
+              "total": 40,
+              "correct": 27
+            },
+            "15": {
+              "accuracy": 0.625,
+              "total": 40,
+              "correct": 25
+            }
+          }
+        },
+        "full-20250929-1349/openai/gpt-5-mini-2025-08-07": {
+          "provider": "full-20250929-1349",
+          "model": "openai",
+          "thinking_mode": "gpt-5-mini-2025-08-07",
+          "summary": {
+            "name": "exp6_horn_yesno",
+            "provider": "openai",
+            "model": "gpt-5-mini-2025-08-07",
+            "run": "full-20250929-1349",
+            "total": 520,
+            "correct": 482,
+            "accuracy": 0.926923076923077,
+            "unclear": 38,
+            "sat_total": 260,
+            "sat_correct": 223,
+            "sat_accuracy": 0.8576923076923076,
+            "unsat_total": 260,
+            "unsat_correct": 259,
+            "unsat_accuracy": 0.9961538461538462,
+            "avg_timing_ms": 14076.571153846155,
+            "timestamp": 1759160727
+          },
+          "complexity_breakdown": {
+            "3": {
+              "accuracy": 1.0,
+              "total": 40,
+              "correct": 40
+            },
+            "4": {
+              "accuracy": 1.0,
+              "total": 40,
+              "correct": 40
+            },
+            "5": {
+              "accuracy": 1.0,
+              "total": 40,
+              "correct": 40
+            },
+            "6": {
+              "accuracy": 1.0,
+              "total": 40,
+              "correct": 40
+            },
+            "7": {
+              "accuracy": 1.0,
+              "total": 40,
+              "correct": 40
+            },
+            "8": {
+              "accuracy": 0.975,
+              "total": 40,
+              "correct": 39
+            },
+            "9": {
+              "accuracy": 1.0,
+              "total": 40,
+              "correct": 40
+            },
+            "10": {
+              "accuracy": 0.95,
+              "total": 40,
+              "correct": 38
+            },
+            "11": {
+              "accuracy": 0.925,
+              "total": 40,
+              "correct": 37
+            },
+            "12": {
+              "accuracy": 0.825,
+              "total": 40,
+              "correct": 33
+            },
+            "13": {
+              "accuracy": 0.825,
+              "total": 40,
+              "correct": 33
+            },
+            "14": {
+              "accuracy": 0.75,
+              "total": 40,
+              "correct": 30
+            },
+            "15": {
+              "accuracy": 0.8,
+              "total": 40,
+              "correct": 32
+            }
+          }
+        },
+        "full-20250929-1349/openai/gpt-5-nano-2025-08-07": {
+          "provider": "full-20250929-1349",
+          "model": "openai",
+          "thinking_mode": "gpt-5-nano-2025-08-07",
+          "summary": {
+            "name": "exp6_horn_yesno",
+            "provider": "openai",
+            "model": "gpt-5-nano-2025-08-07",
+            "run": "full-20250929-1349",
+            "total": 520,
+            "correct": 421,
+            "accuracy": 0.8096153846153846,
+            "unclear": 97,
+            "sat_total": 260,
+            "sat_correct": 180,
+            "sat_accuracy": 0.6923076923076923,
+            "unsat_total": 260,
+            "unsat_correct": 241,
+            "unsat_accuracy": 0.926923076923077,
+            "avg_timing_ms": 8534.448076923078,
+            "timestamp": 1759160727
+          },
+          "complexity_breakdown": {
+            "3": {
+              "accuracy": 1.0,
+              "total": 40,
+              "correct": 40
+            },
+            "4": {
+              "accuracy": 0.975,
+              "total": 40,
+              "correct": 39
+            },
+            "5": {
+              "accuracy": 1.0,
+              "total": 40,
+              "correct": 40
+            },
+            "6": {
+              "accuracy": 0.975,
+              "total": 40,
+              "correct": 39
+            },
+            "7": {
+              "accuracy": 0.95,
+              "total": 40,
+              "correct": 38
+            },
+            "8": {
+              "accuracy": 0.95,
+              "total": 40,
+              "correct": 38
+            },
+            "9": {
+              "accuracy": 0.925,
+              "total": 40,
+              "correct": 37
+            },
+            "10": {
+              "accuracy": 0.825,
+              "total": 40,
+              "correct": 33
+            },
+            "11": {
+              "accuracy": 0.7,
+              "total": 40,
+              "correct": 28
+            },
+            "12": {
+              "accuracy": 0.7,
+              "total": 40,
+              "correct": 28
+            },
+            "13": {
+              "accuracy": 0.65,
+              "total": 40,
+              "correct": 26
+            },
+            "14": {
+              "accuracy": 0.475,
+              "total": 40,
+              "correct": 19
+            },
+            "15": {
+              "accuracy": 0.4,
+              "total": 40,
+              "correct": 16
+            }
+          }
+        },
+        "smoke-20251014-1444/anthropic/claude-3-5-haiku-20241022": {
+          "provider": "smoke-20251014-1444",
+          "model": "anthropic",
+          "thinking_mode": "claude-3-5-haiku-20241022",
+          "summary": {
+            "name": "exp9_mixed_cnf_v1",
+            "provider": "anthropic",
+            "model": "claude-3-5-haiku-20241022",
+            "run": "smoke-20251014-1444",
+            "total": 5,
+            "correct": 1,
+            "accuracy": 0.2,
+            "unclear": 4,
+            "sat_total": 3,
+            "sat_correct": 1,
+            "sat_accuracy": 0.3333333333333333,
+            "unsat_total": 2,
+            "unsat_correct": 0,
+            "unsat_accuracy": 0.0,
+            "avg_timing_ms": 6405.0,
+            "timestamp": 1760443212
+          },
+          "complexity_breakdown": {
+            "10": {
+              "accuracy": 0.2,
+              "total": 5,
+              "correct": 1
+            }
+          }
+        },
+        "smoke-20251014-1444/anthropic/claude-opus-4-1-20250805": {
+          "provider": "smoke-20251014-1444",
+          "model": "anthropic",
+          "thinking_mode": "claude-opus-4-1-20250805",
+          "summary": {
+            "name": "exp9_mixed_cnf_v1",
+            "provider": "anthropic",
+            "model": "claude-opus-4-1-20250805",
+            "run": "smoke-20251014-1444",
+            "total": 5,
+            "correct": 0,
+            "accuracy": 0.0,
+            "unclear": 5,
+            "sat_total": 3,
+            "sat_correct": 0,
+            "sat_accuracy": 0.0,
+            "unsat_total": 2,
+            "unsat_correct": 0,
+            "unsat_accuracy": 0.0,
+            "avg_timing_ms": null,
+            "timestamp": 1760443212
+          },
+          "complexity_breakdown": {
+            "10": {
+              "accuracy": 0.0,
+              "total": 5,
+              "correct": 0
+            }
+          }
+        },
+        "smoke-20251014-1444/anthropic/claude-sonnet-4-5-20250929": {
+          "provider": "smoke-20251014-1444",
+          "model": "anthropic",
+          "thinking_mode": "claude-sonnet-4-5-20250929",
+          "summary": {
+            "name": "exp9_mixed_cnf_v1",
+            "provider": "anthropic",
+            "model": "claude-sonnet-4-5-20250929",
+            "run": "smoke-20251014-1444",
+            "total": 5,
+            "correct": 0,
+            "accuracy": 0.0,
+            "unclear": 5,
+            "sat_total": 3,
+            "sat_correct": 0,
+            "sat_accuracy": 0.0,
+            "unsat_total": 2,
+            "unsat_correct": 0,
+            "unsat_accuracy": 0.0,
+            "avg_timing_ms": null,
+            "timestamp": 1760443212
+          },
+          "complexity_breakdown": {
+            "10": {
+              "accuracy": 0.0,
+              "total": 5,
+              "correct": 0
+            }
+          }
+        },
+        "smoke-20251014-1444/google/gemini-2.5-flash": {
+          "provider": "smoke-20251014-1444",
+          "model": "google",
+          "thinking_mode": "gemini-2.5-flash",
+          "summary": {
+            "name": "exp9_mixed_cnf_v1",
+            "provider": "google",
+            "model": "gemini-2.5-flash",
+            "run": "smoke-20251014-1444",
+            "total": 5,
+            "correct": 0,
+            "accuracy": 0.0,
+            "unclear": 5,
+            "sat_total": 3,
+            "sat_correct": 0,
+            "sat_accuracy": 0.0,
+            "unsat_total": 2,
+            "unsat_correct": 0,
+            "unsat_accuracy": 0.0,
+            "avg_timing_ms": 38337.8,
+            "timestamp": 1760443212
+          },
+          "complexity_breakdown": {
+            "10": {
+              "accuracy": 0.0,
+              "total": 5,
+              "correct": 0
+            }
+          }
+        },
+        "smoke-20251014-1444/google/gemini-2.5-flash-lite": {
+          "provider": "smoke-20251014-1444",
+          "model": "google",
+          "thinking_mode": "gemini-2.5-flash-lite",
+          "summary": {
+            "name": "exp9_mixed_cnf_v1",
+            "provider": "google",
+            "model": "gemini-2.5-flash-lite",
+            "run": "smoke-20251014-1444",
+            "total": 5,
+            "correct": 0,
+            "accuracy": 0.0,
+            "unclear": 5,
+            "sat_total": 3,
+            "sat_correct": 0,
+            "sat_accuracy": 0.0,
+            "unsat_total": 2,
+            "unsat_correct": 0,
+            "unsat_accuracy": 0.0,
+            "avg_timing_ms": 6001.8,
+            "timestamp": 1760443212
+          },
+          "complexity_breakdown": {
+            "10": {
+              "accuracy": 0.0,
+              "total": 5,
+              "correct": 0
+            }
+          }
+        },
+        "smoke-20251014-1444/google/gemini-2.5-pro": {
+          "provider": "smoke-20251014-1444",
+          "model": "google",
+          "thinking_mode": "gemini-2.5-pro",
+          "summary": {
+            "name": "exp9_mixed_cnf_v1",
+            "provider": "google",
+            "model": "gemini-2.5-pro",
+            "run": "smoke-20251014-1444",
+            "total": 5,
+            "correct": 0,
+            "accuracy": 0.0,
+            "unclear": 5,
+            "sat_total": 3,
+            "sat_correct": 0,
+            "sat_accuracy": 0.0,
+            "unsat_total": 2,
+            "unsat_correct": 0,
+            "unsat_accuracy": 0.0,
+            "avg_timing_ms": 45539.5,
+            "timestamp": 1760443212
+          },
+          "complexity_breakdown": {
+            "10": {
+              "accuracy": 0.0,
+              "total": 5,
+              "correct": 0
+            }
+          }
+        },
+        "smoke-20251014-1444/openai/gpt-5-2025-08-07": {
+          "provider": "smoke-20251014-1444",
+          "model": "openai",
+          "thinking_mode": "gpt-5-2025-08-07",
+          "summary": {
+            "name": "exp9_mixed_cnf_v1",
+            "provider": "openai",
+            "model": "gpt-5-2025-08-07",
+            "run": "smoke-20251014-1444",
+            "total": 5,
+            "correct": 2,
+            "accuracy": 0.4,
+            "unclear": 3,
+            "sat_total": 3,
+            "sat_correct": 0,
+            "sat_accuracy": 0.0,
+            "unsat_total": 2,
+            "unsat_correct": 2,
+            "unsat_accuracy": 1.0,
+            "avg_timing_ms": 36431.6,
+            "timestamp": 1760443212
+          },
+          "complexity_breakdown": {
+            "10": {
+              "accuracy": 0.4,
+              "total": 5,
+              "correct": 2
+            }
+          }
+        },
+        "smoke-20251014-1444/openai/gpt-5-mini-2025-08-07": {
+          "provider": "smoke-20251014-1444",
+          "model": "openai",
+          "thinking_mode": "gpt-5-mini-2025-08-07",
+          "summary": {
+            "name": "exp9_mixed_cnf_v1",
+            "provider": "openai",
+            "model": "gpt-5-mini-2025-08-07",
+            "run": "smoke-20251014-1444",
+            "total": 5,
+            "correct": 1,
+            "accuracy": 0.2,
+            "unclear": 4,
+            "sat_total": 3,
+            "sat_correct": 0,
+            "sat_accuracy": 0.0,
+            "unsat_total": 2,
+            "unsat_correct": 1,
+            "unsat_accuracy": 0.5,
+            "avg_timing_ms": 41518.0,
+            "timestamp": 1760443212
+          },
+          "complexity_breakdown": {
+            "10": {
+              "accuracy": 0.2,
+              "total": 5,
+              "correct": 1
+            }
+          }
+        },
+        "smoke-20251014-1444/openai/gpt-5-pro-2025-10-06": {
+          "provider": "smoke-20251014-1444",
+          "model": "openai",
+          "thinking_mode": "gpt-5-pro-2025-10-06",
+          "summary": {
+            "name": "exp9_mixed_cnf_v1",
+            "provider": "openai",
+            "model": "gpt-5-pro-2025-10-06",
+            "run": "smoke-20251014-1444",
+            "total": 5,
+            "correct": 0,
+            "accuracy": 0.0,
+            "unclear": 5,
+            "sat_total": 3,
+            "sat_correct": 0,
+            "sat_accuracy": 0.0,
+            "unsat_total": 2,
+            "unsat_correct": 0,
+            "unsat_accuracy": 0.0,
+            "avg_timing_ms": null,
+            "timestamp": 1760443212
+          },
+          "complexity_breakdown": {
+            "10": {
+              "accuracy": 0.0,
+              "total": 5,
+              "correct": 0
+            }
+          }
+        }
+      },
+      "summary": {
+        "total_models": 18,
+        "avg_accuracy": 0.45117521367521374,
+        "total_unclear": 442
+      }
+    }
+  },
+  "models": {
+    "anthropic/claude-haiku-4-5-20251001/nothink": {
+      "provider": "anthropic",
+      "model": "claude-haiku-4-5-20251001",
+      "thinking_mode": "nothink",
+      "experiments": {
+        "cnf1_con_hornonly": {
+          "accuracy": 0.4889705882352941,
+          "total": 272,
+          "correct": 133,
+          "unclear": 105
+        },
+        "cnf1_con_mixed": {
+          "accuracy": 0.8,
+          "total": 5,
+          "correct": 4,
+          "unclear": 0
+        },
+        "cnf2_con_hornonly": {
+          "accuracy": 0.5551470588235294,
+          "total": 272,
+          "correct": 151,
+          "unclear": 95
+        },
+        "cnf2_con_mixed": {
+          "accuracy": 0.8,
+          "total": 5,
+          "correct": 4,
+          "unclear": 0
+        },
+        "horn_yn_hornonly": {
+          "accuracy": 0.0,
+          "total": 3,
+          "correct": 0,
+          "unclear": 3
+        },
+        "horn_yn_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        }
+      }
+    },
+    "anthropic/claude-haiku-4-5-20251001/think-low": {
+      "provider": "anthropic",
+      "model": "claude-haiku-4-5-20251001",
+      "thinking_mode": "think-low",
+      "experiments": {
+        "cnf1_con_hornonly": {
+          "accuracy": 0.41911764705882354,
+          "total": 272,
+          "correct": 114,
+          "unclear": 105
+        },
+        "cnf1_con_mixed": {
+          "accuracy": 0.8,
+          "total": 5,
+          "correct": 4,
+          "unclear": 0
+        },
+        "cnf2_con_hornonly": {
+          "accuracy": 0.5,
+          "total": 272,
+          "correct": 136,
+          "unclear": 95
+        },
+        "cnf2_con_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "horn_yn_hornonly": {
+          "accuracy": 0.0,
+          "total": 3,
+          "correct": 0,
+          "unclear": 3
+        },
+        "horn_yn_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        }
+      }
+    },
+    "anthropic/claude-opus-4-1-20250805/think-med": {
+      "provider": "anthropic",
+      "model": "claude-opus-4-1-20250805",
+      "thinking_mode": "think-med",
+      "experiments": {
+        "cnf1_con_hornonly": {
+          "accuracy": 1.0,
+          "total": 8,
+          "correct": 8,
+          "unclear": 0
+        },
+        "cnf1_con_mixed": {
+          "accuracy": 1.0,
+          "total": 8,
+          "correct": 8,
+          "unclear": 0
+        },
+        "cnf2_con_hornonly": {
+          "accuracy": 1.0,
+          "total": 8,
+          "correct": 8,
+          "unclear": 0
+        },
+        "cnf2_con_mixed": {
+          "accuracy": 1.0,
+          "total": 8,
+          "correct": 8,
+          "unclear": 0
+        },
+        "horn_yn_hornonly": {
+          "accuracy": 0.0,
+          "total": 3,
+          "correct": 0,
+          "unclear": 3
+        },
+        "horn_yn_mixed": {
+          "accuracy": 1.0,
+          "total": 8,
+          "correct": 8,
+          "unclear": 0
+        }
+      }
+    },
+    "anthropic/claude-sonnet-4-5-20250929/think-high": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-4-5-20250929",
+      "thinking_mode": "think-high",
+      "experiments": {
+        "cnf1_con_hornonly": {
+          "accuracy": 0.5772058823529411,
+          "total": 272,
+          "correct": 157,
+          "unclear": 105
+        },
+        "cnf1_con_mixed": {
+          "accuracy": 0.6,
+          "total": 5,
+          "correct": 3,
+          "unclear": 0
+        },
+        "cnf2_con_hornonly": {
+          "accuracy": 0.6102941176470589,
+          "total": 272,
+          "correct": 166,
+          "unclear": 95
+        },
+        "cnf2_con_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "horn_yn_hornonly": {
+          "accuracy": 0.0,
+          "total": 3,
+          "correct": 0,
+          "unclear": 3
+        },
+        "horn_yn_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        }
+      }
+    },
+    "google/gemini-2.5-flash/think-med": {
+      "provider": "google",
+      "model": "gemini-2.5-flash",
+      "thinking_mode": "think-med",
+      "experiments": {
+        "cnf1_con_hornonly": {
+          "accuracy": 0.7757352941176471,
+          "total": 272,
+          "correct": 211,
+          "unclear": 44
+        },
+        "cnf1_con_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "cnf2_con_hornonly": {
+          "accuracy": 0.7647058823529411,
+          "total": 272,
+          "correct": 208,
+          "unclear": 37
+        },
+        "cnf2_con_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "horn_yn_hornonly": {
+          "accuracy": 0.0,
+          "total": 3,
+          "correct": 0,
+          "unclear": 3
+        },
+        "horn_yn_mixed": {
+          "accuracy": 0.8,
+          "total": 5,
+          "correct": 4,
+          "unclear": 0
+        }
+      }
+    },
+    "google/gemini-2.5-flash-lite/nothink": {
+      "provider": "google",
+      "model": "gemini-2.5-flash-lite",
+      "thinking_mode": "nothink",
+      "experiments": {
+        "cnf1_con_hornonly": {
+          "accuracy": 0.5992647058823529,
+          "total": 272,
+          "correct": 163,
+          "unclear": 34
+        },
+        "cnf1_con_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "cnf2_con_hornonly": {
+          "accuracy": 0.625,
+          "total": 272,
+          "correct": 170,
+          "unclear": 55
+        },
+        "cnf2_con_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "horn_yn_hornonly": {
+          "accuracy": 0.0,
+          "total": 3,
+          "correct": 0,
+          "unclear": 3
+        },
+        "horn_yn_mixed": {
+          "accuracy": 0.8,
+          "total": 5,
+          "correct": 4,
+          "unclear": 0
+        }
+      }
+    },
+    "google/gemini-2.5-flash-lite/think-low": {
+      "provider": "google",
+      "model": "gemini-2.5-flash-lite",
+      "thinking_mode": "think-low",
+      "experiments": {
+        "cnf1_con_hornonly": {
+          "accuracy": 0.5441176470588235,
+          "total": 272,
+          "correct": 148,
+          "unclear": 48
+        },
+        "cnf1_con_mixed": {
+          "accuracy": 0.8,
+          "total": 5,
+          "correct": 4,
+          "unclear": 0
+        },
+        "cnf2_con_hornonly": {
+          "accuracy": 0.49264705882352944,
+          "total": 272,
+          "correct": 134,
+          "unclear": 81
+        },
+        "cnf2_con_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "horn_yn_hornonly": {
+          "accuracy": 0.0,
+          "total": 3,
+          "correct": 0,
+          "unclear": 3
+        },
+        "horn_yn_mixed": {
+          "accuracy": 0.8,
+          "total": 5,
+          "correct": 4,
+          "unclear": 0
+        }
+      }
+    },
+    "google/gemini-2.5-pro/think-high": {
+      "provider": "google",
+      "model": "gemini-2.5-pro",
+      "thinking_mode": "think-high",
+      "experiments": {
+        "cnf1_con_hornonly": {
+          "accuracy": 0.6764705882352942,
+          "total": 272,
+          "correct": 184,
+          "unclear": 78
+        },
+        "cnf1_con_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "cnf2_con_hornonly": {
+          "accuracy": 0.7169117647058824,
+          "total": 272,
+          "correct": 195,
+          "unclear": 65
+        },
+        "cnf2_con_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "horn_yn_hornonly": {
+          "accuracy": 0.0,
+          "total": 3,
+          "correct": 0,
+          "unclear": 3
+        },
+        "horn_yn_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        }
+      }
+    },
+    "openai/gpt-5-2025-08-07/think-medium": {
+      "provider": "openai",
+      "model": "gpt-5-2025-08-07",
+      "thinking_mode": "think-medium",
+      "experiments": {
+        "cnf1_con_hornonly": {
+          "accuracy": 0.6176470588235294,
+          "total": 272,
+          "correct": 168,
+          "unclear": 104
+        },
+        "cnf1_con_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "cnf2_con_hornonly": {
+          "accuracy": 0.6764705882352942,
+          "total": 272,
+          "correct": 184,
+          "unclear": 88
+        },
+        "cnf2_con_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "horn_yn_hornonly": {
+          "accuracy": 0.0,
+          "total": 3,
+          "correct": 0,
+          "unclear": 3
+        },
+        "horn_yn_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        }
+      }
+    },
+    "openai/gpt-5-mini-2025-08-07/think-low": {
+      "provider": "openai",
+      "model": "gpt-5-mini-2025-08-07",
+      "thinking_mode": "think-low",
+      "experiments": {
+        "cnf1_con_hornonly": {
+          "accuracy": 0.5845588235294118,
+          "total": 272,
+          "correct": 159,
+          "unclear": 106
+        },
+        "cnf1_con_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "cnf2_con_hornonly": {
+          "accuracy": 0.6617647058823529,
+          "total": 272,
+          "correct": 180,
+          "unclear": 87
+        },
+        "cnf2_con_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "horn_yn_hornonly": {
+          "accuracy": 0.0,
+          "total": 3,
+          "correct": 0,
+          "unclear": 3
+        },
+        "horn_yn_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        }
+      }
+    },
+    "openai/gpt-5-nano-2025-08-07/nothink": {
+      "provider": "openai",
+      "model": "gpt-5-nano-2025-08-07",
+      "thinking_mode": "nothink",
+      "experiments": {
+        "cnf1_con_hornonly": {
+          "accuracy": 0.26838235294117646,
+          "total": 272,
+          "correct": 73,
+          "unclear": 199
+        },
+        "cnf1_con_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "cnf2_con_hornonly": {
+          "accuracy": 0.10294117647058823,
+          "total": 272,
+          "correct": 28,
+          "unclear": 243
+        },
+        "cnf2_con_mixed": {
+          "accuracy": 0.4,
+          "total": 5,
+          "correct": 2,
+          "unclear": 3
+        },
+        "horn_yn_hornonly": {
+          "accuracy": 0.0,
+          "total": 3,
+          "correct": 0,
+          "unclear": 3
+        },
+        "horn_yn_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        }
+      }
+    },
+    "openai/gpt-5-pro-2025-10-06/think-high": {
+      "provider": "openai",
+      "model": "gpt-5-pro-2025-10-06",
+      "thinking_mode": "think-high",
+      "experiments": {
+        "cnf1_con_hornonly": {
+          "accuracy": 0.875,
+          "total": 8,
+          "correct": 7,
+          "unclear": 1
+        },
+        "cnf1_con_mixed": {
+          "accuracy": 1.0,
+          "total": 8,
+          "correct": 8,
+          "unclear": 0
+        },
+        "cnf2_con_hornonly": {
+          "accuracy": 1.0,
+          "total": 8,
+          "correct": 8,
+          "unclear": 0
+        },
+        "cnf2_con_mixed": {
+          "accuracy": 1.0,
+          "total": 8,
+          "correct": 8,
+          "unclear": 0
+        },
+        "horn_yn_hornonly": {
+          "accuracy": 0.0,
+          "total": 3,
+          "correct": 0,
+          "unclear": 3
+        },
+        "horn_yn_mixed": {
+          "accuracy": 0.5,
+          "total": 8,
+          "correct": 4,
+          "unclear": 4
+        }
+      }
+    },
+    "anthropic/claude-haiku-4-5-20251001/think-med": {
+      "provider": "anthropic",
+      "model": "claude-haiku-4-5-20251001",
+      "thinking_mode": "think-med",
+      "experiments": {
+        "cnf1_con_hornonly": {
+          "accuracy": 0.5661764705882353,
+          "total": 272,
+          "correct": 154,
+          "unclear": 105
+        },
+        "cnf1_con_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "cnf2_con_hornonly": {
+          "accuracy": 0.5955882352941176,
+          "total": 272,
+          "correct": 162,
+          "unclear": 95
+        },
+        "cnf2_con_mixed": {
+          "accuracy": 0.8,
+          "total": 5,
+          "correct": 4,
+          "unclear": 0
+        },
+        "horn_yn_hornonly": {
+          "accuracy": 0.9963235294117647,
+          "total": 272,
+          "correct": 271,
+          "unclear": 0
+        },
+        "horn_yn_mixed": {
+          "accuracy": 0.8,
+          "total": 5,
+          "correct": 4,
+          "unclear": 0
+        }
+      }
+    },
+    "openai/gpt-5-2025-08-07/think-high": {
+      "provider": "openai",
+      "model": "gpt-5-2025-08-07",
+      "thinking_mode": "think-high",
+      "experiments": {
+        "cnf1_con_hornonly": {
+          "accuracy": 0.5992647058823529,
+          "total": 272,
+          "correct": 163,
+          "unclear": 109
+        },
+        "cnf1_con_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "cnf2_con_hornonly": {
+          "accuracy": 0.6617647058823529,
+          "total": 272,
+          "correct": 180,
+          "unclear": 92
+        },
+        "cnf2_con_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        },
+        "horn_yn_hornonly": {
+          "accuracy": 0.9889705882352942,
+          "total": 272,
+          "correct": 269,
+          "unclear": 3
+        },
+        "horn_yn_mixed": {
+          "accuracy": 1.0,
+          "total": 5,
+          "correct": 5,
+          "unclear": 0
+        }
+      }
+    },
+    "full-20250929-1349/anthropic/claude-3-5-haiku-20241022": {
+      "provider": "full-20250929-1349",
+      "model": "anthropic",
+      "thinking_mode": "claude-3-5-haiku-20241022",
+      "experiments": {
+        "legacy_samples": {
+          "accuracy": 0.55,
+          "total": 520,
+          "correct": 286,
+          "unclear": 7
+        }
+      }
+    },
+    "full-20250929-1349/anthropic/claude-opus-4-1-20250805": {
+      "provider": "full-20250929-1349",
+      "model": "anthropic",
+      "thinking_mode": "claude-opus-4-1-20250805",
+      "experiments": {
+        "legacy_samples": {
+          "accuracy": 0.9903846153846154,
+          "total": 520,
+          "correct": 515,
+          "unclear": 5
+        }
+      }
+    },
+    "full-20250929-1349/anthropic/claude-sonnet-4-20250514": {
+      "provider": "full-20250929-1349",
+      "model": "anthropic",
+      "thinking_mode": "claude-sonnet-4-20250514",
+      "experiments": {
+        "legacy_samples": {
+          "accuracy": 0.9884615384615385,
+          "total": 520,
+          "correct": 514,
+          "unclear": 5
+        }
+      }
+    },
+    "full-20250929-1349/google/gemini-2.5-flash": {
+      "provider": "full-20250929-1349",
+      "model": "google",
+      "thinking_mode": "gemini-2.5-flash",
+      "experiments": {
+        "legacy_samples": {
+          "accuracy": 0.6346153846153846,
+          "total": 520,
+          "correct": 330,
+          "unclear": 0
+        }
+      }
+    },
+    "full-20250929-1349/google/gemini-2.5-flash-lite": {
+      "provider": "full-20250929-1349",
+      "model": "google",
+      "thinking_mode": "gemini-2.5-flash-lite",
+      "experiments": {
+        "legacy_samples": {
+          "accuracy": 0.7942307692307692,
+          "total": 520,
+          "correct": 413,
+          "unclear": 66
+        }
+      }
+    },
+    "full-20250929-1349/google/gemini-2.5-pro": {
+      "provider": "full-20250929-1349",
+      "model": "google",
+      "thinking_mode": "gemini-2.5-pro",
+      "experiments": {
+        "legacy_samples": {
+          "accuracy": 0.7923076923076923,
+          "total": 520,
+          "correct": 412,
+          "unclear": 97
+        }
+      }
+    },
+    "full-20250929-1349/openai/gpt-5-2025-08-07": {
+      "provider": "full-20250929-1349",
+      "model": "openai",
+      "thinking_mode": "gpt-5-2025-08-07",
+      "experiments": {
+        "legacy_samples": {
+          "accuracy": 0.8346153846153846,
+          "total": 520,
+          "correct": 434,
+          "unclear": 86
+        }
+      }
+    },
+    "full-20250929-1349/openai/gpt-5-mini-2025-08-07": {
+      "provider": "full-20250929-1349",
+      "model": "openai",
+      "thinking_mode": "gpt-5-mini-2025-08-07",
+      "experiments": {
+        "legacy_samples": {
+          "accuracy": 0.926923076923077,
+          "total": 520,
+          "correct": 482,
+          "unclear": 38
+        }
+      }
+    },
+    "full-20250929-1349/openai/gpt-5-nano-2025-08-07": {
+      "provider": "full-20250929-1349",
+      "model": "openai",
+      "thinking_mode": "gpt-5-nano-2025-08-07",
+      "experiments": {
+        "legacy_samples": {
+          "accuracy": 0.8096153846153846,
+          "total": 520,
+          "correct": 421,
+          "unclear": 97
+        }
+      }
+    },
+    "smoke-20251014-1444/anthropic/claude-3-5-haiku-20241022": {
+      "provider": "smoke-20251014-1444",
+      "model": "anthropic",
+      "thinking_mode": "claude-3-5-haiku-20241022",
+      "experiments": {
+        "legacy_samples": {
+          "accuracy": 0.2,
+          "total": 5,
+          "correct": 1,
+          "unclear": 4
+        }
+      }
+    },
+    "smoke-20251014-1444/anthropic/claude-opus-4-1-20250805": {
+      "provider": "smoke-20251014-1444",
+      "model": "anthropic",
+      "thinking_mode": "claude-opus-4-1-20250805",
+      "experiments": {
+        "legacy_samples": {
+          "accuracy": 0.0,
+          "total": 5,
+          "correct": 0,
+          "unclear": 5
+        }
+      }
+    },
+    "smoke-20251014-1444/anthropic/claude-sonnet-4-5-20250929": {
+      "provider": "smoke-20251014-1444",
+      "model": "anthropic",
+      "thinking_mode": "claude-sonnet-4-5-20250929",
+      "experiments": {
+        "legacy_samples": {
+          "accuracy": 0.0,
+          "total": 5,
+          "correct": 0,
+          "unclear": 5
+        }
+      }
+    },
+    "smoke-20251014-1444/google/gemini-2.5-flash": {
+      "provider": "smoke-20251014-1444",
+      "model": "google",
+      "thinking_mode": "gemini-2.5-flash",
+      "experiments": {
+        "legacy_samples": {
+          "accuracy": 0.0,
+          "total": 5,
+          "correct": 0,
+          "unclear": 5
+        }
+      }
+    },
+    "smoke-20251014-1444/google/gemini-2.5-flash-lite": {
+      "provider": "smoke-20251014-1444",
+      "model": "google",
+      "thinking_mode": "gemini-2.5-flash-lite",
+      "experiments": {
+        "legacy_samples": {
+          "accuracy": 0.0,
+          "total": 5,
+          "correct": 0,
+          "unclear": 5
+        }
+      }
+    },
+    "smoke-20251014-1444/google/gemini-2.5-pro": {
+      "provider": "smoke-20251014-1444",
+      "model": "google",
+      "thinking_mode": "gemini-2.5-pro",
+      "experiments": {
+        "legacy_samples": {
+          "accuracy": 0.0,
+          "total": 5,
+          "correct": 0,
+          "unclear": 5
+        }
+      }
+    },
+    "smoke-20251014-1444/openai/gpt-5-2025-08-07": {
+      "provider": "smoke-20251014-1444",
+      "model": "openai",
+      "thinking_mode": "gpt-5-2025-08-07",
+      "experiments": {
+        "legacy_samples": {
+          "accuracy": 0.4,
+          "total": 5,
+          "correct": 2,
+          "unclear": 3
+        }
+      }
+    },
+    "smoke-20251014-1444/openai/gpt-5-mini-2025-08-07": {
+      "provider": "smoke-20251014-1444",
+      "model": "openai",
+      "thinking_mode": "gpt-5-mini-2025-08-07",
+      "experiments": {
+        "legacy_samples": {
+          "accuracy": 0.2,
+          "total": 5,
+          "correct": 1,
+          "unclear": 4
+        }
+      }
+    },
+    "smoke-20251014-1444/openai/gpt-5-pro-2025-10-06": {
+      "provider": "smoke-20251014-1444",
+      "model": "openai",
+      "thinking_mode": "gpt-5-pro-2025-10-06",
+      "experiments": {
+        "legacy_samples": {
+          "accuracy": 0.0,
+          "total": 5,
+          "correct": 0,
+          "unclear": 5
+        }
+      }
+    }
+  },
+  "summary": {
+    "total_experiments": 7,
+    "total_models": 32,
+    "total_problems_processed": 0
+  }
+}
