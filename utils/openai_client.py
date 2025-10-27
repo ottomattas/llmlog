@@ -44,8 +44,9 @@ def chat_completion(messages: List[Dict[str, str]], model: str, max_tokens: Opti
             conn.close()
         return data
 
-    # Prefer Responses API for GPT-5
-    if model.lower().startswith("gpt-5") or model == "gpt-5":
+    # Prefer Responses API for GPT-5 always; explicitly disable reasoning for "nothink" by setting effort=none
+    use_responses = (model.lower().startswith("gpt-5") or model == "gpt-5")
+    if use_responses:
         # Map chat messages -> Responses input format
         input_blocks: List[Dict[str, Any]] = []
         for m in messages:
@@ -63,53 +64,60 @@ def chat_completion(messages: List[Dict[str, str]], model: str, max_tokens: Opti
         # NOTE: Responses API may not accept 'seed' at top-level; omit to avoid 400
         if max_tokens is not None:
             payload["max_output_tokens"] = int(max_tokens)
-        # Reasoning options (official): only 'effort' accepted: low|medium|high
-        # If not provided, the API defaults to medium; we omit the field.
+        # Reasoning control: if thinking enabled with effort, pass it; otherwise explicitly disable
+        eff = None
+        enabled = False
         if thinking:
-            eff = None
             try:
+                enabled = bool(thinking.get("enabled"))
                 eff = thinking.get("effort") or thinking.get("reasoning_effort")
             except Exception:
+                enabled = False
                 eff = None
-            if isinstance(eff, str) and eff.lower() in ("low", "medium", "high"):
-                payload["reasoning"] = {"effort": eff.lower()}
+        if enabled and isinstance(eff, str) and eff.lower() in ("low", "medium", "high"):
+            payload["reasoning"] = {"effort": eff.lower()}
+        else:
+            # Minimal effort for nothink per Responses API
+            payload["reasoning"] = {"effort": "minimal"}
 
         data = _request("/v1/responses", payload)
 
-        # Extract text
+        # Extract text and metadata per Responses API
         resp_obj = data.get("response") or data
+        text_accum: List[str] = []
+        # Preferred: output_text
+        if isinstance(resp_obj, dict) and isinstance(resp_obj.get("output_text"), str):
+            text_accum.append(resp_obj["output_text"])
+        else:
+            # Fallback: stitch from output/content blocks
+            output = resp_obj.get("output") or []
+            if isinstance(output, list):
+                for item in output:
+                    content = (item or {}).get("content") or []
+                    if isinstance(content, list):
+                        for part in content:
+                            t = part.get("text") or part.get("content")
+                            if t:
+                                text_accum.append(str(t))
+        text_out = "\n".join([t for t in text_accum if t]).strip()
+
+        # Map meta: finish_reason and usage if present
+        finish_reason = None
+        # Try common fields found in Responses output items
+        if isinstance(resp_obj, dict):
+            finish_reason = resp_obj.get("finish_reason") or resp_obj.get("status")
+        usage = None
+        if isinstance(resp_obj, dict) and isinstance(resp_obj.get("usage"), dict):
+            usage = resp_obj.get("usage")
+        elif isinstance(data.get("usage"), dict):
+            usage = data.get("usage")
+
         meta: Dict[str, Any] = {
             "raw_response": data,
-            "finish_reason": None,
-            "usage": None,
+            "finish_reason": finish_reason,
+            "usage": usage,
         }
-        if isinstance(resp_obj, dict) and resp_obj.get("output_text"):
-            return resp_obj["output_text"], meta
-        # Fallback: stitch from output/content blocks
-        texts: List[str] = []
-        output = resp_obj.get("output") or []
-        if isinstance(output, list):
-            for item in output:
-                content = (item or {}).get("content") or []
-                for part in content:
-                    t = part.get("text") or part.get("content")
-                    if t:
-                        texts.append(str(t))
-        if texts:
-            return "\n".join(texts).strip(), meta
-        # Absolute fallback: previous schema
-        choices = data.get("choices")
-        if choices:
-            res = ""
-            for ch in choices:
-                if "message" in ch and "content" in ch["message"]:
-                    res += ch["message"]["content"]
-                elif "text" in ch:
-                    if res:
-                        res += "\n"
-                    res += (ch["text"] or "").strip()
-            return res, meta
-        return str(data), meta
+        return (text_out or str(data)), meta
 
     # Default: Chat Completions API
     call: Dict[str, Any] = {
