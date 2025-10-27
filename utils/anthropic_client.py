@@ -59,25 +59,52 @@ def chat_completion(prompt: str, model: str, max_tokens: Optional[int] = 1000, t
 
     # Always stream to avoid non-stream 10-minute guard
     text_buf: list[str] = []
+    thinking_buf: list[str] = []
+    last_stream_usage: Dict[str, Any] = {}
     meta: Dict[str, Any] = {"raw_response": None, "finish_reason": "stream_stop", "usage": {}}
     # Prefer the SDK streaming context manager to reliably access final message (with usage)
     try:
         with client.messages.stream(**kwargs) as stream:
-            # Collect only text deltas via high-level iterator if available
-            try:
-                for delta in stream.text_stream:
-                    if delta:
-                        text_buf.append(delta)
-            except Exception:
-                # Fallback to low-level event iteration
-                for event in stream:
-                    et = getattr(event, "type", None)
-                    if et == "content_block_delta":
-                        delta = getattr(event, "delta", None)
-                        if delta and getattr(delta, "type", None) == "text_delta":
-                            frag = getattr(delta, "text", None)
-                            if frag:
-                                text_buf.append(frag)
+            # Prefer low-level iteration so we can capture text, thinking, and message_delta usage
+            for event in stream:
+                et = getattr(event, "type", None)
+                if et == "content_block_delta":
+                    delta = getattr(event, "delta", None)
+                    if not delta:
+                        continue
+                    dt = getattr(delta, "type", None)
+                    if dt == "text_delta":
+                        frag = getattr(delta, "text", None)
+                        if frag:
+                            text_buf.append(frag)
+                    elif dt == "thinking_delta":
+                        tfrag = getattr(delta, "thinking", None)
+                        if tfrag:
+                            thinking_buf.append(tfrag)
+                    # signature_delta and others are ignored for accumulation
+                elif et == "message_delta":
+                    # Capture cumulative usage snapshot if present
+                    usage_obj = getattr(event, "usage", None)
+                    if usage_obj:
+                        last_stream_usage = {
+                            "input_tokens": getattr(usage_obj, "input_tokens", None),
+                            "output_tokens": getattr(usage_obj, "output_tokens", None),
+                        }
+                    else:
+                        # Try dict() fallback
+                        try:
+                            d = getattr(event, "dict", lambda: None)()
+                            if isinstance(d, dict) and d.get("usage"):
+                                u = d["usage"]
+                                last_stream_usage = {
+                                    "input_tokens": u.get("input_tokens"),
+                                    "output_tokens": u.get("output_tokens"),
+                                }
+                        except Exception:
+                            pass
+                else:
+                    # ignore other event types
+                    pass
             # Get final message containing usage
             try:
                 final_msg = stream.get_final_message()
@@ -96,11 +123,63 @@ def chat_completion(prompt: str, model: str, max_tokens: Optional[int] = 1000, t
                 "input_tokens": getattr(usage_obj, "input_tokens", None) if usage_obj else None,
                 "output_tokens": getattr(usage_obj, "output_tokens", None) if usage_obj else None,
             }
+            # If final message lacked usage, fallback to the last streamed usage snapshot
+            if (meta["usage"].get("input_tokens") is None and meta["usage"].get("output_tokens") is None) and last_stream_usage:
+                meta["usage"].update(last_stream_usage)
             if not text:
                 try:
                     text = _extract_message_text(final_msg)
                 except Exception:
                     pass
+        # Optionally compute visible token counts for thinking/text; expose billed reasoning via usage
+        if thinking_buf:
+            thinking_text = "".join(thinking_buf)
+            try:
+                # Count tokens for the thinking content; API returns an object with input_tokens
+                # We pass the thinking block as assistant content of type "thinking"
+                count_resp = client.messages.count_tokens(
+                    model=kwargs["model"],
+                    messages=[{"role": "assistant", "content": [{"type": "thinking", "thinking": thinking_text}]}],
+                )
+                t_thinking = getattr(count_resp, "input_tokens", None)
+                if t_thinking is None and hasattr(count_resp, "dict"):
+                    try:
+                        t_thinking = count_resp.dict().get("input_tokens")
+                    except Exception:
+                        pass
+                meta.setdefault("usage", {})["thinking_visible_tokens"] = t_thinking
+            except Exception:
+                # If count endpoint not available or thinking blocks not countable, leave as None
+                meta.setdefault("usage", {})["thinking_visible_tokens"] = None
+        # Count visible final text tokens as well
+        try:
+            if text:
+                c_text = client.messages.count_tokens(
+                    model=kwargs["model"],
+                    messages=[{"role": "assistant", "content": [{"type": "text", "text": text}]}],
+                )
+                t_text = getattr(c_text, "input_tokens", None)
+                if t_text is None and hasattr(c_text, "dict"):
+                    try:
+                        t_text = c_text.dict().get("input_tokens")
+                    except Exception:
+                        pass
+                meta.setdefault("usage", {})["text_visible_tokens"] = t_text
+        except Exception:
+            meta.setdefault("usage", {})["text_visible_tokens"] = None
+        # Expose billed reasoning tokens when thinking is enabled (as total output tokens billed)
+        if thinking and thinking.get("enabled"):
+            try:
+                out_total = meta.get("usage", {}).get("output_tokens")
+                u = meta.setdefault("usage", {})
+                u["reasoning_tokens_billed"] = out_total
+                # Back-compat: populate reasoning_tokens field used by runner/provenance
+                u["reasoning_tokens"] = out_total
+            except Exception:
+                pass
+        else:
+            # Ensure reasoning_tokens exists for schema compatibility
+            meta.setdefault("usage", {})["reasoning_tokens"] = None
         return text, meta
     except Exception:
         # As a last resort, try non-stream to ensure we at least get a response and usage
