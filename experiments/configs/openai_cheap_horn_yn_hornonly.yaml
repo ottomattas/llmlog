@@ -1,0 +1,77 @@
+# OpenAI Cheap Suite: Horn on Horn (baseline)
+name: openai_cheap_horn_yn_hornonly
+
+targets:
+  - provider: openai
+    model: gpt-5-nano-2025-08-07
+    temperature: 0
+    seed: 1234
+    max_tokens: 30000
+    thinking:
+      enabled: true
+      effort: high
+
+  - provider: openai
+    model: gpt-5-nano-2025-08-07
+    temperature: 0
+    seed: 1234
+    max_tokens: 10000
+    thinking:
+      enabled: true
+      effort: medium
+
+  - provider: openai
+    model: gpt-5-nano-2025-08-07
+    temperature: 0
+    seed: 1234
+    max_tokens: 3000
+    thinking:
+      enabled: true
+      effort: low
+
+  - provider: openai
+    model: gpt-5-nano-2025-08-07
+    temperature: 0
+    seed: 1234
+    max_tokens: 3000
+    thinking:
+      enabled: false
+
+input_file: data/problems_validation_vars4-20_len2-5_percase4_seed42424.js
+
+filters:
+  horn_only: true
+  skip_rows: 1
+  limit_rows: null
+
+output_pattern: experiments/runs/${name}/${run}/${provider}/${model}/${thinking_mode}/results.jsonl
+
+outputs:
+  results:
+    enabled: true
+  provenance:
+    enabled: true
+    include_prompt: true
+    include_raw_response: true
+
+prompt:
+  template: prompts/_template_unified.j2
+  style: horn_if_then
+  variables: {}
+
+parse:
+  type: yes_no
+  yes_tokens: ["yes"]
+  no_tokens: ["no"]
+
+concurrency:
+  workers: 4
+  lockstep: true
+  rate_limit_per_min: 120
+  retry:
+    max_attempts: 3
+    backoff_seconds: [2, 5, 10]
+
+resume: true
+
+

@@ -1,0 +1,77 @@
+# OpenAI Cheap Suite: CNF (compact) on Mixed
+name: openai_cheap_cnf2_con_mixed
+
+targets:
+  - provider: openai
+    model: gpt-5-nano-2025-08-07
+    temperature: 0
+    seed: 1234
+    max_tokens: 30000
+    thinking:
+      enabled: true
+      effort: high
+
+  - provider: openai
+    model: gpt-5-nano-2025-08-07
+    temperature: 0
+    seed: 1234
+    max_tokens: 10000
+    thinking:
+      enabled: true
+      effort: medium
+
+  - provider: openai
+    model: gpt-5-nano-2025-08-07
+    temperature: 0
+    seed: 1234
+    max_tokens: 3000
+    thinking:
+      enabled: true
+      effort: low
+
+  - provider: openai
+    model: gpt-5-nano-2025-08-07
+    temperature: 0
+    seed: 1234
+    max_tokens: 3000
+    thinking:
+      enabled: false
+
+input_file: data/problems_validation_vars4-20_len2-5_percase4_seed42424.js
+
+filters:
+  horn_only: false
+  skip_rows: 1
+  limit_rows: null
+
+output_pattern: experiments/runs/${name}/${run}/${provider}/${model}/${thinking_mode}/results.jsonl
+
+outputs:
+  results:
+    enabled: true
+  provenance:
+    enabled: true
+    include_prompt: true
+    include_raw_response: true
+
+prompt:
+  template: prompts/_template_unified.j2
+  style: cnf_v2
+  variables: {}
+
+parse:
+  type: contradiction
+  yes_tokens: []
+  no_tokens: []
+
+concurrency:
+  workers: 4
+  lockstep: true
+  rate_limit_per_min: 120
+  retry:
+    max_attempts: 3
+    backoff_seconds: [2, 5, 10]
+
+resume: true
+
+
