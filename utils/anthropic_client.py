@@ -57,67 +57,47 @@ def chat_completion(prompt: str, model: str, max_tokens: Optional[int] = 1000, t
             pass
         return ("\n".join(parts)).strip()
 
-    # Heuristic: stream when thinking is enabled or when max_tokens is large
-    should_stream = bool(thinking and thinking.get("enabled")) or (kwargs.get("max_tokens", 0) and int(kwargs.get("max_tokens", 0)) >= 4096)
-
-    if should_stream:
-        text_buf = []
-        try:
-            stream = client.messages.create(stream=True, **kwargs)
-            # Iterate events; collect text deltas
-            for event in stream:
-                et = getattr(event, "type", None)
-                if et == "content_block_delta":
-                    delta = getattr(event, "delta", None)
-                    if delta and getattr(delta, "type", None) == "text_delta":
-                        frag = getattr(delta, "text", None)
-                        if frag:
-                            text_buf.append(frag)
-                elif et in ("message_stop", "message_delta", "message_start"):
-                    # ignore; finalization handled after loop
-                    pass
-            try:
-                stream.close()
-            except Exception:
+    # Always stream to avoid non-stream 10-minute guard
+    text_buf = []
+    stream = client.messages.create(stream=True, **kwargs)
+    try:
+        # Iterate events; collect text deltas
+        for event in stream:
+            et = getattr(event, "type", None)
+            if et == "content_block_delta":
+                delta = getattr(event, "delta", None)
+                if delta and getattr(delta, "type", None) == "text_delta":
+                    frag = getattr(delta, "text", None)
+                    if frag:
+                        text_buf.append(frag)
+            elif et in ("message_stop", "message_delta", "message_start"):
+                # ignore; finalization handled after loop
                 pass
-            text = ("".join(text_buf)).strip()
-            meta: Dict[str, Any] = {
-                "raw_response": None,
-                "finish_reason": "stream_stop",
-                "usage": {},
-            }
-            if not text:
-                # As a fallback, try to get the final message if available
-                try:
-                    final_msg = getattr(stream, "get_final_message", lambda: None)()
-                    if final_msg:
-                        text = _extract_message_text(final_msg)
-                        meta["raw_response"] = getattr(final_msg, "dict", lambda: final_msg)()
-                        meta["finish_reason"] = getattr(final_msg, "stop_reason", None)
-                        meta["usage"] = {
-                            "input_tokens": getattr(getattr(final_msg, "usage", None), "input_tokens", None),
-                            "output_tokens": getattr(getattr(final_msg, "usage", None), "output_tokens", None),
-                        }
-                except Exception:
-                    pass
-            return text, meta
+    finally:
+        try:
+            stream.close()
         except Exception:
-            # Fallback to non-streaming if streaming path fails
             pass
-
-    # Non-streaming request (fast path or fallback)
-    resp = client.messages.create(**kwargs)
-    text = _extract_message_text(resp)
-    if not text:
-        text = str(resp)
+    text = ("".join(text_buf)).strip()
     meta: Dict[str, Any] = {
-        "raw_response": getattr(resp, "dict", lambda: resp)(),
-        "finish_reason": getattr(resp, "stop_reason", None),
-        "usage": {
-            "input_tokens": getattr(getattr(resp, "usage", None), "input_tokens", None),
-            "output_tokens": getattr(getattr(resp, "usage", None), "output_tokens", None),
-        },
+        "raw_response": None,
+        "finish_reason": "stream_stop",
+        "usage": {},
     }
+    if not text:
+        # As a fallback, try to get the final message if available from stream (if SDK supports it)
+        try:
+            final_msg = getattr(stream, "get_final_message", lambda: None)()
+            if final_msg:
+                text = _extract_message_text(final_msg)
+                meta["raw_response"] = getattr(final_msg, "dict", lambda: final_msg)()
+                meta["finish_reason"] = getattr(final_msg, "stop_reason", None)
+                meta["usage"] = {
+                    "input_tokens": getattr(getattr(final_msg, "usage", None), "input_tokens", None),
+                    "output_tokens": getattr(getattr(final_msg, "usage", None), "output_tokens", None),
+                }
+        except Exception:
+            pass
     return text, meta
 
 
