@@ -409,6 +409,29 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
                         <option value="unclear">Unclear Count</option>
                     </select>
                 </label>
+                <span style="margin-left: 20px; font-weight: 600;">Providers:</span>
+                <label style="margin-left: 8px;">
+                    <input type="checkbox" id="provider-anthropic" checked onchange="transposeHeatmap()"/> Anthropic
+                </label>
+                <label style="margin-left: 8px;">
+                    <input type="checkbox" id="provider-google" checked onchange="transposeHeatmap()"/> Google
+                </label>
+                <label style="margin-left: 8px;">
+                    <input type="checkbox" id="provider-openai" checked onchange="transposeHeatmap()"/> OpenAI
+                </label>
+                <span style="margin-left: 20px; font-weight: 600;">Reasoning:</span>
+                <label style="margin-left: 8px;">
+                    <input type="checkbox" id="think-nothink" checked onchange="transposeHeatmap()"/> no-think
+                </label>
+                <label style="margin-left: 8px;">
+                    <input type="checkbox" id="think-think-low" checked onchange="transposeHeatmap()"/> think-low
+                </label>
+                <label style="margin-left: 8px;">
+                    <input type="checkbox" id="think-think-med" checked onchange="transposeHeatmap()"/> think-med
+                </label>
+                <label style="margin-left: 8px;">
+                    <input type="checkbox" id="think-think-high" checked onchange="transposeHeatmap()"/> think-high
+                </label>
             </div>
             
             <div style="overflow-x: auto;">
@@ -474,6 +497,73 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
         </div>
 """)
     
+    # Insert: Reasoning Mode Comparison section (provider × thinking)
+    # Compute provider-wise averages by thinking mode across all experiments
+    provider_modes: dict = { 'anthropic': {}, 'google': {}, 'openai': {} }
+    for model_key in model_keys:
+        parts = model_key.split('/')
+        if len(parts) < 3:
+            continue
+        provider, _model, thinking = parts[0], parts[1], parts[2]
+        if provider in provider_modes:
+            accs_pct = []
+            for exp_name in exp_names:
+                exp_models = experiments.get(exp_name, {}).get('models', {})
+                if model_key in exp_models:
+                    acc = exp_models[model_key]['summary'].get('accuracy', 0) * 100
+                    accs_pct.append(acc)
+            if accs_pct:
+                provider_modes[provider].setdefault(thinking, []).extend(accs_pct)
+
+    def _avg(lst):
+        return (sum(lst) / len(lst)) if lst else 0
+
+    html.append("""
+        <div class="section">
+            <h2>Reasoning Mode Comparison</h2>
+            <p style="margin-bottom: 10px;">Average accuracy per provider by reasoning mode. Useful when only budget models are run with different thinking settings.</p>
+            <table style="width: 100%; margin-top: 10px;">
+                <thead>
+                    <tr>
+                        <th style="text-align: left;">Provider</th>
+                        <th>no-think</th>
+                        <th>think-low</th>
+                        <th>think-med</th>
+                        <th>think-high</th>
+                        <th>Best Δ vs no-think</th>
+                    </tr>
+                </thead>
+                <tbody>
+    """)
+
+    for _provider in ['anthropic', 'google', 'openai']:
+        modes = provider_modes.get(_provider, {})
+        no = _avg(modes.get('nothink', []))
+        low = _avg(modes.get('think-low', []))
+        med = _avg(modes.get('think-med', []))
+        high = _avg(modes.get('think-high', []))
+        deltas = [low - no, med - no, high - no]
+        best_delta = max(deltas) if deltas else 0
+        html.append(
+            f"""                    <tr>
+                        <td style=\"text-align: left;\">{_provider}</td>
+                        <td class=\"{'acc-100' if no>=95 else 'acc-90' if no>=85 else 'acc-75' if no>=70 else 'acc-50'}\">{no:.0f}%</td>
+                        <td class=\"{'acc-100' if low>=95 else 'acc-90' if low>=85 else 'acc-75' if low>=70 else 'acc-50'}\">{low:.0f}%</td>
+                        <td class=\"{'acc-100' if med>=95 else 'acc-90' if med>=85 else 'acc-75' if med>=70 else 'acc-50'}\">{med:.0f}%</td>
+                        <td class=\"{'acc-100' if high>=95 else 'acc-90' if high>=85 else 'acc-75' if high>=70 else 'acc-50'}\">{high:.0f}%</td>
+                        <td style=\"font-weight: 600; color: {'green' if best_delta>0 else 'black'};\">{best_delta:+.0f}%</td>
+                    </tr>\n"""
+        )
+
+    html.append("""
+                </tbody>
+            </table>
+            <div class="note" style="margin-top: 10px;">
+                <strong>Tip:</strong> Use the filters in the heatmap above to focus on a subset (e.g., provider=OpenAI, reasoning=think-*) to cross-check these averages.
+            </div>
+        </div>
+    """)
+
     # Section 2: Research Questions
     html.append("""
         <div class="section">
@@ -925,8 +1015,16 @@ def generate_html_dashboard(aggregated_data: dict, output_path: Path):
         for exp_name in exp_names:
             if exp_name in model_data["experiments"]:
                 # Load detailed results to separate sat/unsat
-                exp_run_path = runs_dir / exp_name / run_id / model_key.split('/')[0] / model_key.split('/')[1] / model_key.split('/')[2]
+                provider = model_key.split('/')[0]
+                model = model_key.split('/')[1]
+                thinking = model_key.split('/')[2]
+                exp_run_path = runs_dir / exp_name / run_id / provider / model / thinking
                 results_file = exp_run_path / "results.jsonl"
+                # Fallback if normalized thinking name differs on disk (think-medium vs think-med)
+                if not results_file.exists() and 'think-med' in thinking:
+                    alt_path = runs_dir / exp_name / run_id / provider / model / 'think-medium' / 'results.jsonl'
+                    if alt_path.exists():
+                        results_file = alt_path
                 
                 if results_file.exists():
                     with open(results_file) as f:
@@ -1204,6 +1302,22 @@ Vars:  {' '.join(f'{v:4}' for v in vars_sorted)}
         // Store full data for interactivity
         const fullData = """ + json.dumps(aggregated_data) + """;
         
+        function getFilters() {
+            return {
+                providers: {
+                    anthropic: document.getElementById('provider-anthropic') ? document.getElementById('provider-anthropic').checked : true,
+                    google: document.getElementById('provider-google') ? document.getElementById('provider-google').checked : true,
+                    openai: document.getElementById('provider-openai') ? document.getElementById('provider-openai').checked : true,
+                },
+                thinking: {
+                    'nothink': document.getElementById('think-nothink') ? document.getElementById('think-nothink').checked : true,
+                    'think-low': document.getElementById('think-think-low') ? document.getElementById('think-think-low').checked : true,
+                    'think-med': document.getElementById('think-think-med') ? document.getElementById('think-think-med').checked : true,
+                    'think-high': document.getElementById('think-think-high') ? document.getElementById('think-think-high').checked : true,
+                }
+            };
+        }
+        
         function transposeHeatmap() {
             const viewMode = document.getElementById('viewMode').value;
             const metric = document.getElementById('metricSelect').value;
@@ -1213,7 +1327,14 @@ Vars:  {' '.join(f'{v:4}' for v in vars_sorted)}
             const models = fullData.models;
             
             const expNames = Object.keys(experiments).sort();
-            const modelKeys = Object.keys(models).sort();
+            const allModelKeys = Object.keys(models).sort();
+            const filters = getFilters();
+            const modelKeys = allModelKeys.filter((k) => {
+                const parts = k.split('/');
+                const provider = parts[0];
+                const thinking = parts[2] || '';
+                return !!filters.providers[provider] && !!filters.thinking[thinking];
+            });
             
             let html = '';
             
@@ -1352,6 +1473,10 @@ Vars:  {' '.join(f'{v:4}' for v in vars_sorted)}
                     section.parentElement.insertBefore(note, section.nextSibling);
                     break;
                 }
+            }
+            // Build table once at load to apply any filter defaults
+            if (document.getElementById('heatmapTable')) {
+                transposeHeatmap();
             }
         });
         </script>

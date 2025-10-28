@@ -78,6 +78,9 @@ def aggregate_results(runs_dir: Path, run_id: str) -> Dict[str, Any]:
             provider = parts[provider_idx]
             model = parts[model_idx]
             thinking_mode = parts[thinking_idx]
+            # Normalize thinking mode naming across providers
+            if thinking_mode == 'think-medium':
+                thinking_mode = 'think-med'
             
             with open(summary_file) as f:
                 summary_data = json.load(f)
