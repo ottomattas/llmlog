@@ -1,0 +1,18 @@
+{
+  "name": "openai_cheap_horn_yn_mixed",
+  "provider": "openai",
+  "model": "gpt-5-nano-2025-08-07",
+  "run": "cheap_20251027_2211",
+  "total": 201,
+  "correct": 139,
+  "accuracy": 0.6915422885572139,
+  "unclear": 1,
+  "sat_total": 100,
+  "sat_correct": 95,
+  "sat_accuracy": 0.95,
+  "unsat_total": 101,
+  "unsat_correct": 44,
+  "unsat_accuracy": 0.43564356435643564,
+  "avg_timing_ms": 7807.203980099503,
+  "timestamp": 1761656727
+}

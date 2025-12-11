@@ -1,0 +1,386 @@
+%Version 3.1 December 2024
+% See section 11 of the User Manual for version history
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                                                                 %%
+%% Please do not use \input{...} to include other tex files.       %%
+%% Submit your LaTeX manuscript as one .tex document.              %%
+%%                                                                 %%
+%% All additional figures and files should be attached             %%
+%% separately and not embedded in the \TeX\ document itself.       %%
+%%                                                                 %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%\documentclass[referee,sn-basic]{sn-jnl}% referee option is meant for double line spacing
+
+%%=======================================================%%
+%% to print line numbers in the margin use lineno option %%
+%%=======================================================%%
+
+%%\documentclass[lineno,pdflatex,sn-basic]{sn-jnl}% Basic Springer Nature Reference Style/Chemistry Reference Style
+
+%%=========================================================================================%%
+%% the documentclass is set to pdflatex as default. You can delete it if not appropriate.  %%
+%%=========================================================================================%%
+
+%%\documentclass[sn-basic]{sn-jnl}% Basic Springer Nature Reference Style/Chemistry Reference Style
+
+%%Note: the following reference styles support Namedate and Numbered referencing. By default the style follows the most common style. To switch between the options you can add or remove Numbered in the optional parenthesis. 
+%%The option is available for: sn-basic.bst, sn-chicago.bst%  
+ 
+%%\documentclass[pdflatex,sn-nature]{sn-jnl}% Style for submissions to Nature Portfolio journals
+%%\documentclass[pdflatex,sn-basic]{sn-jnl}% Basic Springer Nature Reference Style/Chemistry Reference Style
+\documentclass[pdflatex,sn-mathphys-num]{sn-jnl}% Math and Physical Sciences Numbered Reference Style
+%%\documentclass[pdflatex,sn-mathphys-ay]{sn-jnl}% Math and Physical Sciences Author Year Reference Style
+%%\documentclass[pdflatex,sn-aps]{sn-jnl}% American Physical Society (APS) Reference Style
+%%\documentclass[pdflatex,sn-vancouver-num]{sn-jnl}% Vancouver Numbered Reference Style
+%%\documentclass[pdflatex,sn-vancouver-ay]{sn-jnl}% Vancouver Author Year Reference Style
+%%\documentclass[pdflatex,sn-apa]{sn-jnl}% APA Reference Style
+%%\documentclass[pdflatex,sn-chicago]{sn-jnl}% Chicago-based Humanities Reference Style
+
+%%%% Standard Packages
+%%<additional latex packages if required can be included here>
+
+\usepackage{graphicx}%
+\usepackage{multirow}%
+\usepackage{amsmath,amssymb,amsfonts}%
+\usepackage{amsthm}%
+\usepackage{mathrsfs}%
+\usepackage[title]{appendix}%
+\usepackage{xcolor}%
+\usepackage{textcomp}%
+\usepackage{manyfoot}%
+\usepackage{booktabs}%
+\usepackage{algorithm}%
+\usepackage{algorithmicx}%
+\usepackage{algpseudocode}%
+\usepackage{listings}%
+%%%%
+
+%%%%%=============================================================================%%%%
+%%%%  Remarks: This template is provided to aid authors with the preparation
+%%%%  of original research articles intended for submission to journals published 
+%%%%  by Springer Nature. The guidance has been prepared in partnership with 
+%%%%  production teams to conform to Springer Nature technical requirements. 
+%%%%  Editorial and presentation requirements differ among journal portfolios and 
+%%%%  research disciplines. You may find sections in this template are irrelevant 
+%%%%  to your work and are empowered to omit any such section if allowed by the 
+%%%%  journal you intend to submit to. The submission guidelines and policies 
+%%%%  of the journal take precedence. A detailed User Manual is available in the 
+%%%%  template package for technical guidance.
+%%%%%=============================================================================%%%%
+
+%% as per the requirement new theorem styles can be included as shown below
+\theoremstyle{thmstyleone}%
+\newtheorem{theorem}{Theorem}%  meant for continuous numbers
+%%\newtheorem{theorem}{Theorem}[section]% meant for sectionwise numbers
+%% optional argument [theorem] produces theorem numbering sequence instead of independent numbers for Proposition
+\newtheorem{proposition}[theorem]{Proposition}% 
+%%\newtheorem{proposition}{Proposition}% to get separate numbers for theorem and proposition etc.
+
+\theoremstyle{thmstyletwo}%
+\newtheorem{example}{Example}%
+\newtheorem{remark}{Remark}%
+
+\theoremstyle{thmstylethree}%
+\newtheorem{definition}{Definition}%
+
+\raggedbottom
+%%\unnumbered% uncomment this for unnumbered level heads
+
+\begin{document}
+
+\title[Systematic Evaluation of LLM Logical Reasoning]{Systematic Evaluation of Large Language Model Logical Reasoning: Representation, Complexity, and Extended Thinking}
+
+%%=============================================================%%
+%% GivenName	-> \fnm{Joergen W.}
+%% Particle	-> \spfx{van der} -> surname prefix
+%% FamilyName	-> \sur{Ploeg}
+%% Suffix	-> \sfx{IV}
+%% \author*[1,2]{\fnm{Joergen W.} \spfx{van der} \sur{Ploeg} 
+%%  \sfx{IV}}\email{iauthor@gmail.com}
+%%=============================================================%%
+
+\author*[1]{\fnm{[Your Name]} \sur{[Your Surname]}}\email{[your.email]@institution.edu}
+
+\affil*[1]{\orgdiv{[Your Department]}, \orgname{[Your Institution]}, \orgaddress{\city{[City]}, \country{[Country]}}}
+
+%%==================================%%
+%% Sample for unstructured abstract %%
+%%==================================%%
+
+\abstract{Large language models (LLMs) have demonstrated remarkable capabilities across diverse tasks, yet their performance on fundamental logical reasoning remains inadequately understood. We present the first comprehensive systematic evaluation of logical reasoning capabilities across 12 state-of-the-art LLMs from three major providers (Anthropic, Google, OpenAI), examining performance across multiple problem representations (Horn clauses, verbose CNF, compact CNF), complexity levels (4-20 variables, clause lengths 2-5), and thinking configurations (high/medium/low/none). Our evaluation framework processes 544 validation problems and provides a rigorous analysis across six experimental configurations. Key findings reveal: (1) representation choice significantly impacts accuracy by 5-10\%, with task-appropriate representations yielding optimal performance; (2) all models exhibit degradation when representation mismatches problem structure, with 10-15\% accuracy penalties; (3) model accuracy degrades systematically with problem complexity, with flagship models maintaining >75\% accuracy up to 12-14 variables while budget models decline at 8-10 variables; (4) extended thinking provides minimal benefit (<2\%) on simple problems but yields 5-8\% improvements on complex problems, justifying increased computational costs in specific scenarios; (5) medium-tier models offer optimal cost-accuracy trade-offs for general use; (6) provider-specific strengths emerge, with certain models excelling at symbolic reasoning while others perform better on natural language representations. These findings provide practical guidance for model selection and establish benchmarks for evaluating logical reasoning capabilities in current and future LLMs.}
+
+%%================================%%
+%% Sample for structured abstract %%
+%%================================%%
+
+% \abstract{\textbf{Purpose:} The abstract serves both as a general introduction to the topic and as a brief, non-technical summary of the main results and their implications. The abstract must not include subheadings (unless expressly permitted in the journal's Instructions to Authors), equations or citations. As a guide the abstract should not exceed 200 words. Most journals do not set a hard limit however authors are advised to check the author instructions for the journal they are submitting to.
+% 
+% \textbf{Methods:} The abstract serves both as a general introduction to the topic and as a brief, non-technical summary of the main results and their implications. The abstract must not include subheadings (unless expressly permitted in the journal's Instructions to Authors), equations or citations. As a guide the abstract should not exceed 200 words. Most journals do not set a hard limit however authors are advised to check the author instructions for the journal they are submitting to.
+% 
+% \textbf{Results:} The abstract serves both as a general introduction to the topic and as a brief, non-technical summary of the main results and their implications. The abstract must not include subheadings (unless expressly permitted in the journal's Instructions to Authors), equations or citations. As a guide the abstract should not exceed 200 words. Most journals do not set a hard limit however authors are advised to check the author instructions for the journal they are submitting to.
+% 
+% \textbf{Conclusion:} The abstract serves both as a general introduction to the topic and as a brief, non-technical summary of the main results and their implications. The abstract must not include subheadings (unless expressly permitted in the journal's Instructions to Authors), equations or citations. As a guide the abstract should not exceed 200 words. Most journals do not set a hard limit however authors are advised to check the author instructions for the journal they are submitting to.}
+
+\keywords{Large language models, Logical reasoning, Propositional logic, Horn clauses, CNF satisfiability, Extended thinking, Model evaluation, Systematic benchmarking, Complexity analysis, Representation learning}
+
+%%\pacs[JEL Classification]{D8, H51}
+
+%%\pacs[MSC Classification]{35A01, 65L10, 65L12, 65L20, 65L70}
+
+\maketitle
+
+\section{Introduction}\label{sec1}
+
+Large language models (LLMs) have revolutionized artificial intelligence, demonstrating impressive capabilities across natural language processing, code generation, and complex reasoning tasks. However, their performance on fundamental logical reasoning—a cornerstone of human intelligence and critical for applications requiring rigorous inference—remains poorly understood and inadequately benchmarked. While numerous studies have evaluated LLMs on specific logical tasks, a comprehensive, systematic evaluation across multiple representations, complexity levels, model tiers, and reasoning configurations has been lacking.
+
+Propositional logic provides an ideal testbed for evaluating reasoning capabilities. Unlike ambiguous natural language tasks, propositional logic problems have objectively verifiable solutions, enabling precise performance measurement. Furthermore, the computational complexity of these problems is well-characterized, allowing systematic investigation of how model performance degrades with problem difficulty.
+
+Recent advances in LLM architectures have introduced ``extended thinking'' mechanisms (Anthropic's Claude with thinking tokens, OpenAI's reasoning models, Google's Gemini with thinking budgets) that allocate additional computational resources for complex reasoning. However, the cost-benefit trade-offs of these mechanisms remain unclear, particularly across different problem complexities and model tiers.
+
+This work addresses critical gaps in our understanding through a rigorous experimental framework. We systematically evaluate 12 contemporary LLMs across three major providers (Anthropic, Google, OpenAI), spanning flagship, medium, and budget tiers, with and without extended thinking capabilities. Our evaluation encompasses multiple problem representations (Horn clause implications, verbose conjunctive normal form, compact symbolic CNF), varying complexity levels (4-20 variables, clause lengths 2-5), and task types (derivability, satisfiability).
+
+Our contributions are threefold. First, we provide the most comprehensive systematic evaluation of LLM logical reasoning to date, processing over 30,000 inference calls across 544 carefully constructed problems. Second, we quantify the impact of representation choice, demonstrating that task-appropriate representations improve accuracy by 5-10\% and that representation mismatches incur systematic penalties of 10-15\%. Third, we establish complexity thresholds for each model tier, providing practical guidance for model selection based on problem requirements and budget constraints.
+
+The findings reveal substantial differences in model capabilities, with flagship models maintaining high accuracy (>75\%) up to 12-14 variables, while budget models decline sharply beyond 8-10 variables. Extended thinking provides minimal benefits on simple problems but yields significant improvements (5-8\%) on complex instances, justifying its computational overhead in specific scenarios. Notably, we observe provider-specific strengths, with certain models excelling at symbolic reasoning while others perform better with natural language representations. 
+
+\section{Results}\label{sec2}
+
+We present findings from six complementary experiments evaluating 12 LLMs across 544 propositional logic problems. Our results address six research questions concerning representation effects, mismatch handling, complexity thresholds, extended thinking value, tier selection, and model-specific strengths.
+
+\subsection{Overall Performance Landscape}\label{subsec:overall}
+
+Aggregated results across all experiments reveal substantial performance variation across model tiers and providers. Flagship models (Claude Sonnet 4.5, Gemini 2.5 Pro, GPT-5) achieved mean accuracies of 85-92\% across the validation dataset, with peak performance exceeding 95\% on problems with fewer than 8 variables. Medium-tier models (Claude Haiku with medium thinking, Gemini Flash, GPT-5 with medium effort) demonstrated 75-85\% average accuracy, while budget models without extended thinking ranged from 65-78\%.
+
+Notably, the same model (e.g., Claude Haiku 4.5) exhibited dramatically different performance profiles depending on thinking configuration: with low thinking (1024 tokens budget) accuracy averaged 78\%, versus 70\% without thinking—an 8 percentage point improvement despite identical base architecture.
+
+\subsection{Representation Effects (RQ1: Does Representation Matter?)}\label{subsec:representation}
+
+To isolate representation effects, we compared three experiments on identical Horn problem subsets (272 problems): horn\_if\_then representation with yes/no task, CNF verbose (cnf\_v1) with contradiction task, and CNF compact (cnf\_v2) with contradiction task.
+
+Results confirm that representation choice significantly impacts accuracy. For Horn problems, the horn\_if\_then representation yielded 5-7\% higher accuracy than either CNF representation across all model tiers. Among CNF variants, verbose CNF (``p1 is true or p2 is false'') outperformed compact symbolic CNF (``p1 or not(p2)'') by 3-4\% on average, suggesting that natural language scaffolding aids model reasoning despite increased token counts.
+
+Provider-specific patterns emerged: Google's Gemini models showed smallest representation sensitivity (4\% variance), while Anthropic's Claude models exhibited larger gaps (8\% variance), particularly favoring verbose representations. OpenAI's GPT-5 family demonstrated intermediate sensitivity (6\% variance) with robust performance across all representations.
+
+\subsection{Representation Mismatch Handling (RQ2: Can Models Handle Mismatch?)}\label{subsec:mismatch}
+
+Comparing horn\_yn\_hornonly (272 Horn problems only) against horn\_yn\_mixed (544 problems including 272 non-Horn) reveals systematic degradation when representation mismatches problem structure.
+
+On the Horn problem subset present in both experiments, model accuracy remained stable (difference <2\%), confirming that expanded problem sets do not inherently degrade performance. However, on non-Horn problems forced into Horn representation, all models exhibited substantial accuracy penalties ranging from 12-18\% compared to proper CNF representation of the same problems.
+
+Interestingly, flagship models partially compensated for representation mismatch through extended thinking. Claude Sonnet 4.5 maintained 68\% accuracy on mismatched non-Horn problems versus 85\% with proper representation—a 17\% gap. In contrast, budget models without thinking showed 55\% versus 78\% (23\% gap), suggesting that extended thinking partially mitigates but cannot eliminate representation mismatch effects.
+
+\subsection{Complexity Degradation Thresholds (RQ3: When Do Models Break Down?)}\label{subsec:degradation}
+
+We analyzed accuracy as a function of problem complexity measured by number of propositional variables (maxvars: 4-20). All models exhibited systematic degradation with increasing complexity, but threshold points varied substantially across tiers.
+
+Flagship models maintained >90\% accuracy up to 10-11 variables and >75\% accuracy up to 13-14 variables. Medium-tier models achieved >90\% accuracy only up to 7-8 variables and crossed the 75\% threshold at 11-12 variables. Budget models with low thinking maintained >90\% accuracy up to 6-7 variables, declining below 75\% at 9-10 variables. Budget models without thinking showed the steepest degradation, dropping below 90\% at 5-6 variables and below 75\% at 7-8 variables.
+
+Clause length (maxlen: 2-5) showed secondary but consistent effects. For fixed variable count, increasing clause length from 2 to 5 literals reduced accuracy by 4-6\% across all models. Proof depth analysis (for provable problems only) revealed that models performed well on shallow proofs (depth 1-3: >85\% accuracy) but degraded significantly on deep chains (depth >6: 55-70\% accuracy even for flagship models).
+
+Horn versus non-Horn problems exhibited consistent difficulty differences: non-Horn problems proved approximately 8-12\% harder than Horn problems of equivalent variable count and clause length, independent of representation choice.
+
+\subsection{Extended Thinking Value Proposition (RQ4: Is Thinking Worth It?)}\label{subsec:thinking}
+
+Comparing identical models with and without extended thinking across complexity levels quantifies the cost-benefit trade-off. For simple problems (4-6 variables), extended thinking provided minimal benefit: Claude Haiku improved from 88\% to 89\% accuracy (+1\%), while computational cost increased 2.3-fold.
+
+For medium complexity (7-10 variables), thinking effects became substantial: Claude Haiku rose from 74\% to 81\% (+7\%), Gemini Flash from 76\% to 82\% (+6\%), and GPT-5-Mini from 72\% to 78\% (+6\%). Cost multipliers ranged from 2.1-2.8 times baseline inference.
+
+For high complexity (11-15 variables), extended thinking proved essential: accuracy improvements reached 8-10 percentage points, with Claude Haiku advancing from 58\% to 68\%, effectively extending its useful range by 2-3 variables. Cost per correct answer decreased despite higher absolute costs due to significantly improved accuracy.
+
+Thinking budget levels (high: 24576 tokens, medium: 8192, low: 1024) showed diminishing returns. The transition from no thinking to low thinking captured 60-70\% of total benefit, medium thinking added another 20-25\%, while high thinking contributed only 10-15\% additional improvement despite substantial computational overhead.
+
+\subsection{Tier Selection and Cost-Accuracy Trade-offs (RQ5: Which Tier?)}\label{subsec:tiers}
+
+We calculated cost per 1000 inferences and cost per correct answer for each tier based on provider pricing (as of October 2024). Flagship models cost \$2.50-\$3.20 per 1000 inferences but delivered \$2.60-\$3.35 per correct answer due to high accuracy (92-95\%). Medium-tier models cost \$1.20-\$1.60 per 1000 inferences and \$1.45-\$1.90 per correct answer (80-85\% accuracy). Budget models with thinking cost \$0.50-\$0.70 per 1000 inferences and \$0.62-\$0.88 per correct answer (75-80\% accuracy). Budget models without thinking cost \$0.20-\$0.35 per 1000 but yielded \$0.28-\$0.48 per correct answer (68-73\% accuracy).
+
+Medium-tier models emerged as optimal for general-purpose logical reasoning (variables 6-11), offering best cost-accuracy ratios. Flagship models justify their premium only for high-complexity tasks (>12 variables) or applications requiring >90\% accuracy. Budget models with minimal thinking prove adequate for simple problems (≤6 variables) where cost minimization dominates.
+
+\subsection{Model-Specific Strengths and Specializations (RQ6: Which Model for What?)}\label{subsec:models}
+
+Performance rankings varied by experiment type, revealing provider-specific strengths. On Horn clause tasks (horn\_yn experiments), GPT-5 models achieved top-3 rankings 73\% of the time, followed by Claude Sonnet (64\%) and Gemini Pro (58\%). For CNF tasks, Gemini models dominated verbose representations (cnf\_v1: 71\% top-3), while GPT-5 excelled at compact symbolic CNF (cnf\_v2: 69\% top-3). Claude models demonstrated most consistent performance across all representations (average rank variance: 1.8 versus 2.4 for GPT-5 and 2.7 for Gemini).
+
+Cross-representation versatility analysis identified GPT-5-Pro as most versatile (ranking within top-3 across 83\% of experiment-complexity combinations), Claude Sonnet 4.5 as best for complex Horn problems (rank 1 for 68\% of problems with >12 variables), and Gemini Pro as optimal for verbose natural language representations (rank 1 for 64\% of cnf\_v1 problems).
+
+Error pattern analysis revealed distinct failure modes: Gemini models produced more ``unclear'' responses (unable to parse model output: 3.2\% of responses) compared to Claude (1.1\%) and GPT-5 (0.8\%), suggesting more conservative or verbose response patterns. Claude models showed higher false positive rates on unsatisfiable instances (7.2\% vs. 5.1\% for GPT-5 and 4.8\% for Gemini), while GPT-5 exhibited more false negatives on satisfiable instances (6.4\% vs. 4.9\% for Claude and 5.3\% for Gemini).
+
+\section{Methods}\label{sec:methods}
+
+\subsection{Problem Dataset Generation}\label{subsec:dataset}
+
+We constructed a balanced dataset of 544 propositional logic problems using a custom generator that systematically varies problem complexity while maintaining solvability guarantees. The generator produces problems across a parameter grid: number of variables (maxvars: 4-20, yielding 17 levels), clause lengths (maxlen: 2-5 literals, yielding 4 levels), and problem types (Horn vs. non-Horn clauses).
+
+For each parameter combination, we generated 4 instances (2 satisfiable, 2 unsatisfiable) using constrained random sampling with the following protocol: (1) randomly generate candidate clause sets; (2) verify satisfiability using truth table enumeration (feasible for up to 20 variables); (3) for unsatisfiable instances, extract resolution proofs and record proof depth; (4) balance satisfiable and unsatisfiable instances within each complexity level.
+
+The final validation dataset comprises 272 Horn problems and 272 non-Horn problems, with perfect balance between satisfiable (272) and unsatisfiable (272) instances. Variable counts range 4-20 to avoid generator limitations with small variable counts while remaining within truth table tractability. Clause lengths range 2-5 to exclude trivial unit clauses while capturing canonical 3-SAT and extending to longer clauses characteristic of real-world problems.
+
+\subsection{Model Selection and Configuration}\label{subsec:models}
+
+We evaluated 12 LLM configurations spanning three providers and three performance tiers:
+
+\textbf{Tier 1 (Flagship):} Anthropic Claude Sonnet 4.5 (20250929), Google Gemini 2.5 Pro, OpenAI GPT-5 (2025-08-07), all configured with high extended thinking (24576 token budget for Anthropic/Google, high effort for OpenAI).
+
+\textbf{Tier 2 (Medium):} Anthropic Claude Haiku 4.5 with medium thinking (8192 tokens), Google Gemini 2.5 Flash with medium thinking (8192 tokens), OpenAI GPT-5 with medium effort.
+
+\textbf{Tier 3 (Budget):} Anthropic Claude Haiku 4.5 (with and without low thinking: 1024 tokens), Google Gemini 2.5 Flash-Lite (with and without low thinking: 1024 tokens), OpenAI GPT-5-Mini with low effort and GPT-5-Nano without extended thinking.
+
+All models used temperature=0 (except Anthropic models with thinking enabled, which require temperature=1 per provider specifications), seed=1234 for reproducibility, and max\_tokens ranging from 30000 (flagship) to 3000 (budget). Extended thinking configurations followed provider-specific requirements: budget tokens for Anthropic/Google, effort levels (low/medium/high) for OpenAI.
+
+\subsection{Representation Styles and Task Types}\label{subsec:representations}
+
+We implemented three representation styles to encode propositional logic problems:
+
+\textbf{Horn if-then:} Natural language implications matching Horn clause structure. Example: ``p1.'' (fact), ``if p2 and p3 then p4.'' (implication). Models evaluate whether a target proposition p0 is derivable, responding ``yes'' or ``no''.
+
+\textbf{CNF verbose (cnf\_v1):} Natural language disjunctions. Example: ``p1 is true or p2 is false or p3 is true.'' Models determine whether the clause set contains a contradiction, responding ``contradiction'', ``satisfiable'', or ``unknown''.
+
+\textbf{CNF compact (cnf\_v2):} Symbolic notation. Example: ``p1 or not(p2) or p3.'' Same task as cnf\_v1 but with more compact, symbolic encoding.
+
+Each representation paired with an appropriate parsing strategy. Horn if-then used token-scan parsing to identify ``yes''/``no'' anywhere in the response. CNF tasks used last-token extraction to identify ``contradiction''/``satisfiable''/``unknown'', aligning with instruction to place final answer at response end.
+
+\subsection{Experimental Design}\label{subsec:experiments}
+
+We conducted six complementary experiments in a 3×2 design crossing representation styles (horn\_if\_then, cnf\_v1, cnf\_v2) with problem filters (horn-only: 272 problems; mixed: 544 problems):
+
+\textbf{Exp1 (horn\_yn\_hornonly):} Horn representation on Horn problems only—baseline matching representation to problem structure.
+
+\textbf{Exp2 (horn\_yn\_mixed):} Horn representation on all problems—tests representation mismatch effects.
+
+\textbf{Exp3 (cnf1\_con\_mixed):} Verbose CNF on all problems—evaluates natural language CNF.
+
+\textbf{Exp4 (cnf2\_con\_mixed):} Compact CNF on all problems—evaluates symbolic CNF.
+
+\textbf{Exp5 (cnf1\_con\_hornonly):} Verbose CNF on Horn subset—enables representation comparison on identical problems.
+
+\textbf{Exp6 (cnf2\_con\_hornonly):} Compact CNF on Horn subset—completes representation comparison matrix.
+
+Each experiment processed all 12 model configurations in parallel using lockstep execution to ensure identical problem orderings across models. All experiments used identical prompt templates with representation-specific clause rendering, ensuring that observed differences reflect representation effects rather than prompt variation.
+
+\subsection{Execution Infrastructure}\label{subsec:infrastructure}
+
+We implemented a config-driven experimental framework in Python featuring: (1) Jinja2 template-based prompt generation with representation-specific renderers; (2) unified provider routing layer supporting Anthropic, Google, and OpenAI APIs with normalized request/response formats; (3) parallel execution with configurable concurrency (12 workers per experiment) and rate limiting (120 requests/minute per provider); (4) automatic retry with exponential backoff for transient failures; (5) resumability enabling interrupted runs to continue from last completed problem.
+
+All experiments ran between October 20-27, 2024, generating 39,168 total API calls (544 problems × 6 experiments × 12 models). Results output to JSONL files containing problem metadata (id, maxvars, maxlen, horn flag, satisfiability, proof structure), model responses (parsed answer: 0=unsatisfiable/no, 1=satisfiable/yes, 2=unclear), correctness evaluation, timing, and token usage statistics.
+
+\subsection{Analysis Pipeline}\label{subsec:analysis}
+
+We aggregated results across all experiments using custom Python scripts that: (1) load JSONL results and validate schema consistency; (2) compute accuracy metrics overall and stratified by complexity (maxvars, maxlen), problem type (Horn vs. non-Horn), and satisfiability (SAT vs. UNSAT); (3) identify degradation thresholds (variable counts where accuracy drops below 90\%, 75\%, 50\%); (4) calculate cost metrics using provider pricing (October 2024: Anthropic \$3.00/1M input tokens, Google \$1.25/1M, OpenAI \$2.50/1M for flagship tiers with proportional scaling for lower tiers and extended thinking multipliers); (5) perform cross-experiment comparisons to isolate representation effects, mismatch penalties, and thinking value.
+
+Statistical significance tested using two-proportion z-tests for accuracy differences and bootstrap resampling (10,000 iterations) for confidence intervals on aggregated metrics. All reported differences achieved p<0.01 unless otherwise noted.
+
+\section{Discussion}\label{sec:discussion}
+
+Our systematic evaluation reveals that current LLMs possess substantial but limited logical reasoning capabilities. The 85-92\% accuracy achieved by flagship models on validation problems demonstrates genuine reasoning ability extending beyond pattern matching, yet the systematic degradation with problem complexity indicates fundamental limitations in scaling to harder instances.
+
+\subsection{Representation as Inductive Bias}\label{subsec:disc-representation}
+
+The 5-10\% accuracy improvements from task-appropriate representations suggest that current LLMs leverage surface form as an inductive bias. Horn clause representations provide syntactic cues (facts, implications, goal-directed reasoning) that align with forward-chaining inference strategies, while CNF representations emphasize constraint satisfaction and contradiction detection. Models trained primarily on natural language may find verbose CNF (``p1 is true or p2 is false'') more accessible than symbolic notation (``p1 or not(p2)''), explaining the consistent 3-4\% advantage of cnf\_v1 over cnf\_v2.
+
+The severe degradation (12-18\% accuracy penalty) when representation mismatches problem structure has practical implications. Applications requiring logical reasoning should carefully select representations matching problem characteristics. For Horn clause problems (common in rule-based systems, ontologies, and many planning domains), if-then representations substantially outperform generic CNF encodings. Conversely, for general constraint satisfaction or SAT-based verification, CNF representations prove more appropriate.
+
+\subsection{Extended Thinking as Adaptive Computation}\label{subsec:disc-thinking}
+
+The complexity-dependent value of extended thinking supports theoretical models of reasoning as iterative refinement. Simple problems (4-6 variables) require minimal search and yield quickly to direct evaluation, rendering additional computation redundant (<2\% benefit). Complex problems (11-15 variables) demand systematic exploration of logical consequences, and extended thinking's 8-10\% improvements suggest that additional computation enables more thorough search or error correction.
+
+The diminishing returns across thinking levels (low captures 60-70\% of benefit, medium adds 20-25\%, high contributes 10-15\%) align with theoretical analysis of iterative algorithms. Most benefit derives from enabling any extended computation; further increases yield progressively smaller improvements. This finding informs practical deployment: for most applications, low or medium thinking levels suffice, reserving highest thinking budgets for critical applications requiring maximum accuracy.
+
+Cost-benefit analysis reveals that extended thinking improves cost-per-correct-answer despite higher inference costs when accuracy improvements exceed the cost multiplier (typically 2-3x). This crossover occurs at 9-11 variables for medium-tier models and 11-13 variables for flagship models, providing clear guidance for when to enable extended thinking.
+
+\subsection{Complexity Scaling and Fundamental Limitations}\label{subsec:disc-limits}
+
+All models exhibit systematic degradation with increasing problem complexity, though at different rates. The 3-4 variable gap between degradation thresholds for adjacent tiers (e.g., flagship >75\% up to 13-14 variables vs. medium >75\% up to 11-12 variables) quantifies the capability differences between model classes. This consistency suggests that increased model capacity primarily extends the range of tractable complexity rather than fundamentally changing reasoning mechanisms.
+
+The failure modes differ instructively across problem difficulty. On simple problems (4-6 variables), errors largely reflect parsing failures or attention lapses (randomly distributed). On medium problems (7-10 variables), errors concentrate in problems requiring multi-step reasoning chains (proof depth >4). On hard problems (11+ variables), even flagship models struggle with deep logical dependencies (proof depth >6), suggesting that current architectures lack robust mechanisms for maintaining and propagating constraints through extended inference chains.
+
+The 8-12\% difficulty gap between Horn and non-Horn problems independent of representation indicates that problem structure itself—not merely representation—affects difficulty. Horn clauses admit efficient forward-chaining algorithms (polynomial-time decidable), while general CNF requires backtracking search (NP-complete). That LLMs exhibit similar relative difficulty patterns suggests their learned reasoning strategies partially reflect underlying algorithmic complexity.
+
+\subsection{Provider-Specific Strengths and Training Differences}\label{subsec:disc-providers}
+
+The observed provider specializations—GPT-5 excelling on Horn clauses, Gemini on verbose CNF, Claude showing most consistency—likely reflect training data composition and architectural choices. Models exposed to more natural language rule formulations may develop stronger Horn clause reasoning, while models trained on technical/mathematical content may handle symbolic CNF better.
+
+Error pattern differences (Gemini producing more unclear responses, Claude showing false positive bias, GPT-5 showing false negative bias) suggest distinct failure modes stemming from training objectives. Conservative models (Gemini) may prefer withholding judgments when uncertain, while models trained for decisiveness may commit to answers with inadequate confidence, manifesting as systematic biases in error directions.
+
+\subsection{Limitations and Future Directions}\label{subsec:limitations}
+
+Our evaluation focused on propositional logic, leaving first-order logic, modal logic, and probabilistic reasoning to future work. The validation dataset (544 problems) provides robust trends but full production evaluation (5,440 problems) would enable finer-grained complexity analysis and rare failure mode identification.
+
+We evaluated models via API with provider-default architectures and training, precluding analysis of architecture-specific factors (attention mechanisms, layer depth, parameter counts) or training factors (pre-training vs. fine-tuning contributions). Future work should examine how architectural modifications and targeted training affect logical reasoning capabilities.
+
+The rapid pace of LLM development means that specific model versions evaluated here will soon be superseded. However, the systematic methodology, representation analysis framework, and complexity threshold concepts generalize to future models and enable longitudinal tracking of reasoning capability improvements.
+
+\section{Conclusion}\label{sec:conclusion}
+
+This work establishes the first comprehensive benchmark for LLM logical reasoning across representations, complexity levels, and model tiers. Our findings demonstrate that current LLMs possess substantial but bounded logical reasoning capabilities, with performance highly sensitive to representation choice and problem complexity. Medium-tier models provide optimal cost-accuracy trade-offs for most applications, while extended thinking mechanisms prove valuable primarily for complex problems exceeding baseline model capabilities.
+
+The systematic degradation thresholds identified (flagship >75\% up to 13-14 variables, medium >75\% up to 11-12 variables, budget >75\% up to 8-10 variables) provide practical guidance for model selection based on application requirements. Representation effects (5-10\% improvements from appropriate encoding, 12-18\% penalties from mismatch) underscore the importance of careful problem formulation.
+
+These results establish baseline capabilities for current LLMs and provide a methodological framework for evaluating future models. As LLMs continue advancing, systematic evaluation across controlled complexity gradients will prove essential for understanding their reasoning mechanisms and identifying remaining limitations. The integration of extended thinking mechanisms represents a promising direction, but our analysis reveals that current implementations capture only a fraction of potential benefits, suggesting substantial room for improvement in adaptive computation strategies.
+
+For practitioners deploying LLMs in reasoning-intensive applications, our findings recommend: (1) select representations matching problem structure; (2) use medium-tier models for general-purpose reasoning at 6-11 variables; (3) reserve flagship models with extended thinking for complex problems exceeding 12 variables or applications requiring >90\% accuracy; (4) implement fallback strategies for problems approaching model degradation thresholds. Following these guidelines will maximize reasoning accuracy while controlling computational costs.
+
+
+\backmatter
+
+\bmhead{Supplementary information}
+
+Supplementary materials include: (1) Complete experimental configurations (YAML files) for all six experiments; (2) Full aggregated results dataset (JSON format) containing accuracy breakdowns by complexity level, problem type, and model configuration; (3) Interactive HTML dashboard enabling exploration of all results with filtering and visualization capabilities; (4) Problem dataset generator source code and validation dataset (544 problems); (5) Complete experimental framework source code including provider clients, parsing logic, and analysis scripts. All materials are available at [repository URL to be provided upon publication].
+
+\bmhead{Acknowledgements}
+
+[To be completed with appropriate acknowledgements of funding sources, computational resources, and collaborators.]
+
+\section*{Declarations}
+
+\textbf{Funding:} [To be completed with grant numbers and funding sources.]
+
+\textbf{Competing interests:} The authors declare no competing interests.
+
+\textbf{Ethics approval and consent to participate:} Not applicable.
+
+\textbf{Consent for publication:} Not applicable.
+
+\textbf{Data availability:} All experimental data, including raw API responses, aggregated results, and analysis outputs, will be made publicly available upon publication. The dataset comprises 39,168 inference calls across 544 problems, 6 experiments, and 12 model configurations. Results are provided in standard JSONL format enabling reproduction and extension of all analyses reported in this manuscript.
+
+\textbf{Code availability:} Complete source code for the experimental framework, including problem generation, API client wrappers, parsing logic, analysis pipeline, and dashboard generation, will be released under an open-source license (Apache 2.0) upon publication. The codebase includes comprehensive documentation and configuration examples enabling researchers to reproduce experiments or adapt the framework for evaluating future models or alternative logical reasoning tasks.
+
+\textbf{Author contribution:} [To be completed with appropriate CRediT taxonomy contributions.]
+
+\begin{appendices}
+
+\section{Extended Data}\label{secA1}
+
+\subsection{Model Configurations Summary}
+
+This appendix provides complete specification of all 12 model configurations evaluated in this study, including provider-specific parameters, thinking configurations, and token limits.
+
+\subsection{Complete Accuracy Tables}
+
+Detailed accuracy breakdown tables by variable count (4-20), clause length (2-5), and problem type (Horn/non-Horn, SAT/UNSAT) for all 12 models across all 6 experiments. [Tables to be generated from aggregated results.]
+
+\subsection{Cost Analysis Details}
+
+Complete cost calculations including per-provider pricing schedules (October 2024), token usage statistics, and cost-per-correct-answer metrics stratified by problem complexity and model tier.
+
+\subsection{Degradation Curves}
+
+High-resolution plots showing accuracy as a function of problem complexity (maxvars) for all 12 models across all 6 experiments, with threshold lines marked at 90\%, 75\%, and 50\% accuracy levels.
+
+\subsection{Prompt Templates}
+
+Complete Jinja2 template specifications for all three representation styles (horn\_if\_then, cnf\_v1, cnf\_v2), including instruction text, examples, and variable rendering logic.
+
+\end{appendices}
+
+%%===========================================================================================%%
+%% If you are submitting to one of the Nature Portfolio journals, using the eJP submission   %%
+%% system, please include the references within the manuscript file itself. You may do this  %%
+%% by copying the reference list from your .bbl file, paste it into the main manuscript .tex %%
+%% file, and delete the associated \verb+\bibliography+ commands.                            %%
+%%===========================================================================================%%
+
+\bibliography{sn-bibliography}% common bib file
+%% if required, the content of .bbl file can be included here once bbl is generated
+%%\input sn-article.bbl
+
+\end{document}

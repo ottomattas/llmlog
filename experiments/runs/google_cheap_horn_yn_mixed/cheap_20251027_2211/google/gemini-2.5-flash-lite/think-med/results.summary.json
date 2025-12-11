@@ -1,0 +1,18 @@
+{
+  "name": "google_cheap_horn_yn_mixed",
+  "provider": "google",
+  "model": "gemini-2.5-flash-lite",
+  "run": "cheap_20251027_2211",
+  "total": 544,
+  "correct": 398,
+  "accuracy": 0.7316176470588235,
+  "unclear": 0,
+  "sat_total": 272,
+  "sat_correct": 144,
+  "sat_accuracy": 0.5294117647058824,
+  "unsat_total": 272,
+  "unsat_correct": 254,
+  "unsat_accuracy": 0.9338235294117647,
+  "avg_timing_ms": 16232.398897058823,
+  "timestamp": 1761611789
+}

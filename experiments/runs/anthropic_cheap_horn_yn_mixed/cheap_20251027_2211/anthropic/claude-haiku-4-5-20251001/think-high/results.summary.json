@@ -1,0 +1,18 @@
+{
+  "name": "anthropic_cheap_horn_yn_mixed",
+  "provider": "anthropic",
+  "model": "claude-haiku-4-5-20251001",
+  "run": "cheap_20251027_2211",
+  "total": 544,
+  "correct": 266,
+  "accuracy": 0.4889705882352941,
+  "unclear": 241,
+  "sat_total": 272,
+  "sat_correct": 120,
+  "sat_accuracy": 0.4411764705882353,
+  "unsat_total": 272,
+  "unsat_correct": 146,
+  "unsat_accuracy": 0.5367647058823529,
+  "avg_timing_ms": 29860.928308823528,
+  "timestamp": 1761612357
+}
