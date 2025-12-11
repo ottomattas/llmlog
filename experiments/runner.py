@@ -519,6 +519,16 @@ def run_targets_lockstep(
                                                             break
                                             if extracted:
                                                 break
+                                    # Anthropic final message shape: { content: [ {type: 'text', text: '...'} , ... ] }
+                                    if not extracted:
+                                        try:
+                                            blocks = rr.get("content") or []
+                                            for blk in blocks:
+                                                if isinstance(blk, dict) and blk.get("type") == "text" and isinstance(blk.get("text"), str) and blk.get("text").strip():
+                                                    extracted = blk.get("text").strip()
+                                                    break
+                                        except Exception:
+                                            pass
                                 if not extracted:
                                     # Fallback: any string value in raw_response
                                     for v in rr.values():

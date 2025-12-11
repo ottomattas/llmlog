@@ -131,6 +131,28 @@ def chat_completion(prompt: str, model: str, max_tokens: Optional[int] = 1000, t
                     text = _extract_message_text(final_msg)
                 except Exception:
                     pass
+        # If no text captured via streaming/final message, perform a non-stream fallback to fetch final text
+        if not text:
+            try:
+                resp = client.messages.create(**kwargs)
+                # Reuse extractor to pull any text blocks
+                text = _extract_message_text(resp)
+                if not text:
+                    # As last resort, stringify resp
+                    text = str(resp)
+                # Update meta minimally from non-stream response
+                meta.update({
+                    "raw_response": getattr(resp, "dict", lambda: resp)(),
+                    "finish_reason": getattr(resp, "stop_reason", meta.get("finish_reason")),
+                    "usage": {
+                        "input_tokens": getattr(getattr(resp, "usage", None), "input_tokens", meta.get("usage", {}).get("input_tokens")),
+                        "output_tokens": getattr(getattr(resp, "usage", None), "output_tokens", meta.get("usage", {}).get("output_tokens")),
+                    },
+                })
+            except Exception:
+                # keep empty text
+                pass
+
         # Optionally compute visible token counts for thinking/text; expose billed reasoning via usage
         if thinking_buf:
             thinking_text = "".join(thinking_buf)
