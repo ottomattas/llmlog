@@ -21,8 +21,6 @@
 #-------------------------------------------------------------------
 
 import sys
-import argparse
-from concurrent.futures import ProcessPoolExecutor
 import json
 
 import random, math, time
@@ -53,188 +51,97 @@ probs_for_onecase=20 # 100 will contain 50 satisfiable and 50 non-satisfiable, i
 
 # ======== generator ======
 
-# Suggested ratios to use per max clause length and horn flag
-# maxvars: [general_ratio,horn_ratio]
-GOOD_RATIOS={
-  2: [1.9,1.3],
-  3: [4.0,2.0],
-  4: [[0,0,0,3.2,4.4,5.6,6.4,6.9,6.7,7.6],3.1],
-  5: [[0,0,0,3.3,5.5,7.7,9.4,10.8,11.6,12.4,12.9,13.9,14.1],4.6]
-}
-
-def select_ratio(varnr, cllen, hornflag):
-  ratios=GOOD_RATIOS[cllen]
-  ratios=ratios[1] if hornflag else ratios[0]
-  if type(ratios)==list:
-    if varnr>=len(ratios):
-      return ratios[-1]
-    return ratios[varnr]
-  return ratios
-
-def _generate_case(case_args):
-  # case_args: (case_index, varnr, cllen, hornflag, ratio, percase, seed, no_proof)
-  (case_index, varnr, cllen, hornflag, ratio, percase, seed, no_proof)=case_args
-  if seed is not None:
-    # derive deterministic per-case seed
-    random.seed(seed + case_index*9973 + cllen*131 + (1 if hornflag else 0))
-  problems=[]
-  problst=make_balanced_prop_problem_list(percase,varnr,cllen,ratio,hornflag)
-  truelist=problst[2]
-  falselist=problst[3]
-  choosefrom=True
-  local_id=0
-  while True:
-    if not truelist and not falselist: break
-    if choosefrom==True:
-      if truelist:
-        prob=truelist[0]
-        truelist=truelist[1:]
-        res=truth_table_solve(prob)
-        proof=[]
-        for el in res[0]:
-          proof.append(int(el))
-        truth=1
-      else:
-        choosefrom=False
-        continue
-    else:
-      if falselist:
-        prob=falselist[0]
-        falselist=falselist[1:]
-        if no_proof:
-          proof=[]
-        else:
-          res=solve_prop_problem(prob)
-          proof=makeproof(res,allcls)
-        truth=0
-      else:
-        choosefrom=True
-        continue
-    horn=1 if hornflag else 0
-    horn_solve_res=resolve_res=solve_prop_horn_problem(prob)
-    local_id+=1
-    problems.append([0,varnr,cllen,horn,truth,prob,proof,horn_solve_res])
-    choosefrom= not choosefrom
-  return problems
-
-
-def parse_int_list(arg):
-  # Accept comma-separated ints, ranges like a-b, or repeated flags
-  # Examples: "3,4,5" or "3-10". Returns a sorted unique list of ints.
-  vals=set()
-  if not arg:
-    return []
-  parts=str(arg).split(",")
-  for p in parts:
-    p=p.strip()
-    if not p:
-      continue
-    if "-" in p:
-      a,b=p.split("-",1)
-      a=int(a.strip()); b=int(b.strip())
-      if a<=b:
-        for x in range(a,b+1):
-          vals.add(x)
-      else:
-        for x in range(b,a+1):
-          vals.add(x)
-    else:
-      vals.add(int(p))
-  res=list(vals)
-  res.sort()
-  return res
-
 
 def main(): 
   global allcls
-  # CLI parameters
-  ap=argparse.ArgumentParser(description="Generate CNF/Horn problems with configurable complexity")
-  ap.add_argument("--vars", dest="vars", default=None, help="Variable counts as list/range, e.g. 3-15 or 10,12,15")
-  ap.add_argument("--clens", dest="clens", default=None, help="Clause lengths as list/range, e.g. 3-4 or 3,4,5")
-  ap.add_argument("--horn", dest="horn", choices=["only","mixed"], default=None, help="Horn-only or mixed problems")
-  ap.add_argument("--percase", dest="percase", type=int, default=None, help="Problems per (vars,clen,horn) case (even number)")
-  ap.add_argument("--seed", dest="seed", type=int, default=None, help="Random seed for reproducibility")
-  ap.add_argument("--workers", dest="workers", type=int, default=1, help="Parallel worker processes for case generation")
-  ap.add_argument("--no-proof", dest="no_proof", action="store_true", help="Skip resolution proof construction for UNSAT (faster)")
-  args=ap.parse_args()
-
-  # Apply CLI overrides while keeping legacy defaults if not provided
-  global varnr_range, cl_len_range, horn_flags, probs_for_onecase
-  if args.vars:
-    varnr_range=parse_int_list(args.vars)
-  if args.clens:
-    cl_len_range=parse_int_list(args.clens)
-  if args.horn:
-    horn_flags=[True] if args.horn=="only" else [True,False]
-  if args.percase is not None:
-    if args.percase%2!=0:
-      print("--percase must be even", file=sys.stderr)
-      sys.exit(2)
-    probs_for_onecase=args.percase
-  if args.seed is not None:
-    random.seed(args.seed)
-
-  # Guard: the truth table solver supports up to 20 variables
-  # If user specified values beyond 20, we will warn and filter to 20
-  max_supported_vars=20
-  if any(v>max_supported_vars for v in varnr_range):
-    print(f"Warning: max vars beyond {max_supported_vars} are not supported by truth table; filtering.", file=sys.stderr)
-    varnr_range=[v for v in varnr_range if v<=max_supported_vars]
-
-  # Build cases (deterministic order)
-  cases=[]
-  case_index=0
+  problems=[]
+  # maxvars: [general_ratio,horn_ratio]
+  goodratios={
+    2: [1.9,1.3],
+    3: [4.0,2.0],
+    4: [[0,0,0,3.2,4.4,5.6,6.4,6.9,6.7,7.6],3.1],
+    5: [[0,0,0,3.3,5.5,7.7,9.4,10.8,11.6,12.4,12.9,13.9,14.1],4.6]
+  }
+  probnr=0
   for varnr in varnr_range:
     for cllen in cl_len_range:
       for hornflag in horn_flags:
-        ratio=select_ratio(varnr,cllen,hornflag)
-        cases.append((case_index,varnr,cllen,hornflag,ratio,probs_for_onecase,args.seed,args.no_proof))
-        case_index+=1
-
-  # Stream: print header then process each case and emit rows immediately
-  fline='["id","maxvarnr","maxlen","mustbehorn","issatisfiable","problem",'
-  fline+='"proof_of_inconsistency_or_satisfying_valuation","units_derived_by_horn_clauses"]'
+        ratios=goodratios[cllen]
+        if hornflag: ratios=ratios[1]
+        else: ratios=ratios[0]
+        #print("ratios",ratios)
+        if type(ratios)==list:
+          if varnr>=len(ratios): ratio=ratios[-1]
+          else: ratio=ratios[varnr] 
+        else:
+          ratio=ratios       
+        # we get a list [truecount,falsecount,true_problems,false_problems]  
+        #print("probs_for_onecase,varnr,cllen,ratio,hornflag",probs_for_onecase,varnr,cllen,ratio,hornflag)
+        problst=make_balanced_prop_problem_list(probs_for_onecase,varnr,cllen,ratio,hornflag)
+        #print("problst",problst)
+        # interleave problems from the list, add proof/model and metainfo
+        truelist=problst[2]
+        falselist=problst[3]
+        choosefrom=True       
+        while True:
+          if not truelist and not falselist: break
+          if choosefrom==True:
+            if truelist:
+              # true problem 
+              prob=truelist[0]
+              truelist=truelist[1:]  
+              res=truth_table_solve(prob) 
+              proof=[]
+              for el in res[0]:
+                proof.append(int(el))              
+          else:
+            if falselist: 
+              # false problem 
+              prob=falselist[0]
+              falselist=falselist[1:]  
+              res=solve_prop_problem(prob)          
+              proof=makeproof(res,allcls)                
+          # build a problem with proof and metainfo    
+          probnr+=1            
+          if hornflag: horn=1
+          else: horn=0
+          if choosefrom: truth=1
+          else: truth=0
+          horn_solve_res=resolve_res=solve_prop_horn_problem(prob)
+          newprob=[probnr,varnr,cllen,horn,truth,prob,proof,horn_solve_res]
+          problems.append(newprob)
+          choosefrom= not choosefrom
+  simpcount=0  
+  fline="""["id","maxvarnr","maxlen","mustbehorn","issatisfiable","problem","""
+  fline+=""" "proof_of_inconsistency_or_satisfying_valuation","units_derived_by_horn_clauses"]"""
   print(fline)
+  for prob in problems:
+    print (prob)  
 
-  prob_id=0
-
-  def emit_case(results):
-    nonlocal prob_id
-    for prob in results:
-      prob_id+=1
-      prob[0]=prob_id
-      print(prob)
-      # basic sanity checks (kept from legacy)
-      for cl in prob[5]:
-        fullneg=True
-        for v in cl:
-          if v>0:
-            fullneg=False
-            break
-        if fullneg: break
-      for cl in prob[5]:
-        fullpos=True
-        for v in cl:
-          if v<0:
-            fullpos=False
-            break
-        if fullpos: break
-      if prob[4]==0 and not (fullpos and fullneg):
-        return False
-    return True
-
-  if args.workers and args.workers>1:
-    with ProcessPoolExecutor(max_workers=args.workers) as ex:
-      for res in ex.map(_generate_case, cases):
-        ok=emit_case(res)
-        if not ok:
-          return
-  else:
-    for c in cases:
-      res=_generate_case(c)
-      ok=emit_case(res)
-      if not ok:
-        return
+    for cl in prob[5]:   
+      fullneg=True
+      for v in cl:
+        if v>0: 
+          fullneg=False
+          break
+      if fullneg: break  
+    for cl in prob[5]:   
+      fullpos=True
+      for v in cl:
+        if v<0: 
+          fullpos=False
+          break
+      if fullpos: break  
+    #print(prob[4],len(prob[5][0]),fullneg,"\n")      
+    #print(prob[4],fullpos and fullneg,"\n") 
+    #if prob[4]==1 and (len(prob[5][0])!=1 or not fullneg):
+    if prob[4]==0 and not (fullpos and fullneg):
+      #print("****","\n")
+      return
+    if not (fullpos and fullneg):
+    #if not fullneg:
+      simpcount+=1
+  #print("simpcount",simpcount)    
 
 
 def testing_main():  
@@ -621,48 +528,32 @@ def print_trace(depth,x):
 #proofcls={}
 
 def makeproof(resolve_res,allcls):  
-  # Build proof iteratively to avoid recursion depth limits
+  #global proofcls
+  #print("resolve_res",resolve_res)
   proofcls={}
   if type(resolve_res)!=list:
-    return []
-  stack=[resolve_res]
-  while stack:
-    incl=stack.pop()
-    if type(incl)!=list:
-      continue
-    clid=incl[0]
-    if clid in proofcls:
-      continue
-    lst=list(incl[2])
-    lst.sort()
-    proof=incl[1] if incl[1] else []
-    lstcl=[clid,proof,lst]
-    proofcls[clid]=lstcl
-    if proof:
-      for parent_id in proof:
-        if parent_id not in proofcls:
-          parent=allcls.get(parent_id)
-          if parent is not None:
-            stack.append(parent)
+    return []  
+  # built full proof
+  makeproof_aux(resolve_res,allcls,proofcls)
   # make list-form clauses
   lst=[]
-  for el in proofcls:
+  for el in proofcls:       
     lst.append(proofcls[el])
-  lst.sort(key=lambda x: x[0])
+  lst.sort(key=lambda x: x[0])  
   # collect cl numbers and renumber from 1
   nr=0
   nrs={}
-  for el in lst:
+  for el in lst: 
     if el[0] not in nrs:
       nr+=1
       nrs[el[0]]=nr
   # rename clause numbers in clauses and histories
   lst2=[]
-  for el in lst:
+  for el in lst:    
     newhist=[]
     for hel in el[1]:
       newhist.append(nrs[hel])
-    newcl=[nrs[el[0]],newhist,el[2]]
+    newcl=[nrs[el[0]],newhist,el[2]] 
     lst2.append(newcl)
   return lst2
 
