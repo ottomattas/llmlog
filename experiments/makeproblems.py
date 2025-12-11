@@ -22,10 +22,38 @@
 
 import sys
 import json
+import os
+import subprocess
+import tempfile
+import shlex
+import shutil
 
 import random, math, time
 
+# Optional PySAT backend
+try:
+  from pysat.formula import CNF
+  from pysat.solvers import Solver
+  HAS_PYSAT=True
+except ImportError:
+  HAS_PYSAT=False
+
 # ======== configuration ======
+# Backend choice: "legacy" or "pysat". Default auto-selects PySAT if available.
+SOLVER_BACKEND=os.getenv("SOLVER_BACKEND","pysat" if HAS_PYSAT else "legacy")
+# PySAT solver names to try (in order) when SOLVER_BACKEND=="pysat"
+PYSAT_SOLVER_CANDIDATES=os.getenv("PYSAT_SOLVER_CANDIDATES","lgl,mc,m22,g4,g41,g3").split(",")
+# PySAT solver name selected after probe (set during probe)
+PYSAT_SOLVER_NAME=None
+# External proof solver command (e.g., kissat --proof=)
+PROOF_SOLVER_CMD=os.getenv("PROOF_SOLVER_CMD","")
+PROOF_SOLVER_TIMEOUT=float(os.getenv("PROOF_SOLVER_TIMEOUT","30"))
+PROOF_FORMAT=os.getenv("PROOF_FORMAT","drat")  # expected output format from external solver
+# Print timing to stderr
+PRINT_TIMING=True
+# Fixed seed for reproducibility
+SEED=int(os.getenv("PROBLEM_SEED","12345"))
+random.seed(SEED)
 
 # probs_for_onecase number of problems will be created 
 # for each triple of params below:
@@ -54,6 +82,8 @@ probs_for_onecase=20 # 100 will contain 50 satisfiable and 50 non-satisfiable, i
 
 def main(): 
   global allcls
+  select_pysat_solver_if_needed()
+  start=time.time()
   problems=[]
   # maxvars: [general_ratio,horn_ratio]
   goodratios={
@@ -89,18 +119,18 @@ def main():
             if truelist:
               # true problem 
               prob=truelist[0]
-              truelist=truelist[1:]  
-              res=truth_table_solve(prob) 
-              proof=[]
-              for el in res[0]:
-                proof.append(int(el))              
+              truelist=truelist[1:]
+              sat,payload=solve_with_backend(prob,SOLVER_BACKEND,PYSAT_SOLVER_NAME)
+              proof=payload if payload is not None else []
+              if sat and proof:
+                proof=[int(el) for el in proof]
           else:
             if falselist: 
               # false problem 
               prob=falselist[0]
-              falselist=falselist[1:]  
-              res=solve_prop_problem(prob)          
-              proof=makeproof(res,allcls)                
+              falselist=falselist[1:]
+              sat,payload=solve_with_backend(prob,SOLVER_BACKEND,PYSAT_SOLVER_NAME)
+              proof=payload if payload is not None else []
           # build a problem with proof and metainfo    
           probnr+=1            
           if hornflag: horn=1
@@ -142,6 +172,9 @@ def main():
     #if not fullneg:
       simpcount+=1
   #print("simpcount",simpcount)    
+  if PRINT_TIMING:
+    elapsed=time.time()-start
+    print(f"# elapsed_seconds {elapsed:.2f}", file=sys.stderr)
 
 
 def testing_main():  
@@ -245,11 +278,12 @@ def make_balanced_prop_problem_list(wanted,varnr,maxlen,ratio,hornflag):
     raw_problem=make_prop_problem(varnr,maxlen,ratio,hornflag)
     problem=normalize_problem(raw_problem)
     if not problem: continue
-    table_res=truth_table_solve(problem) 
-    if not table_res:
+    solve_res=solve_with_backend(problem,SOLVER_BACKEND,PYSAT_SOLVER_NAME)
+    if solve_res is None:
       print("error while solving a problem")
       return None
-    if table_res[0]:
+    issat=solve_res[0]
+    if issat:
       # true
       truecount+=1
       if len(true_problems)>len(false_problems): continue
@@ -809,6 +843,158 @@ def store_model(varvals):
   for i in range(1, len(varvals)):
       if varvals[i] != 0:
         result_model.append(str(i * varvals[i]))
+
+
+# ========= external proof solver (e.g., kissat) helpers =========
+
+def clauses_to_dimacs(clauses):
+  maxvar=0
+  for cl in clauses:
+    for lit in cl:
+      if abs(lit)>maxvar:
+        maxvar=abs(lit)
+  lines=[f"p cnf {maxvar} {len(clauses)}"]
+  for cl in clauses:
+    lines.append(" ".join(str(l) for l in cl)+" 0")
+  return "\n".join(lines)+"\n"
+
+
+def parse_dimacs_model(stdout):
+  model=[]
+  for line in stdout.splitlines():
+    line=line.strip()
+    if not line or line.startswith("c") or line.startswith("s"):
+      continue
+    if line.startswith("v") or line[0].isdigit() or line[0]=="-":
+      parts=line.split()
+      if parts[0]=="v":
+        parts=parts[1:]
+      for p in parts:
+        try:
+          val=int(p)
+        except ValueError:
+          continue
+        if val==0:
+          continue
+        model.append(val)
+  return model
+
+
+def run_external_proof_solver(clauses):
+  cmd=PROOF_SOLVER_CMD.strip()
+  if not cmd:
+    return None
+  head=shlex.split(cmd)[0]
+  if not shutil.which(head):
+    print(f"Error: proof solver command not found: {cmd}", file=sys.stderr)
+    return None
+  with tempfile.TemporaryDirectory() as td:
+    cnf_path=os.path.join(td,"input.cnf")
+    proof_path=os.path.join(td,f"proof.{PROOF_FORMAT}")
+    with open(cnf_path,"w") as f:
+      f.write(clauses_to_dimacs(clauses))
+    args=shlex.split(cmd)+[f"--proof={proof_path}",cnf_path]
+    try:
+      proc=subprocess.run(args,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,timeout=PROOF_SOLVER_TIMEOUT)
+    except Exception as e:
+      print(f"Error: external proof solver failed to run ({e})", file=sys.stderr)
+      return None
+    rc=proc.returncode
+    if rc==10:
+      model=parse_dimacs_model(proc.stdout)
+      return (True, model)
+    if rc==20:
+      proof_lines=[]
+      if os.path.exists(proof_path):
+        with open(proof_path,"r") as pf:
+          proof_lines=[ln.rstrip("\n") for ln in pf.readlines()]
+      return (False, proof_lines)
+    print(f"Error: proof solver returned rc={rc}; stdout='{proc.stdout.strip()}' stderr='{proc.stderr.strip()}'", file=sys.stderr)
+    return None
+
+
+# ======== PySAT / backend helpers ========
+
+def pysat_solve(clauses, solver_name="g3", need_proof=True):
+  if not HAS_PYSAT:
+    return None
+  cnf=CNF(from_clauses=clauses)
+  with Solver(name=solver_name, bootstrap_with=cnf, with_proof=need_proof) as solver:
+    sat=solver.solve()
+    if sat:
+      model=solver.get_model() or []
+      model=[int(l) for l in model]
+      return (True, model)
+    proof=[]
+    if need_proof:
+      try:
+        raw=solver.get_proof()
+        if raw is not None:
+          proof=list(raw)
+      except Exception as e:
+        print(f"Warning: failed to fetch PySAT proof ({e})", file=sys.stderr)
+    return (False, proof)
+
+
+def probe_pysat_solver(names):
+  """
+  Try solvers in order, return the first name that yields a non-empty proof on a trivial UNSAT instance.
+  """
+  trivial_unsat=[[1],[-1]]
+  for name in names:
+    try:
+      res=pysat_solve(trivial_unsat, solver_name=name, need_proof=True)
+    except Exception as e:
+      continue
+    if res and res[0] is False and res[1]:
+      return name
+  return None
+
+
+def select_pysat_solver_if_needed():
+  global PYSAT_SOLVER_NAME
+  if SOLVER_BACKEND!="pysat":
+    return
+  if not HAS_PYSAT:
+    print("Error: PySAT requested but python-sat not installed", file=sys.stderr)
+    sys.exit(2)
+  name=probe_pysat_solver(PYSAT_SOLVER_CANDIDATES)
+  if not name:
+    print("Error: No PySAT solver with proof logging available from candidates", file=sys.stderr)
+    sys.exit(2)
+  PYSAT_SOLVER_NAME=name
+  print(f"# Using PySAT solver '{name}'", file=sys.stderr)
+
+
+def solve_with_backend(problem, backend, pysat_name):
+  if backend=="pysat" and HAS_PYSAT:
+    try:
+      res=pysat_solve(problem, solver_name=pysat_name, need_proof=True)
+    except Exception as e:
+      print(f"Warning: PySAT solve failed ({e})", file=sys.stderr)
+      return None
+    if res:
+      sat,payload=res
+      if sat or (sat is False and payload):
+        return res
+    # fall through to external proof solver if UNSAT proof missing
+  ext_res=run_external_proof_solver(problem)
+  if ext_res:
+    return ext_res
+  if backend=="legacy":
+    table_res=truth_table_solve(problem)
+    if not table_res:
+      return None
+    if table_res[0]:
+      proof=[]
+      for el in table_res[0]:
+        proof.append(int(el))
+      return (True, proof)
+    res=solve_prop_problem(problem)
+    proof=makeproof(res,allcls)
+    return (False, proof)
+  print("Error: No proof-capable solver available", file=sys.stderr)
+  return None
 
 
 
