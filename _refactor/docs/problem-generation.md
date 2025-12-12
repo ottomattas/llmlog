@@ -73,9 +73,25 @@ python scripts/generate_problems.py \
   --print-sha256
 ```
 
-- **Output path**: `datasets/validation/full_vars3-50_len3-5_hornmixed_per20_seed12345.jsonl`
-- **Expected rows**: \(48 \times 3 \times 2 \times 20 = 5760\) (not counting the header line)
+- **Output path**: `datasets/validation/full_vars3-50_len3-5_hornmixed_per50_seed12345.jsonl`
+- **Expected rows**: \(48 \times 3 \times 2 \times 50 = 14400\) (not counting the header line)
 - **Tip**: record the printed SHA-256 checksum to make runs reproducible and comparable.
+
+### Runtime controls: monitoring + avoiding “hangs”
+These flags do **not** change the dataset meaning; they affect generation UX and failure behavior.
+
+- **`--progress-every N`**:
+  - Prints periodic progress lines to **stderr**.
+  - During full dataset generation (balancing), it prints every **N attempts** inside each \((n,k,horn)\) case, e.g.:
+    - `# progress attempts=... sat_seen=... unsat_seen=... sat_kept=... unsat_kept=... elapsed_s=...`
+  - During **probe mode** (`--probe-samples`), it prints every **N probe samples** per case:
+    - `# probe_progress case_var=... case_len=... horn=... i=... sat=... unsat=... unk=... elapsed_s=...`
+  - If `N` is large (or a case finishes quickly), you may see **no progress output** even though generation is working. You’ll still see the final checksum if you pass `--print-sha256`.
+
+- **`--max-attempts N`**:
+  - Safety valve for balancing: aborts if a single \((n,k,horn)\) case can’t reach the requested balanced count within **N attempts**.
+  - Default is `0` (disabled / no limit).
+  - Useful when the chosen clause/variable ratio makes one side (SAT or UNSAT) too rare, or when UNSAT proof generation frequently times out.
 
 ### Output format (contract)
 The generator emits rows that are **JSON-compatible** (numbers + lists only), so they can be parsed as JSONL:

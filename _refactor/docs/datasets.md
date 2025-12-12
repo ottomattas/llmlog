@@ -28,7 +28,11 @@ python scripts/generate_problems.py \
   --print-sha256
 ```
 
-This produces a single JSONL file under `datasets/validation/` with **5760** problem rows (plus a header line).
+This produces a single JSONL file under `datasets/validation/` with **14400** problem rows (plus a header line).
+
+### Runtime controls (generation behavior)
+- **`--progress-every N`**: prints periodic progress lines (to stderr) so you can see whether generation is making progress. If `N` is large, you may see no intermediate output even though the run is healthy.
+- **`--max-attempts N`**: aborts if balancing a single \((n,k,horn)\) case takes more than `N` sampling attempts (default `0` = no limit). This prevents indefinite runs when SAT/UNSAT is too imbalanced under the chosen ratio.
 
 ### Will document next
 - dataset naming convention (vars, lens, per-case, seed, horn/mixed)
