@@ -1,4 +1,4 @@
-## Problem generation (`makeproblems`)
+## Problem generation (`generate_problems`)
 
 This doc describes the dataset generator used to create propositional logic problem sets consumed by the runner.
 
@@ -18,7 +18,7 @@ The generator emits rows that are **JSON-compatible** (numbers + lists only), so
   - `problem`: list of clauses (each clause is a list of ints)
   - `proof_of_inconsistency_or_satisfying_valuation`:
     - if SAT: a satisfying valuation (list of ints)
-    - if UNSAT: a legacy-style resolution proof (list of derived clauses)
+    - if UNSAT: a Kissat DRAT proof encoded as lists of ints (see below)
   - `units_derived_by_horn_clauses`: list of derived units (Horn-only forward chaining)
 
 Important: to stay JSON-compatible for downstream tooling, proofs/models must remain **numbers + lists** (avoid raw solver text lines).
@@ -27,8 +27,18 @@ Important: to stay JSON-compatible for downstream tooling, proofs/models must re
 - **SAT models**: PySAT with solver **`g3`** (fast, widely available in `python-sat` builds).
 - **UNSAT proofs**:
   - We validated external proof logging via **Kissat**.
-  - However, for **legacy parity**, UNSAT proofs are represented in the legacy internal proof format (resolution trace), not DRAT/LRAT text.
-  - Post-parity, we can optionally add DRAT/LRAT as an additional artifact/output format.
+  - Proofs are emitted as DRAT, but encoded as **numbers + lists** (not raw text) so the dataset stays JSON-compatible.
+
+### UNSAT proof encoding (Kissat DRAT)
+Kissat writes DRAT lines like:
+- add clause: `-3 0`
+- delete clause: `d -3 -2 0`
+- empty clause: `0`
+
+We encode each line as a list of ints:
+- additions: `[ 1, lit1, lit2, ... ]`
+- deletions: `[ -1, lit1, lit2, ... ]`
+- empty clause: `[ 1 ]`
 
 ### Determinism and seeds
 - The legacy script `_legacy/makeproblems.py` is not inherently deterministic when run directly (it does not read a seed).
@@ -41,6 +51,18 @@ Keep a “golden parity mode” and verify it:
 - Compare checksums (`shasum`) or `diff`
 
 ### Next steps (planned)
-- Copy `_legacy/makeproblems.py` into `scripts/makeproblems.py` unchanged as baseline.
+- Keep `_legacy/makeproblems.py` as the generation engine while we stabilize the wrapper.
 - Introduce a minimal CLI (e.g., `--seed`, `--vars`, `--clens`, `--percase`, `--horn`) while preserving defaults.
 - Remove dead options only after parity is protected by a stable test/harness.
+
+### External dependencies (solving/proofs)
+- **PySAT (python-sat)**: we use PySAT’s `formula` + `solvers` APIs to solve CNFs and extract SAT models.
+  - Docs: [PySAT API documentation](https://pysathq.github.io/docs/html/#api-documentation)
+  - Source: [pysathq/pysat (GitHub)](https://github.com/pysathq/pysat)
+- **Kissat**: external SAT solver used to emit UNSAT proofs (DRAT) when `issatisfiable=0`.
+  - Source: [arminbiere/kissat (GitHub)](https://github.com/arminbiere/kissat)
+
+### Background reading (resolution + proof search)
+These are useful context for why the internal “legacy parity” proof format looks the way it does, and for future improvements (indexing/subsumption/selection strategies):
+- **Subsumption and performance**: T. Tammet, *Towards Efficient Subsumption* ([PDF](https://www.cs.cmu.edu/~fp/courses/atp/cmuonly/T98.pdf))
+- **Given-clause / ANL loop** (resolution prover control loop): *The ANL Loop* ([article](https://cs.miami.edu/home/geoff/Courses/CSC749-24F/Content/ANLLoop.shtml))
