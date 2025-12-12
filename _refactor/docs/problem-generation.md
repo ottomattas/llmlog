@@ -10,6 +10,20 @@ This doc describes the dataset generator used to create propositional logic prob
 - **`--mode legacy`**: legacy parity output (uses legacy SAT/UNSAT logic + legacy proof/model shape).
 - **`--mode pysat_kissat`**: modern solving (SAT models via PySAT `g3`, UNSAT proofs via Kissat DRAT encoded as int lists).
 
+### Output paths
+You can either provide an explicit output path, or let the generator write into the repo’s `datasets/` tree.
+
+- **Explicit path**: `--output <path>` writes exactly to that path.
+- **Repo-relative output (recommended)**: omit `--output` and use:
+  - `--dataset {legacy,validation,production}` (defaults to `legacy` for `--mode legacy`, else `validation`)
+  - `--name <filename>` (optional; `.jsonl` is added if missing; otherwise a name is generated from params)
+
+Example:
+```
+python scripts/generate_problems.py --mode pysat_kissat --seed 12345 --dataset validation --name smoke
+```
+This writes: `datasets/validation/smoke.jsonl`.
+
 ### Output format (contract)
 The generator emits rows that are **JSON-compatible** (numbers + lists only), so they can be parsed as JSONL:
 - **Line 1**: header row (JSON array of column names)

@@ -102,6 +102,78 @@ def _sha256_file(path: str) -> str:
     return h.hexdigest()
 
 
+def _format_int_list_for_filename(values: List[int]) -> str:
+    if not values:
+        return "none"
+    vals = sorted({int(v) for v in values})
+    if len(vals) == 1:
+        return str(vals[0])
+    if vals == list(range(vals[0], vals[-1] + 1)):
+        return f"{vals[0]}-{vals[-1]}"
+    if len(vals) <= 6:
+        return "_".join(str(v) for v in vals)
+    return f"{vals[0]}-{vals[-1]}_n{len(vals)}"
+
+
+def _default_output_name(
+    *,
+    mode: str,
+    seed: int,
+    varnr_range: List[int],
+    cl_len_range: List[int],
+    horn: str,
+    percase: int,
+) -> str:
+    vars_part = _format_int_list_for_filename(varnr_range)
+    lens_part = _format_int_list_for_filename(cl_len_range)
+    return f"problems_{mode}_seed{seed}_vars{vars_part}_len{lens_part}_horn{horn}_percase{percase}.jsonl"
+
+
+def _project_root() -> str:
+    # scripts/ lives directly under the project root (currently `_refactor/`).
+    return os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+
+
+def _resolve_output_path(
+    *,
+    output: Optional[str],
+    dataset: Optional[str],
+    name: Optional[str],
+    mode: str,
+    seed: int,
+    varnr_range: List[int],
+    cl_len_range: List[int],
+    horn: str,
+    percase: int,
+) -> str:
+    # If the user provided an explicit path, respect it verbatim.
+    if output:
+        return str(output)
+
+    ds = dataset or ("legacy" if mode == "legacy" else "validation")
+    out_dir = os.path.join(_project_root(), "datasets", ds)
+    fname = (name or _default_output_name(
+        mode=mode,
+        seed=seed,
+        varnr_range=varnr_range,
+        cl_len_range=cl_len_range,
+        horn=horn,
+        percase=percase,
+    )).strip()
+    if not fname:
+        fname = _default_output_name(
+            mode=mode,
+            seed=seed,
+            varnr_range=varnr_range,
+            cl_len_range=cl_len_range,
+            horn=horn,
+            percase=percase,
+        )
+    if not fname.endswith(".jsonl"):
+        fname = fname + ".jsonl"
+    return os.path.join(out_dir, fname)
+
+
 def _apply_legacy_overrides(
     *,
     varnr_range: List[int],
@@ -308,7 +380,22 @@ def _make_balanced_prop_problem_list(
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
     ap = argparse.ArgumentParser(description="Generate propositional logic datasets.")
-    ap.add_argument("--output", required=True, help="Output dataset path (JSONL).")
+    ap.add_argument(
+        "--output",
+        default=None,
+        help="Output dataset path (JSONL). If omitted, writes under datasets/<dataset>/ with a generated name.",
+    )
+    ap.add_argument(
+        "--dataset",
+        choices=["legacy", "validation", "production"],
+        default=None,
+        help="When --output is omitted, choose datasets/<dataset>/ (default: legacy for --mode legacy, else validation).",
+    )
+    ap.add_argument(
+        "--name",
+        default=None,
+        help="When --output is omitted, output file name (default: generated from params).",
+    )
     ap.add_argument(
         "--mode",
         choices=["legacy", "pysat_kissat"],
@@ -352,7 +439,17 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         5: [[0, 0, 0, 3.3, 5.5, 7.7, 9.4, 10.8, 11.6, 12.4, 12.9, 13.9, 14.1], 4.6],
     }
 
-    out_path = args.output
+    out_path = _resolve_output_path(
+        output=args.output,
+        dataset=args.dataset,
+        name=args.name,
+        mode=str(args.mode),
+        seed=int(args.seed),
+        varnr_range=varnr_range,
+        cl_len_range=cl_len_range,
+        horn=str(args.horn),
+        percase=int(percase),
+    )
 
     # ---- legacy parity mode ------------------------------------------------
     if args.mode == "legacy":

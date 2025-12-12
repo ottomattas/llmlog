@@ -32,7 +32,7 @@ export GOOGLE_API_KEY=...
 
 3) Generate a problem dataset:
 ```
-python scripts/generate_problems.py --seed 12345 --output datasets/validation/problems_validation_seed12345.jsonl
+python scripts/generate_problems.py --seed 12345 --dataset validation --name problems_validation_seed12345
 ```
 
 4) Run a small test suite (limit 10):
