@@ -10,6 +10,37 @@ This doc describes the dataset generator used to create propositional logic prob
 - **`--mode legacy`**: legacy parity output (uses legacy SAT/UNSAT logic + legacy proof/model shape).
 - **`--mode pysat_kissat`**: modern solving (SAT models via PySAT `g3`, UNSAT proofs via Kissat DRAT encoded as int lists).
 
+### Parameter defaults (and why)
+The generator is parameterized by:
+- number of variables (`--vars`, i.e. \(n\))
+- max clause length (`--clens`, i.e. \(k\))
+- Horn vs non-Horn (`--horn`)
+- problems per case (`--percase`)
+- clause/variable ratio (`goodratios`, `--ratio-*`)
+
+These defaults come from `_legacy/makeproblems.py` (unless overridden by CLI flags):
+
+- **Variables (`--vars`)**:
+  - Legacy default is `3–15`.
+  - We start at **3** because `n=1–2` tends to produce **toy / repetitive / degenerate** CNFs (and the legacy generator also enforces structural constraints like “at least one fully-positive and one fully-negative clause”). `n>=3` is still “small”, but not trivial.
+
+- **Clause lengths (`--clens`)**:
+  - Legacy default is **`[3, 4]`**.
+  - Practical rationale:
+    - `k=2` (2-SAT) is polynomial-time solvable and often too “easy” for the intended use.
+    - `k=3` and `k=4` are standard NP-complete families and are easier to tune for balanced SAT/UNSAT generation.
+    - `k=5` is supported, but at larger `n` it can become much harder to keep SAT/UNSAT balanced and (especially) to generate UNSAT proofs quickly.
+  - Current tooling assumes `k` in `{2,3,4,5}` because the `goodratios` table is defined for those values.
+
+- **Horn vs non-Horn (`--horn`)**:
+  - `only` generates Horn-only problems (typically much faster to solve/prove).
+  - `no` generates general non-Horn CNFs (harder; proof generation dominates runtime).
+  - `mixed` generates both; if one case is slow (often non-Horn at large `n`), the whole run can appear to “hang” while balancing that case.
+
+- **Problems per case (`--percase`)**:
+  - Must be **even**.
+  - The generator tries to output a roughly **balanced** set (≈ half SAT / half UNSAT) for each \((n,k,horn)\) case. If one side is rare under the chosen ratio, generation can take a long time.
+
 ### Output paths
 You can either provide an explicit output path, or let the generator write into the repo’s `datasets/` tree.
 
@@ -48,6 +79,38 @@ Important: to stay JSON-compatible for downstream tooling, proofs/models must re
 - **UNSAT proofs**:
   - We validated external proof logging via **Kissat**.
   - Proofs are emitted as DRAT, but encoded as **numbers + lists** (not raw text) so the dataset stays JSON-compatible.
+
+### Clause/variable ratio (`goodratios`)
+The legacy generator chooses the number of clauses as \(m = \lfloor n \cdot r \rfloor\), where:
+- \(n\) is the number of variables (`--vars`)
+- \(r\) is a heuristic clause/variable ratio (from a small hand-tuned table in the legacy script)
+
+This ratio strongly controls **how often instances are SAT vs UNSAT**. If \(r\) is too low for a given \(k\) (clause length), almost everything is SAT; if \(r\) is too high, almost everything is UNSAT. Since the generator tries to produce **both** SAT and UNSAT examples per case, a badly chosen ratio can make generation appear to “hang” while it keeps sampling.
+
+For large `--vars` (e.g. 100) and `--clens 5-5` in **non-Horn** mode, the legacy fallback ratios are often too SAT-heavy. Use one of:
+- explicitly set `--ratio-nonhorn` (and/or `--ratio-horn`) to tune the SAT/UNSAT balance
+
+As a rough starting point for **non-Horn random k-SAT**, the phase transition ratios (m/n) are often quoted around:
+- `k=3`: ~4.3
+- `k=4`: ~9.9
+- `k=5`: ~21.1
+
+However, the “right” ratio depends on `n` and on the legacy generator’s additional constraints, so you should **probe first** and then set `--ratio-nonhorn`/`--ratio-horn` explicitly.
+
+### Probing SAT/UNSAT balance (recommended for large `--vars`)
+To validate whether a ratio is producing a reasonable SAT/UNSAT mix **before** generating proofs, use probe mode:
+
+```
+python scripts/generate_problems.py --probe-samples 30 --vars 100-100 --clens 5-5 --horn no --ratio-nonhorn 21.0
+```
+
+This prints `sat=... unsat=...` plus average generation/solve times, and exits.
+
+You can also write the sampled CNFs + labels for analysis:
+
+```
+python scripts/generate_problems.py --probe-samples 30 --probe-output /tmp/probe_vars100_len5.jsonl --vars 100-100 --clens 5-5 --horn no --ratio-nonhorn 21.0
+```
 
 ### UNSAT proof encoding (Kissat DRAT)
 Kissat writes DRAT lines like:

@@ -33,7 +33,8 @@ import shutil
 import subprocess
 import sys
 import tempfile
-from typing import Iterable, List, Optional, Sequence, Tuple
+import time
+from typing import List, Optional, Sequence, Tuple
 
 # ---- Import legacy generator primitives ------------------------------------
 
@@ -226,6 +227,28 @@ def _run_seeded_legacy_to_file(
         sys.stdout = old_stdout
 
 
+def _choose_clause_var_ratio(
+    *,
+    varnr: int,
+    cllen: int,
+    hornflag: bool,
+    goodratios: dict,
+    ratio_nonhorn_override: Optional[float],
+    ratio_horn_override: Optional[float],
+) -> float:
+    """Pick a clause/variable ratio (m/n) for the current case."""
+    if hornflag and ratio_horn_override is not None:
+        return float(ratio_horn_override)
+    if (not hornflag) and ratio_nonhorn_override is not None:
+        return float(ratio_nonhorn_override)
+
+    entry = goodratios[cllen]
+    ratios = entry[1] if hornflag else entry[0]
+    if isinstance(ratios, list):
+        return float(ratios[varnr] if varnr < len(ratios) else ratios[-1])
+    return float(ratios)
+
+
 def _clauses_to_dimacs(clauses: Sequence[Sequence[int]]) -> str:
     maxvar = 0
     for cl in clauses:
@@ -251,6 +274,38 @@ def _pysat_solve_model(clauses: Sequence[Sequence[int]], solver_name: str = "g3"
         model = s.get_model() or []
         return True, [int(x) for x in model]
 
+
+def _kissat_decide(
+    clauses: Sequence[Sequence[int]],
+    *,
+    kissat_cmd: str = "kissat",
+    timeout_s: float = 5.0,
+) -> Optional[bool]:
+    """Return SAT/UNSAT using Kissat, or None if timed out/unknown."""
+    if not shutil.which(kissat_cmd):
+        raise RuntimeError(f"kissat not found on PATH: {kissat_cmd}")
+
+    with tempfile.TemporaryDirectory() as td:
+        cnf_path = os.path.join(td, "input.cnf")
+        with open(cnf_path, "w") as f:
+            f.write(_clauses_to_dimacs(clauses))
+
+        try:
+            proc = subprocess.run(
+                [kissat_cmd, cnf_path],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                timeout=float(timeout_s),
+            )
+        except subprocess.TimeoutExpired:
+            return None
+
+        if proc.returncode == 10:
+            return True
+        if proc.returncode == 20:
+            return False
+        return None
 
 def _kissat_unsat_proof(
     clauses: Sequence[Sequence[int]],
@@ -342,24 +397,53 @@ def _make_balanced_prop_problem_list(
     pysat_solver: str,
     kissat_cmd: str,
     kissat_timeout: float,
+    max_attempts: Optional[int] = None,
+    progress_every: int = 0,
 ) -> List:
     true_problems: List[Tuple[List[List[int]], List[int]]] = []
     false_problems: List[Tuple[List[List[int]], List[List[int]]]] = []
     truecount = 0
     falsecount = 0
+    attempts = 0
+    started = time.time()
 
     while True:
+        attempts += 1
+        if max_attempts is not None and attempts > max_attempts:
+            elapsed = time.time() - started
+            raise SystemExit(
+                f"Failed to generate a balanced set after {attempts} attempts (elapsed {elapsed:.1f}s). "
+                f"Collected SAT={len(true_problems)} UNSAT={len(false_problems)}. "
+                f"Try adjusting the clause/variable ratio (e.g. --ratio-nonhorn / --ratio-horn) "
+                f"or generating SAT/UNSAT separately."
+            )
+        if progress_every and (attempts % int(progress_every) == 0):
+            elapsed = time.time() - started
+            print(
+                f"# progress attempts={attempts} sat_seen={truecount} unsat_seen={falsecount} "
+                f"sat_kept={len(true_problems)} unsat_kept={len(false_problems)} elapsed_s={elapsed:.1f}",
+                file=sys.stderr,
+                flush=True,
+            )
+
         raw_problem = legacy.make_prop_problem(varnr, maxlen, ratio, hornflag)
         problem = legacy.normalize_problem(raw_problem)
         if not problem:
             continue
 
-        sat, payload = _solve_with_pysat_and_kissat(
-            problem,
-            pysat_solver=pysat_solver,
-            kissat_cmd=kissat_cmd,
-            kissat_timeout=kissat_timeout,
-        )
+        try:
+            sat, payload = _solve_with_pysat_and_kissat(
+                problem,
+                pysat_solver=pysat_solver,
+                kissat_cmd=kissat_cmd,
+                kissat_timeout=kissat_timeout,
+            )
+        except subprocess.TimeoutExpired:
+            # Likely a hard UNSAT proof attempt. Skip and sample a new instance.
+            continue
+        except Exception:
+            # Any solver/proof error: skip and sample a new instance.
+            continue
 
         if sat:
             truecount += 1
@@ -407,6 +491,32 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument("--clens", dest="clens", default=None, help="Clause lengths: '3-4' or '3,4'.")
     ap.add_argument("--horn", choices=["mixed", "only", "no"], default="mixed", help="Generate horn-only, non-horn, or mixed.")
     ap.add_argument("--percase", type=int, default=None, help="Problems per (varnr,maxlen,hornflag) case (even).")
+    ap.add_argument("--probe-samples", type=int, default=0, help="Probe SAT/UNSAT balance only; do not write a dataset.")
+    ap.add_argument(
+        "--probe-output",
+        default=None,
+        help="Optional JSONL path to write probed samples (includes CNF + SAT/UNSAT). Requires --probe-samples>0.",
+    )
+    ap.add_argument(
+        "--probe-timeout",
+        type=float,
+        default=5.0,
+        help="Per-sample timeout (seconds) used by probe solver (default: 5.0).",
+    )
+    ap.add_argument("--progress-every", type=int, default=0, help="Print progress every N samples while balancing.")
+    ap.add_argument("--max-attempts", type=int, default=0, help="Abort balancing after N attempts (0 = no limit).")
+    ap.add_argument(
+        "--ratio-nonhorn",
+        type=float,
+        default=None,
+        help="Override the clause/variable ratio (m/n) for non-Horn cases (e.g., 21.1 for 5-SAT @ n~100).",
+    )
+    ap.add_argument(
+        "--ratio-horn",
+        type=float,
+        default=None,
+        help="Override the clause/variable ratio (m/n) for Horn cases.",
+    )
     ap.add_argument("--pysat", default="g3", help="PySAT solver name (default: g3).")
     ap.add_argument("--kissat", default="kissat", help="Kissat command (default: kissat).")
     ap.add_argument("--kissat-timeout", type=float, default=30.0, help="Kissat timeout seconds.")
@@ -451,6 +561,105 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         percase=int(percase),
     )
 
+    # ---- probe mode --------------------------------------------------------
+    if int(args.probe_samples) > 0:
+        sample_out = str(args.probe_output) if args.probe_output else None
+        out_f = None
+        if sample_out:
+            os.makedirs(os.path.dirname(sample_out) or ".", exist_ok=True)
+            out_f = open(sample_out, "w", buffering=1)
+            out_f.write(
+                json.dumps(
+                    [
+                        "trial_id",
+                        "maxvarnr",
+                        "maxlen",
+                        "mustbehorn",
+                        "ratio_m_over_n",
+                        "issatisfiable",
+                        "problem",
+                    ]
+                )
+                + "\n"
+            )
+
+        try:
+            trial_id = 0
+            for varnr in varnr_range:
+                for cllen in cl_len_range:
+                    for hornflag in horn_flags:
+                        ratio = _choose_clause_var_ratio(
+                            varnr=int(varnr),
+                            cllen=int(cllen),
+                            hornflag=bool(hornflag),
+                            goodratios=goodratios,
+                            ratio_nonhorn_override=args.ratio_nonhorn,
+                            ratio_horn_override=args.ratio_horn,
+                        )
+
+                        sat_cnt = 0
+                        unsat_cnt = 0
+                        unk_cnt = 0
+                        gen_s = 0.0
+                        solve_s = 0.0
+                        samples_target = int(args.probe_samples)
+                        started_case = time.time()
+                        for i in range(samples_target):
+                            trial_id += 1
+                            t0 = time.time()
+                            raw_problem = legacy.make_prop_problem(int(varnr), int(cllen), float(ratio), bool(hornflag))
+                            problem = legacy.normalize_problem(raw_problem)
+                            gen_s += time.time() - t0
+                            if not problem:
+                                continue
+                            t1 = time.time()
+                            sat = _kissat_decide(
+                                problem,
+                                kissat_cmd=str(args.kissat),
+                                timeout_s=float(args.probe_timeout),
+                            )
+                            solve_s += time.time() - t1
+                            if sat is None:
+                                unk_cnt += 1
+                            else:
+                                if sat:
+                                    sat_cnt += 1
+                                else:
+                                    unsat_cnt += 1
+                                if out_f:
+                                    row = [
+                                        trial_id,
+                                        int(varnr),
+                                        int(cllen),
+                                        1 if bool(hornflag) else 0,
+                                        float(ratio),
+                                        1 if sat else 0,
+                                        problem,
+                                    ]
+                                    out_f.write(json.dumps(row) + "\n")
+
+                            if int(args.progress_every) and (i + 1) % int(args.progress_every) == 0:
+                                elapsed = time.time() - started_case
+                                print(
+                                    f"# probe_progress case_var={varnr} case_len={cllen} horn={int(bool(hornflag))} "
+                                    f"i={i+1}/{samples_target} sat={sat_cnt} unsat={unsat_cnt} unk={unk_cnt} elapsed_s={elapsed:.1f}",
+                                    file=sys.stderr,
+                                    flush=True,
+                                )
+
+                        print(
+                            f"probe var={varnr} len={cllen} horn={int(bool(hornflag))} ratio={ratio:.3f} "
+                            f"sat={sat_cnt} unsat={unsat_cnt} unk={unk_cnt} "
+                            f"avg_gen_s={gen_s/max(1,samples_target):.4f} "
+                            f"avg_solve_s={solve_s/max(1,samples_target):.4f}",
+                            flush=True,
+                        )
+        finally:
+            if out_f:
+                out_f.close()
+
+        return 0
+
     # ---- legacy parity mode ------------------------------------------------
     if args.mode == "legacy":
         _run_seeded_legacy_to_file(
@@ -486,18 +695,21 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ]
 
     probnr = 0
-    with open(out_path, "w") as out:
+    with open(out_path, "w", buffering=1) as out:
         out.write(json.dumps(header) + "\n")
+        out.flush()
 
         for varnr in varnr_range:
             for cllen in cl_len_range:
                 for hornflag in horn_flags:
-                    ratios = goodratios[cllen]
-                    ratios = ratios[1] if hornflag else ratios[0]
-                    if isinstance(ratios, list):
-                        ratio = ratios[varnr] if varnr < len(ratios) else ratios[-1]
-                    else:
-                        ratio = ratios
+                    ratio = _choose_clause_var_ratio(
+                        varnr=int(varnr),
+                        cllen=int(cllen),
+                        hornflag=bool(hornflag),
+                        goodratios=goodratios,
+                        ratio_nonhorn_override=args.ratio_nonhorn,
+                        ratio_horn_override=args.ratio_horn,
+                    )
 
                     _, _, truelist, falselist = _make_balanced_prop_problem_list(
                         percase,
@@ -508,6 +720,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                         pysat_solver=str(args.pysat),
                         kissat_cmd=str(args.kissat),
                         kissat_timeout=float(args.kissat_timeout),
+                        max_attempts=(int(args.max_attempts) if int(args.max_attempts) > 0 else None),
+                        progress_every=int(args.progress_every),
                     )
 
                     choosefrom = True
@@ -535,6 +749,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                         horn_units = legacy.solve_prop_horn_problem(prob)
                         row = [probnr, varnr, cllen, horn, truth, prob, proof_or_model, horn_units]
                         out.write(json.dumps(row) + "\n")
+                        out.flush()
 
                         choosefrom = not choosefrom
 
