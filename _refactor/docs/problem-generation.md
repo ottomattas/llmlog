@@ -2,6 +2,8 @@
 
 This doc describes the dataset generator used to create propositional logic problem sets consumed by the runner.
 
+All commands below assume your working directory is the `_refactor/` project root (so the generator path is `scripts/generate_problems.py`). If you are running from the repo root, use `_refactor/scripts/generate_problems.py` instead.
+
 ### Legacy parity mode (compatibility target)
 - **Source of truth**: `_legacy/makeproblems.py` (while it exists)
 - **Requirement**: the generator can reproduce legacy outputs **byte-for-byte** (given the same seed and parameters), so we can change internals safely while keeping downstream code usable.
@@ -55,6 +57,26 @@ python scripts/generate_problems.py --mode pysat_kissat --seed 12345 --dataset v
 ```
 This writes: `datasets/validation/smoke.jsonl`.
 
+### Example: full validation dataset (vars 3–50, clause length 3–5)
+```
+python scripts/generate_problems.py \
+  --mode pysat_kissat \
+  --seed 12345 \
+  --vars 3-50 \
+  --clens 3-5 \
+  --horn mixed \
+  --percase 50 \
+  --dataset validation \
+  --name full_vars3-50_len3-5_hornmixed_per50_seed12345 \
+  --max-attempts 200000 \
+  --progress-every 2000 \
+  --print-sha256
+```
+
+- **Output path**: `datasets/validation/full_vars3-50_len3-5_hornmixed_per20_seed12345.jsonl`
+- **Expected rows**: \(48 \times 3 \times 2 \times 20 = 5760\) (not counting the header line)
+- **Tip**: record the printed SHA-256 checksum to make runs reproducible and comparable.
+
 ### Output format (contract)
 The generator emits rows that are **JSON-compatible** (numbers + lists only), so they can be parsed as JSONL:
 - **Line 1**: header row (JSON array of column names)
@@ -89,6 +111,10 @@ This ratio strongly controls **how often instances are SAT vs UNSAT**. If \(r\) 
 
 For large `--vars` (e.g. 100) and `--clens 5-5` in **non-Horn** mode, the legacy fallback ratios are often too SAT-heavy. Use one of:
 - explicitly set `--ratio-nonhorn` (and/or `--ratio-horn`) to tune the SAT/UNSAT balance
+
+By default (when you do **not** pass `--ratio-nonhorn`), this generator uses the legacy `goodratios` table *where it is defined* (small `n`), but for **larger `n` beyond the legacy table** it ramps the non-Horn ratio upward (instead of staying flat). This avoids the “all SAT at large `n`” behavior and makes balanced generation feasible for ranges like `--vars 3-50 --clens 3-5`.
+
+There is also one important Horn corner case: with the legacy Horn ratio for `k=5`, very small `n` (notably `n=3`) becomes “always UNSAT” in practice. To keep balanced generation feasible when you include `--clens 5`, the generator ramps the Horn `k=5` ratio from `~2.0` at small `n` up to the legacy `4.6` by `n≈50` (unless you override via `--ratio-horn`).
 
 As a rough starting point for **non-Horn random k-SAT**, the phase transition ratios (m/n) are often quoted around:
 - `k=3`: ~4.3

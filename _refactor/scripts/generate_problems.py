@@ -75,6 +75,30 @@ except Exception:
     _HAS_PYSAT = False
 
 
+# ---- Heuristics -------------------------------------------------------------
+
+# Approximate random k-SAT phase transition m/n for large n (non-Horn).
+# We use this only as a gentle *out-of-table* ramp target for the legacy
+# `goodratios` lists (which stop at small n and otherwise become SAT-heavy).
+_KSAT_NONHORN_THRESHOLD = {
+    3: 4.26,
+    4: 9.93,
+    5: 21.12,
+}
+
+# For out-of-table non-Horn ratios, ramp towards ~0.9 * threshold by n~50.
+_NONHORN_RAMP_TARGET_FACTOR = 0.9
+_NONHORN_RAMP_TARGET_VARNR = 50
+
+# For Horn 5-CNF, the legacy constant ratio (4.6) makes very small n (e.g. n=3)
+# essentially always UNSAT. To keep "balanced per case" generation feasible for
+# ranges that include small n and k=5, we ramp from a small-n ratio towards the
+# legacy value by n~50.
+_HORN_CL5_RAMP_START_VARNR = 3
+_HORN_CL5_RAMP_START_RATIO = 2.0
+_HORN_CL5_RAMP_TARGET_VARNR = 50
+
+
 # ---- Parsing helpers -------------------------------------------------------
 
 def _parse_int_list(spec: str) -> List[int]:
@@ -245,8 +269,42 @@ def _choose_clause_var_ratio(
     entry = goodratios[cllen]
     ratios = entry[1] if hornflag else entry[0]
     if isinstance(ratios, list):
-        return float(ratios[varnr] if varnr < len(ratios) else ratios[-1])
-    return float(ratios)
+        if varnr < len(ratios):
+            return float(ratios[varnr])
+
+        base_last = float(ratios[-1])
+        # Horn keeps legacy behavior; the observed "all SAT" issue is non-Horn.
+        if hornflag:
+            return base_last
+
+        thr = _KSAT_NONHORN_THRESHOLD.get(int(cllen))
+        if not thr:
+            return base_last
+
+        target = max(base_last, float(thr) * float(_NONHORN_RAMP_TARGET_FACTOR))
+        last_n = len(ratios) - 1
+        ramp_n = max(int(_NONHORN_RAMP_TARGET_VARNR), last_n + 1)
+        if varnr >= ramp_n:
+            return float(target)
+        # Linear ramp from legacy last value to target.
+        t = (float(varnr) - float(last_n)) / (float(ramp_n) - float(last_n))
+        return float(base_last + t * (target - base_last))
+
+    base = float(ratios)
+    if hornflag and int(cllen) == 5:
+        # Ramp Horn 5-CNF ratio at small n to avoid "always UNSAT".
+        start_n = int(_HORN_CL5_RAMP_START_VARNR)
+        start_r = float(_HORN_CL5_RAMP_START_RATIO)
+        end_n = int(_HORN_CL5_RAMP_TARGET_VARNR)
+        end_r = base
+        if varnr <= start_n:
+            return start_r
+        if varnr >= end_n:
+            return end_r
+        t = (float(varnr) - float(start_n)) / (float(end_n) - float(start_n))
+        return float(start_r + t * (end_r - start_r))
+
+    return base
 
 
 def _clauses_to_dimacs(clauses: Sequence[Sequence[int]]) -> str:

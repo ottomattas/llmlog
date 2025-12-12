@@ -2,6 +2,8 @@
 
 Config-driven framework for running **logic-focused LLM experiments** reproducibly.
 
+This README applies to the `_refactor/` directory; commands below assume your working directory is `_refactor/` (or that you adjust paths accordingly).
+
 It supports an end-to-end workflow:
 - **Generate datasets** of propositional-logic problems (with ground truth + optional proof metadata)
 - **Render prompts** from Jinja templates
@@ -17,7 +19,7 @@ It supports an end-to-end workflow:
 ### Quickstart
 1) Create a virtual environment and install dependencies:
 ```
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate
 pip install -U pip
 pip install -r requirements.txt
