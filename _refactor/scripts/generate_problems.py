@@ -29,6 +29,7 @@ import argparse
 import json
 import os
 import random
+import re
 import shutil
 import subprocess
 import sys
@@ -102,19 +103,33 @@ _HORN_CL5_RAMP_TARGET_VARNR = 50
 # ---- Parsing helpers -------------------------------------------------------
 
 def _parse_int_list(spec: str) -> List[int]:
-    """Parse "3-10" or "3,4,7" into a list of ints."""
+    """Parse an integer list/range spec into a list of ints.
+
+    Supported formats:
+    - Range: "3-10"
+    - List: "3,4,7"
+    - Mixed: "3-5,7" or "1,2-4"
+    """
     s = (spec or "").strip()
     if not s:
         return []
-    if "-" in s:
-        a, b = s.split("-", 1)
-        start = int(a.strip())
-        end = int(b.strip())
-        if end < start:
-            start, end = end, start
-        return list(range(start, end + 1))
     parts = [p.strip() for p in s.split(",") if p.strip()]
-    return [int(p) for p in parts]
+    out: List[int] = []
+    range_re = re.compile(r"^\s*(-?\d+)\s*-\s*(-?\d+)\s*$")
+    for part in parts:
+        m = range_re.match(part)
+        if m:
+            start = int(m.group(1))
+            end = int(m.group(2))
+            if end < start:
+                start, end = end, start
+            out.extend(list(range(start, end + 1)))
+            continue
+        try:
+            out.append(int(part))
+        except ValueError as e:
+            raise ValueError(f"Invalid int list spec {spec!r}: bad token {part!r}") from e
+    return out
 
 
 def _sha256_file(path: str) -> str:
@@ -266,7 +281,11 @@ def _choose_clause_var_ratio(
     if (not hornflag) and ratio_nonhorn_override is not None:
         return float(ratio_nonhorn_override)
 
-    entry = goodratios[cllen]
+    if int(cllen) not in goodratios:
+        supported = ", ".join(str(k) for k in sorted(goodratios.keys()))
+        raise SystemExit(f"Unsupported clause length {cllen}. Supported values: {supported}.")
+
+    entry = goodratios[int(cllen)]
     ratios = entry[1] if hornflag else entry[0]
     if isinstance(ratios, list):
         if varnr < len(ratios):
