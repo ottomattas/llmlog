@@ -30,7 +30,7 @@ export OPENAI_API_KEY=...
 export GOOGLE_API_KEY=...
 ```
 
-3) Generate a dataset:
+3) Generate a problem dataset:
 ```
 python scripts/generate_problems.py --seed 12345 --output datasets/validation/problems_validation_seed12345.jsonl
 ```
@@ -47,7 +47,7 @@ python scripts/analyze.py runs/exp8_horn_yesno/validation_001/*/*/results.jsonl
 
 ### Documentation
 - **Documentation index**: [`docs/README.md`](docs/README.md)
-- **Problem generation (`makeproblems`)**: [`docs/problem-generation.md`](docs/problem-generation.md)
+- **Problem generation**: [`docs/problem-generation.md`](docs/problem-generation.md)
 - **Repository layout**: [`docs/repository-layout.md`](docs/repository-layout.md)
 - **Datasets**: [`docs/datasets.md`](docs/datasets.md)
 - **Runner + configs**: [`docs/runner-and-configs.md`](docs/runner-and-configs.md)
