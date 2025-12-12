@@ -6,6 +6,10 @@ This doc describes the dataset generator used to create propositional logic prob
 - **Source of truth**: `_legacy/makeproblems.py` (while it exists)
 - **Requirement**: the generator can reproduce legacy outputs **byte-for-byte** (given the same seed and parameters), so we can change internals safely while keeping downstream code usable.
 
+### Modes (`scripts/generate_problems.py`)
+- **`--mode legacy`**: legacy parity output (uses legacy SAT/UNSAT logic + legacy proof/model shape).
+- **`--mode pysat_kissat`**: modern solving (SAT models via PySAT `g3`, UNSAT proofs via Kissat DRAT encoded as int lists).
+
 ### Output format (contract)
 The generator emits rows that are **JSON-compatible** (numbers + lists only), so they can be parsed as JSONL:
 - **Line 1**: header row (JSON array of column names)
@@ -18,7 +22,9 @@ The generator emits rows that are **JSON-compatible** (numbers + lists only), so
   - `problem`: list of clauses (each clause is a list of ints)
   - `proof_of_inconsistency_or_satisfying_valuation`:
     - if SAT: a satisfying valuation (list of ints)
-    - if UNSAT: a Kissat DRAT proof encoded as lists of ints (see below)
+    - if UNSAT:
+      - in `--mode legacy`: legacy resolution proof (nested int lists)
+      - in `--mode pysat_kissat`: Kissat DRAT proof encoded as lists of ints (see below)
   - `units_derived_by_horn_clauses`: list of derived units (Horn-only forward chaining)
 
 Important: to stay JSON-compatible for downstream tooling, proofs/models must remain **numbers + lists** (avoid raw solver text lines).
@@ -41,14 +47,24 @@ We encode each line as a list of ints:
 - empty clause: `[ 1 ]` (addition) or `[ -1 ]` (deletion; rare)
 
 ### Determinism and seeds
-- The legacy script `_legacy/makeproblems.py` is not inherently deterministic when run directly (it does not read a seed).
-- For deterministic runs we standardize on **`PROBLEM_SEED`** (default `12345`) and run generators through a seeded entrypoint so parity can be verified mechanically (hash comparisons).
+- The legacy script `_legacy/makeproblems.py` is not inherently deterministic when run directly (it does not expose a seed flag).
+- For deterministic runs we standardize on the wrapper CLI flag **`--seed`** (default `12345`).
 
 ### Parity check (recommended)
 Keep a “golden parity mode” and verify it:
-- Generate legacy baseline
-- Generate new output
-- Compare checksums (`shasum`) or `diff`
+- Generate a file in **`--mode legacy`**
+- Compare checksums (or `diff`) against a known-good baseline
+
+### Checksum harness (recommended)
+Use `--print-sha256` / `--expect-sha256` to turn parity into a mechanical check.
+
+Small fixture (fast, stable):
+```
+python scripts/generate_problems.py --mode legacy --seed 12345 --vars 3-3 --clens 3-3 --horn mixed --percase 4 \
+  --output /tmp/llmlog_legacy_fixture.jsonl \
+  --print-sha256 \
+  --expect-sha256 9d64eabd9bc546599a47ba90cecf76dd85a49b5b0d2e2db2f37f9cc98af21a9c
+```
 
 ### Next steps (planned)
 - Keep `_legacy/makeproblems.py` as the generation engine while we stabilize the wrapper.

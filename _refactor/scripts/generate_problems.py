@@ -20,7 +20,7 @@ Notes on UNSAT proof encoding:
 - We encode each proof line as a list of ints to stay JSON-compatible:
   - additions:  [ 1, lit1, lit2, ... ]
   - deletions:  [ -1, lit1, lit2, ... ]
-  - empty clause (end of proof): [1]
+  - empty clause (end of proof): [ 1 ] or [ -1 ] (rare)
 """
 
 from __future__ import annotations
@@ -90,6 +90,68 @@ def _parse_int_list(spec: str) -> List[int]:
         return list(range(start, end + 1))
     parts = [p.strip() for p in s.split(",") if p.strip()]
     return [int(p) for p in parts]
+
+
+def _sha256_file(path: str) -> str:
+    import hashlib
+
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1024 * 1024), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def _apply_legacy_overrides(
+    *,
+    varnr_range: List[int],
+    cl_len_range: List[int],
+    horn_flags: List[bool],
+    percase: int,
+) -> None:
+    # Override legacy globals so legacy.main() can be parameterized without editing legacy.
+    legacy.varnr_range = list(varnr_range)
+    legacy.cl_len_range = list(cl_len_range)
+    legacy.horn_flags = list(horn_flags)
+    legacy.probs_for_onecase = int(percase)
+
+
+def _run_seeded_legacy_to_file(
+    *,
+    out_path: str,
+    seed: int,
+    varnr_range: List[int],
+    cl_len_range: List[int],
+    horn_flags: List[bool],
+    percase: int,
+) -> None:
+    """
+    Run legacy.main() with seeded RNG and parameter overrides, capturing its stdout.
+
+    This is the 'legacy parity' mode: output bytes match the legacy generator's
+    stdout for the same seed/params.
+    """
+    random.seed(int(seed))
+    try:
+        legacy.random.seed(int(seed))
+    except Exception:
+        pass
+
+    _apply_legacy_overrides(
+        varnr_range=varnr_range,
+        cl_len_range=cl_len_range,
+        horn_flags=horn_flags,
+        percase=percase,
+    )
+
+    os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
+    old_stdout = sys.stdout
+    try:
+        with open(out_path, "w") as out:
+            sys.stdout = out
+            legacy.main()
+    finally:
+        sys.stdout = old_stdout
 
 
 def _clauses_to_dimacs(clauses: Sequence[Sequence[int]]) -> str:
@@ -245,8 +307,14 @@ def _make_balanced_prop_problem_list(
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
-    ap = argparse.ArgumentParser(description="Generate propositional logic datasets (PySAT g3 + Kissat DRAT proofs).")
+    ap = argparse.ArgumentParser(description="Generate propositional logic datasets.")
     ap.add_argument("--output", required=True, help="Output dataset path (JSONL).")
+    ap.add_argument(
+        "--mode",
+        choices=["legacy", "pysat_kissat"],
+        default="pysat_kissat",
+        help="Generation mode: legacy parity output, or PySAT+Kissat proofs.",
+    )
     ap.add_argument("--seed", type=int, default=12345, help="Random seed.")
     ap.add_argument("--vars", dest="vars", default=None, help="Variable numbers: '3-15' or '3,4,5'.")
     ap.add_argument("--clens", dest="clens", default=None, help="Clause lengths: '3-4' or '3,4'.")
@@ -255,6 +323,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument("--pysat", default="g3", help="PySAT solver name (default: g3).")
     ap.add_argument("--kissat", default="kissat", help="Kissat command (default: kissat).")
     ap.add_argument("--kissat-timeout", type=float, default=30.0, help="Kissat timeout seconds.")
+    ap.add_argument("--print-sha256", action="store_true", help="Print SHA-256 of the output file.")
+    ap.add_argument("--expect-sha256", default=None, help="Fail if SHA-256(output) != this value.")
     args = ap.parse_args(list(argv) if argv is not None else None)
 
     if args.percase is None:
@@ -263,8 +333,6 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         percase = int(args.percase)
     if percase % 2 != 0:
         raise SystemExit("--percase must be even")
-
-    random.seed(int(args.seed))
 
     varnr_range = _parse_int_list(args.vars) if args.vars else list(getattr(legacy, "varnr_range", list(range(3, 16))))
     cl_len_range = _parse_int_list(args.clens) if args.clens else list(getattr(legacy, "cl_len_range", [3, 4]))
@@ -285,6 +353,28 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     }
 
     out_path = args.output
+
+    # ---- legacy parity mode ------------------------------------------------
+    if args.mode == "legacy":
+        _run_seeded_legacy_to_file(
+            out_path=out_path,
+            seed=int(args.seed),
+            varnr_range=varnr_range,
+            cl_len_range=cl_len_range,
+            horn_flags=horn_flags,
+            percase=percase,
+        )
+
+        if args.print_sha256 or args.expect_sha256:
+            sha = _sha256_file(out_path)
+            if args.print_sha256:
+                print(sha)
+            if args.expect_sha256 and sha.lower() != str(args.expect_sha256).strip().lower():
+                raise SystemExit(f"SHA256 mismatch: got {sha}, expected {args.expect_sha256}")
+        return 0
+
+    # ---- PySAT+Kissat mode -------------------------------------------------
+    random.seed(int(args.seed))
     os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
 
     header = [
@@ -351,6 +441,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
                         choosefrom = not choosefrom
 
+    if args.print_sha256 or args.expect_sha256:
+        sha = _sha256_file(out_path)
+        if args.print_sha256:
+            print(sha)
+        if args.expect_sha256 and sha.lower() != str(args.expect_sha256).strip().lower():
+            raise SystemExit(f"SHA256 mismatch: got {sha}, expected {args.expect_sha256}")
     return 0
 
 
