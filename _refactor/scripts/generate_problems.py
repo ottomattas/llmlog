@@ -276,6 +276,11 @@ def _choose_clause_var_ratio(
     ratio_horn_override: Optional[float],
 ) -> float:
     """Pick a clause/variable ratio (m/n) for the current case."""
+    if int(varnr) < 2:
+        # Legacy generator returns [] for n<2, which would otherwise make
+        # balancing/probing hang (it keeps sampling empty problems).
+        raise SystemExit(f"Unsupported variable count {varnr}. Must be >= 2.")
+
     if hornflag and ratio_horn_override is not None:
         return float(ratio_horn_override)
     if (not hornflag) and ratio_nonhorn_override is not None:
@@ -289,7 +294,20 @@ def _choose_clause_var_ratio(
     ratios = entry[1] if hornflag else entry[0]
     if isinstance(ratios, list):
         if varnr < len(ratios):
-            return float(ratios[varnr])
+            val = float(ratios[varnr])
+            if val != 0.0:
+                return val
+            # 0 marks "undefined" entries in the legacy goodratios table.
+            # Fall back to the next defined value (or the first defined).
+            for idx in range(int(varnr) + 1, len(ratios)):
+                v = float(ratios[idx])
+                if v != 0.0:
+                    return v
+            for v0 in ratios:
+                v = float(v0)
+                if v != 0.0:
+                    return v
+            raise SystemExit(f"Invalid goodratios table for clause length {cllen}: all entries are 0.")
 
         base_last = float(ratios[-1])
         # Horn keeps legacy behavior; the observed "all SAT" issue is non-Horn.
