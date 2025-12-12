@@ -38,7 +38,7 @@ Kissat writes DRAT lines like:
 We encode each line as a list of ints:
 - additions: `[ 1, lit1, lit2, ... ]`
 - deletions: `[ -1, lit1, lit2, ... ]`
-- empty clause: `[ 1 ]`
+- empty clause: `[ 1 ]` (addition) or `[ -1 ]` (deletion; rare)
 
 ### Determinism and seeds
 - The legacy script `_legacy/makeproblems.py` is not inherently deterministic when run directly (it does not read a seed).

@@ -178,7 +178,7 @@ def _kissat_unsat_proof(
                     lits.append(v)
                 # empty clause is a valid proof terminator
                 if not lits:
-                    steps.append([1])
+                    steps.append([action])
                 else:
                     steps.append([action] + lits)
         return steps
