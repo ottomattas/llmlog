@@ -54,4 +54,4 @@ reports/             # plots/tables/dashboards (usually NOT committed)
 ### Conventions
 - **Code lives under `src/`**: avoids accidental imports from the repo root and makes packaging straightforward.
 - **Artifacts are not code**: treat `runs/` and most of `reports/` as generated outputs. Keep the repo lean by default.
-- **Datasets are curated**: keep validation/production sets separated; record seed + generation command + checksum.
+- **Datasets are curated**: keep validation/production sets separated; record seed + generation command + checksum. Large datasets are tracked via Git LFS (see `.gitattributes`).

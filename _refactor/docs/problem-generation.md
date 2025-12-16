@@ -4,6 +4,8 @@ This doc describes the dataset generator used to create propositional logic prob
 
 All commands below assume your working directory is the `_refactor/` project root (so the generator path is `scripts/generate_problems.py`). If you are running from the repo root, use `_refactor/scripts/generate_problems.py` instead.
 
+For dataset naming, provenance, and storage policy (Git LFS), see [`docs/datasets.md`](datasets.md).
+
 ### Legacy parity mode (compatibility target)
 - **Source of truth**: `_legacy/makeproblems.py` (while it exists)
 - **Requirement**: the generator can reproduce legacy outputs **byte-for-byte** (given the same seed and parameters), so we can change internals safely while keeping downstream code usable.
@@ -25,6 +27,7 @@ These defaults come from `_legacy/makeproblems.py` (unless overridden by CLI fla
 - **Variables (`--vars`)**:
   - Legacy default is `3–15`.
   - We start at **3** because `n=1–2` tends to produce **toy / repetitive / degenerate** CNFs (and the legacy generator also enforces structural constraints like “at least one fully-positive and one fully-negative clause”). `n>=3` is still “small”, but not trivial.
+  - CLI parsing accepts **ranges**, **lists**, and **mixed** specs (e.g. `3-50`, `3,4,7`, `3-5,7`).
 
 - **Clause lengths (`--clens`)**:
   - Legacy default is **`[3, 4]`**.
@@ -33,6 +36,7 @@ These defaults come from `_legacy/makeproblems.py` (unless overridden by CLI fla
     - `k=3` and `k=4` are standard NP-complete families and are easier to tune for balanced SAT/UNSAT generation.
     - `k=5` is supported, but at larger `n` it can become much harder to keep SAT/UNSAT balanced and (especially) to generate UNSAT proofs quickly.
   - Current tooling assumes `k` in `{2,3,4,5}` because the `goodratios` table is defined for those values.
+  - If you pass an unsupported clause length (e.g. `--clens 6`), the generator exits with a clear error.
 
 - **Horn vs non-Horn (`--horn`)**:
   - `only` generates Horn-only problems (typically much faster to solve/prove).
