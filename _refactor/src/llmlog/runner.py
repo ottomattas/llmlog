@@ -223,6 +223,8 @@ def run_suite(
                     "input_tokens": 0,
                     "output_tokens": 0,
                     "reasoning_tokens": 0,
+                    "cache_creation_input_tokens": 0,
+                    "cache_read_input_tokens": 0,
                 },
             }
         )
@@ -414,6 +416,8 @@ def run_suite(
                 stats["input_tokens"] += int(usage.get("input_tokens") or 0)
                 stats["output_tokens"] += int(usage.get("output_tokens") or 0)
                 stats["reasoning_tokens"] += int(usage.get("reasoning_tokens") or 0)
+                stats["cache_creation_input_tokens"] += int(usage.get("cache_creation_input_tokens") or 0)
+                stats["cache_read_input_tokens"] += int(usage.get("cache_read_input_tokens") or 0)
             except Exception:
                 pass
 

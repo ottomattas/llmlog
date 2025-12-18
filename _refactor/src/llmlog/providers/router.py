@@ -41,7 +41,7 @@ def run_chat(
         return {"text": text, "thinking_text": thinking_text, **norm}
 
     if provider_l in ("google", "gemini"):
-        text, meta = gemini_chat(
+        text, meta, thinking_text = gemini_chat(
             prompt=prompt,
             system=sysprompt,
             model=model,
@@ -50,15 +50,15 @@ def run_chat(
             thinking=thinking,
         )
         norm = normalize_meta("google", model, meta)
-        # Gemini thinking text is not always returned; keep placeholder for symmetry
-        return {"text": text, "thinking_text": None, **norm}
+        # Gemini thinking text is not always returned; best-effort extraction in google_client.
+        return {"text": text, "thinking_text": thinking_text, **norm}
 
     if provider_l == "openai":
         messages: List[Dict[str, str]] = []
         if sysprompt:
             messages.append({"role": "system", "content": sysprompt})
         messages.append({"role": "user", "content": prompt})
-        text, meta = openai_chat(
+        text, meta, thinking_text = openai_chat(
             messages=messages,
             model=model,
             max_tokens=max_tokens,
@@ -67,7 +67,7 @@ def run_chat(
             thinking=thinking,
         )
         norm = normalize_meta("openai", model, meta)
-        return {"text": text, "thinking_text": None, **norm}
+        return {"text": text, "thinking_text": thinking_text, **norm}
 
     raise NotImplementedError(f"Provider not supported: {provider}")
 

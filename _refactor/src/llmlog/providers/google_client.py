@@ -23,6 +23,36 @@ def _extract_text(data: Dict[str, Any]) -> str:
         return ""
 
 
+def _extract_thinking_text(data: Dict[str, Any]) -> Optional[str]:
+    """Best-effort extraction of any returned thought/thinking blocks.
+
+    Note: depending on model + API settings, Gemini thinking may be *not* returned as text at all.
+    In that case this returns None and only usageMetadata.thoughtsTokenCount is available.
+    """
+    try:
+        candidates = data.get("candidates") or []
+        if not candidates:
+            return None
+        parts = (((candidates[0] or {}).get("content") or {}).get("parts")) or []
+        out = []
+        for p in parts:
+            if not isinstance(p, dict):
+                continue
+            ptype = str(p.get("type") or "").lower()
+            if ptype in ("thought", "thinking", "reasoning"):
+                t = p.get("text") or p.get("content")
+                if isinstance(t, str) and t.strip():
+                    out.append(t.strip())
+            for key in ("thought", "thinking", "reasoning", "thoughtText", "thinkingText"):
+                v = p.get(key)
+                if isinstance(v, str) and v.strip():
+                    out.append(v.strip())
+        txt = "\n".join(out).strip()
+        return txt or None
+    except Exception:
+        return None
+
+
 def chat_completion(
     *,
     prompt: str,
@@ -31,7 +61,7 @@ def chat_completion(
     max_tokens: Optional[int] = None,
     temperature: float = 0.0,
     thinking: Optional[Dict[str, Any]] = None,
-) -> Tuple[str, Dict[str, Any]]:
+) -> Tuple[str, Dict[str, Any], Optional[str]]:
     secrets = load_secrets()
     key = get_provider_key(secrets, "google") or get_provider_key(secrets, "gemini")
     if not key:
@@ -109,11 +139,12 @@ def chat_completion(
         conn.close()
 
     text = _extract_text(data)
+    thinking_text = _extract_thinking_text(data)
     meta: Dict[str, Any] = {
         "raw_response": data,
         "finish_reason": None,
         "usage": (data.get("usageMetadata") or {}),
     }
-    return text, meta
+    return text, meta, thinking_text
 
 

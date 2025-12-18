@@ -152,6 +152,8 @@ def aggregate_runs(*, runs_dir: str, run_id: str) -> Dict[str, Any]:
                 "input_tokens": (summary.get("stats") or {}).get("input_tokens", 0),
                 "output_tokens": (summary.get("stats") or {}).get("output_tokens", 0),
                 "reasoning_tokens": (summary.get("stats") or {}).get("reasoning_tokens", 0),
+                "cache_creation_input_tokens": (summary.get("stats") or {}).get("cache_creation_input_tokens", 0),
+                "cache_read_input_tokens": (summary.get("stats") or {}).get("cache_read_input_tokens", 0),
             }
 
             exp_data["summary"]["total_models"] += 1

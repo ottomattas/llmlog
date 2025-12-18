@@ -15,7 +15,7 @@ def chat_completion(
     temperature: float = 0.0,
     seed: Optional[int] = None,
     thinking: Optional[Dict[str, Any]] = None,
-) -> Tuple[str, Dict[str, Any]]:
+) -> Tuple[str, Dict[str, Any], Optional[str]]:
     secrets = load_secrets()
     key = get_provider_key(secrets, "openai")
     if not key:
@@ -88,24 +88,59 @@ def chat_completion(
             # Best-effort explicit disable for GPT-5 tiers.
             payload["reasoning"] = {"effort": "minimal"}
 
-        def _responses_call(payload_in: Dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
-            data = _request("/v1/responses", payload_in)
-            resp_obj = data.get("response") or data
-
+        def _extract_text_and_reasoning(resp_obj: Any) -> Tuple[str, Optional[str]]:
             text_accum: List[str] = []
-            if isinstance(resp_obj, dict) and isinstance(resp_obj.get("output_text"), str):
-                text_accum.append(resp_obj["output_text"])
-            else:
+            reasoning_accum: List[str] = []
+
+            if isinstance(resp_obj, dict):
+                # Direct convenience field
+                if isinstance(resp_obj.get("output_text"), str):
+                    text_accum.append(resp_obj["output_text"])
+
+                # Some rollouts attach reasoning summaries separately.
+                r = resp_obj.get("reasoning")
+                if isinstance(r, dict):
+                    rs = r.get("summary") or r.get("text")
+                    if isinstance(rs, str) and rs.strip():
+                        reasoning_accum.append(rs.strip())
+
                 output = resp_obj.get("output") or []
                 if isinstance(output, list):
                     for item in output:
                         content = (item or {}).get("content") or []
-                        if isinstance(content, list):
-                            for part in content:
+                        if not isinstance(content, list):
+                            continue
+                        for part in content:
+                            if not isinstance(part, dict):
+                                continue
+                            ptype = (part.get("type") or "").lower()
+
+                            # Visible response text
+                            if ptype in ("output_text", "text"):
                                 t = part.get("text") or part.get("content")
-                                if t:
-                                    text_accum.append(str(t))
+                                if isinstance(t, str) and t:
+                                    text_accum.append(t)
+
+                            # Reasoning summary / thinking (when exposed)
+                            if ptype in ("reasoning", "reasoning_summary", "output_reasoning", "thinking"):
+                                rs = part.get("summary") or part.get("text") or part.get("thinking") or part.get("content")
+                                if isinstance(rs, str) and rs.strip():
+                                    reasoning_accum.append(rs.strip())
+                            else:
+                                # Some schemas use a generic type but store a summary field.
+                                rs = part.get("summary")
+                                if isinstance(rs, str) and rs.strip():
+                                    reasoning_accum.append(rs.strip())
+
             text_out = "\n".join([t for t in text_accum if t]).strip()
+            reasoning_out = "\n".join([t for t in reasoning_accum if t]).strip()
+            return text_out, (reasoning_out or None)
+
+        def _responses_call(payload_in: Dict[str, Any]) -> Tuple[str, Dict[str, Any], Optional[str]]:
+            data = _request("/v1/responses", payload_in)
+            resp_obj = data.get("response") or data
+
+            text_out, thinking_text = _extract_text_and_reasoning(resp_obj)
 
             finish_reason = None
             if isinstance(resp_obj, dict):
@@ -122,7 +157,7 @@ def chat_completion(
                 "finish_reason": finish_reason,
                 "usage": usage,
             }
-            return (text_out or str(data)), meta
+            return (text_out or str(data)), meta, thinking_text
 
         try:
             # Some Responses API deployments reject seed; try it only for non-GPT-5 by default.
@@ -172,6 +207,6 @@ def chat_completion(
         "finish_reason": (data.get("choices", [{}])[0] or {}).get("finish_reason"),
         "usage": data.get("usage"),
     }
-    return res, meta
+    return res, meta, None
 
 
