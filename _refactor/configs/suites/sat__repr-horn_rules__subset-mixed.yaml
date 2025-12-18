@@ -1,0 +1,25 @@
+name: sat__repr-horn_rules__subset-mixed
+description: "SAT decision on mixed dataset rendered as Horn rules (representation mismatch)."
+
+task: sat_decision
+subset: mixed
+
+dataset:
+  path: datasets/validation/vars10_len3-5_hornmixed_per20_seed12345.jsonl
+  skip_rows: 1
+
+prompting:
+  render_policy: fixed
+  representation: horn_rules
+  template: prompts/sat_decision__horn_rules__answer_only.j2
+  prompt_profile: direct
+  response_style: answer_only
+  answer_format: yes_no
+
+targets_ref:
+  - ../targets/twelve_models.yaml
+
+output_pattern: runs/${name}/${run}/${provider}/${model}/${thinking_mode}/results.jsonl
+resume: true
+
+
