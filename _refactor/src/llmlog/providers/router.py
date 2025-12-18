@@ -29,9 +29,9 @@ def run_chat(
     provider_l = (provider or "").lower()
 
     if provider_l == "anthropic":
-        full_prompt = f"{sysprompt}\n{prompt}" if sysprompt else prompt
         text, meta, thinking_text = anthropic_chat(
-            prompt=full_prompt,
+            prompt=prompt,
+            system=sysprompt,
             model=model,
             max_tokens=max_tokens,
             temperature=temperature,
@@ -41,9 +41,9 @@ def run_chat(
         return {"text": text, "thinking_text": thinking_text, **norm}
 
     if provider_l in ("google", "gemini"):
-        full_prompt = f"{sysprompt}\n{prompt}" if sysprompt else prompt
         text, meta = gemini_chat(
-            prompt=full_prompt,
+            prompt=prompt,
+            system=sysprompt,
             model=model,
             max_tokens=max_tokens,
             temperature=temperature,

@@ -54,9 +54,10 @@ def chat_completion(
             conn.close()
         return data
 
-    # Prefer Responses API for GPT-5 models
-    use_responses = str(model).lower().startswith("gpt-5")
-    if use_responses:
+    # Prefer Responses API (newer unified generation endpoint). If unsupported for a model,
+    # we fall back to Chat Completions.
+    try_responses = True
+    if try_responses:
         input_blocks: List[Dict[str, Any]] = []
         for m in messages:
             role = m.get("role", "user")
@@ -69,52 +70,76 @@ def chat_completion(
         }
         if max_tokens is not None:
             payload["max_output_tokens"] = int(max_tokens)
+        # Best-effort: include temperature when provided (some models may ignore/forbid it).
+        try:
+            payload["temperature"] = float(temperature or 0.0)
+        except Exception:
+            pass
 
         eff = None
         enabled = False
         if thinking:
             enabled = bool(thinking.get("enabled"))
             eff = thinking.get("effort") or thinking.get("reasoning_effort")
+        model_lower = str(model).lower()
         if enabled and isinstance(eff, str) and eff.lower() in ("low", "medium", "high"):
             payload["reasoning"] = {"effort": eff.lower()}
-        else:
-            # Best-effort disable
+        elif model_lower.startswith("gpt-5"):
+            # Best-effort explicit disable for GPT-5 tiers.
             payload["reasoning"] = {"effort": "minimal"}
 
-        data = _request("/v1/responses", payload)
-        resp_obj = data.get("response") or data
+        def _responses_call(payload_in: Dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
+            data = _request("/v1/responses", payload_in)
+            resp_obj = data.get("response") or data
 
-        text_accum: List[str] = []
-        if isinstance(resp_obj, dict) and isinstance(resp_obj.get("output_text"), str):
-            text_accum.append(resp_obj["output_text"])
-        else:
-            output = resp_obj.get("output") or []
-            if isinstance(output, list):
-                for item in output:
-                    content = (item or {}).get("content") or []
-                    if isinstance(content, list):
-                        for part in content:
-                            t = part.get("text") or part.get("content")
-                            if t:
-                                text_accum.append(str(t))
-        text_out = "\n".join([t for t in text_accum if t]).strip()
+            text_accum: List[str] = []
+            if isinstance(resp_obj, dict) and isinstance(resp_obj.get("output_text"), str):
+                text_accum.append(resp_obj["output_text"])
+            else:
+                output = resp_obj.get("output") or []
+                if isinstance(output, list):
+                    for item in output:
+                        content = (item or {}).get("content") or []
+                        if isinstance(content, list):
+                            for part in content:
+                                t = part.get("text") or part.get("content")
+                                if t:
+                                    text_accum.append(str(t))
+            text_out = "\n".join([t for t in text_accum if t]).strip()
 
-        finish_reason = None
-        if isinstance(resp_obj, dict):
-            finish_reason = resp_obj.get("finish_reason") or resp_obj.get("status")
+            finish_reason = None
+            if isinstance(resp_obj, dict):
+                finish_reason = resp_obj.get("finish_reason") or resp_obj.get("status")
 
-        usage = None
-        if isinstance(resp_obj, dict) and isinstance(resp_obj.get("usage"), dict):
-            usage = resp_obj.get("usage")
-        elif isinstance(data.get("usage"), dict):
-            usage = data.get("usage")
+            usage = None
+            if isinstance(resp_obj, dict) and isinstance(resp_obj.get("usage"), dict):
+                usage = resp_obj.get("usage")
+            elif isinstance(data.get("usage"), dict):
+                usage = data.get("usage")
 
-        meta: Dict[str, Any] = {
-            "raw_response": data,
-            "finish_reason": finish_reason,
-            "usage": usage,
-        }
-        return (text_out or str(data)), meta
+            meta: Dict[str, Any] = {
+                "raw_response": data,
+                "finish_reason": finish_reason,
+                "usage": usage,
+            }
+            return (text_out or str(data)), meta
+
+        try:
+            # Some Responses API deployments reject seed; try it only for non-GPT-5 by default.
+            if seed is not None and not model_lower.startswith("gpt-5"):
+                payload["seed"] = int(seed)
+            return _responses_call(payload)
+        except Exception:
+            # Retry once without seed if that was the issue, then fall back.
+            if "seed" in payload:
+                try:
+                    payload2 = dict(payload)
+                    payload2.pop("seed", None)
+                    return _responses_call(payload2)
+                except Exception:
+                    pass
+            # fall through to Chat Completions
+            pass
 
     # Default: Chat Completions API
     call: Dict[str, Any] = {

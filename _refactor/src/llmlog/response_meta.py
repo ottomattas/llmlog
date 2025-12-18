@@ -27,6 +27,9 @@ def normalize_meta(provider: str, model: str, meta: Dict[str, Any]) -> Dict[str,
             "input_tokens": None,
             "output_tokens": None,
             "reasoning_tokens": None,
+            # Optional extras (best-effort)
+            "cache_creation_input_tokens": None,
+            "cache_read_input_tokens": None,
         },
         "raw_response": meta.get("raw_response"),
     }
@@ -38,6 +41,8 @@ def normalize_meta(provider: str, model: str, meta: Dict[str, Any]) -> Dict[str,
         usage = meta.get("usage") or _safe_get(raw, "usage") or {}
         normalized["usage"]["input_tokens"] = usage.get("input_tokens")
         normalized["usage"]["output_tokens"] = usage.get("output_tokens")
+        normalized["usage"]["cache_creation_input_tokens"] = usage.get("cache_creation_input_tokens")
+        normalized["usage"]["cache_read_input_tokens"] = usage.get("cache_read_input_tokens")
         # If extended thinking is present (thinking or redacted_thinking blocks),
         # Anthropic bills thinking tokens as output tokens. Surface them as reasoning_tokens.
         try:
@@ -69,16 +74,19 @@ def normalize_meta(provider: str, model: str, meta: Dict[str, Any]) -> Dict[str,
             normalized["usage"]["output_tokens"] = usage.get("completion_tokens") or usage.get("output_tokens")
             details = usage.get("output_tokens_details") or {}
             normalized["usage"]["reasoning_tokens"] = details.get("reasoning_tokens")
+            # Responses-style cached tokens sometimes appear here too
+            in_details = usage.get("input_tokens_details") or {}
+            normalized["usage"]["cache_read_input_tokens"] = in_details.get("cached_tokens")
             return normalized
         resp_obj = raw.get("response") or raw
         u2 = resp_obj.get("usage") if isinstance(resp_obj, dict) else None
         if isinstance(u2, dict):
-            normalized["usage"]["input_tokens"] = (u2.get("input_tokens_details", {}).get("cached_tokens")) or u2.get(
-                "input_tokens"
-            )
+            normalized["usage"]["input_tokens"] = u2.get("input_tokens")
             normalized["usage"]["output_tokens"] = u2.get("output_tokens")
             out_details = u2.get("output_tokens_details") or {}
             normalized["usage"]["reasoning_tokens"] = out_details.get("reasoning_tokens")
+            in_details = u2.get("input_tokens_details") or {}
+            normalized["usage"]["cache_read_input_tokens"] = in_details.get("cached_tokens")
         return normalized
 
     return normalized

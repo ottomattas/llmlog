@@ -26,6 +26,7 @@ def _extract_text(data: Dict[str, Any]) -> str:
 def chat_completion(
     *,
     prompt: str,
+    system: Optional[str] = None,
     model: str,
     max_tokens: Optional[int] = None,
     temperature: float = 0.0,
@@ -40,9 +41,12 @@ def chat_completion(
     path = f"/v1beta/models/{model}:generateContent?key={key}"
 
     body: Dict[str, Any] = {
-        "contents": [{"parts": [{"text": prompt}]}],
+        "contents": [{"role": "user", "parts": [{"text": prompt}]}],
         "generationConfig": {"temperature": float(temperature or 0.0)},
     }
+    if system:
+        # Prefer structured system instruction when supported by the API.
+        body["system_instruction"] = {"parts": [{"text": str(system)}]}
     gen_cfg = body.setdefault("generationConfig", {})
     try:
         if thinking and thinking.get("enabled"):

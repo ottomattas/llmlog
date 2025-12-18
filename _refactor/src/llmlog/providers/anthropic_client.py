@@ -10,6 +10,7 @@ from .secrets import get_provider_key, load_secrets
 def chat_completion(
     *,
     prompt: str,
+    system: Optional[str] = None,
     model: str,
     max_tokens: Optional[int] = 1000,
     temperature: Optional[float] = None,
@@ -27,6 +28,9 @@ def chat_completion(
         "max_tokens": max_tokens or 1000,
         "messages": [{"role": "user", "content": prompt}],
     }
+    # Messages API has a top-level system parameter (no "system" role in messages).
+    if system:
+        kwargs["system"] = str(system)
 
     # When extended thinking is enabled, Anthropic requires temperature semantics of 1;
     # omit temperature to avoid invalid combinations.
@@ -107,6 +111,8 @@ def chat_completion(
             meta["usage"] = {
                 "input_tokens": getattr(usage_obj, "input_tokens", None) if usage_obj else None,
                 "output_tokens": getattr(usage_obj, "output_tokens", None) if usage_obj else None,
+                "cache_creation_input_tokens": getattr(usage_obj, "cache_creation_input_tokens", None) if usage_obj else None,
+                "cache_read_input_tokens": getattr(usage_obj, "cache_read_input_tokens", None) if usage_obj else None,
             }
             if (meta["usage"].get("input_tokens") is None and meta["usage"].get("output_tokens") is None) and last_stream_usage:
                 meta["usage"].update(last_stream_usage)
@@ -125,6 +131,8 @@ def chat_completion(
             "usage": {
                 "input_tokens": getattr(getattr(resp, "usage", None), "input_tokens", None),
                 "output_tokens": getattr(getattr(resp, "usage", None), "output_tokens", None),
+                "cache_creation_input_tokens": getattr(getattr(resp, "usage", None), "cache_creation_input_tokens", None),
+                "cache_read_input_tokens": getattr(getattr(resp, "usage", None), "cache_read_input_tokens", None),
             },
         }
         return text, meta, None
