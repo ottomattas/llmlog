@@ -1,0 +1,23 @@
+You will be given a propositional logic problem expressed as CNF clauses in natural language.
+
+Semantics
+- Literals are written as:
+  - "pN is true" (positive)
+  - "pN is false" (negative)
+- Each line is a clause (a disjunction with "or").
+- All clauses are jointly assumed true (conjoined).
+
+Task
+- Determine whether the set of clauses is a contradiction (unsatisfiable) or satisfiable.
+
+Answer format
+- Output exactly one final word on the last line, lowercase with no punctuation:
+  - "contradiction" if the set is unsatisfiable
+  - "satisfiable" if the set is satisfiable
+  - "unknown" only if you genuinely cannot decide
+- Do not output any other words.
+
+Statements:
+{{ clauses }}
+
+

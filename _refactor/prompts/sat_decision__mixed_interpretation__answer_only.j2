@@ -1,0 +1,19 @@
+Your task is to solve a propositional logic problem.
+
+Choose the appropriate interpretation based on how the statements are rendered below.
+- If you see facts like "p1." and rules like "if p2 and p3 then p4.", treat them as Horn facts and implications, and determine whether p0 can be derived.
+- If you see disjunctions like "p1 is true or p2 is false." or compact forms like "p1 or not(p2).", treat them as CNF clauses, and determine whether the set is a contradiction (unsatisfiable) or satisfiable.
+
+Conventions
+- Propositional variables are written as pN, where N is a number.
+- All statements are jointly assumed true (conjoined).
+
+Answer format
+- For Horn tasks: output exactly one final word on the last line, lowercase with no punctuation: "yes" if p0 is derivable; otherwise "no".
+- For CNF tasks: output exactly one final word on the last line, lowercase with no punctuation: "contradiction" if unsatisfiable; otherwise "satisfiable" (or "unknown" if undecidable).
+- Do not output any other words.
+
+Statements:
+{{ clauses }}
+
+
