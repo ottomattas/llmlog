@@ -39,12 +39,18 @@ python scripts/generate_problems.py --seed 12345 --dataset validation --name pro
 
 4) Run a small test suite (limit 10):
 ```
-python scripts/run.py --config configs/suites/exp8_horn_yesno.yaml --run validation_001 --resume --limit 10
+python scripts/run.py --suite configs/suites/sat__repr-cnf_compact__subset-mixed.yaml --run validation_001 --resume --limit 10
 ```
 
 5) Analyze results:
 ```
-python scripts/analyze.py runs/exp8_horn_yesno/validation_001/*/*/results.jsonl
+python scripts/aggregate_results.py --run-id validation_001 --output reports/validation_001.aggregated.json
+python scripts/generate_dashboard.py --input reports/validation_001.aggregated.json --output reports/validation_001.dashboard.html
+```
+
+6) (Optional) Export prompts + model outputs for human inspection:
+```
+python scripts/export_provenance.py --provenance runs/sat__repr-cnf_compact__subset-mixed/validation_001/<provider>/<model>/<thinking_mode>/results.provenance.jsonl --out reports/exports --limit 10 --no-raw
 ```
 
 ### Documentation

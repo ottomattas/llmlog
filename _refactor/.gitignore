@@ -1,0 +1,8 @@
+# Generated artifacts (never commit)
+runs/
+reports/
+
+# Local secrets (recommended: use env vars instead)
+secrets.json
+
+
