@@ -17,6 +17,7 @@ from .schema import (
     Task,
 )
 from .loader import load_suite_config, load_target_set_config, resolve_suite
+from .converter import convert_experiments_config_dict, write_converted_configs
 
 __all__ = [
     "Task",
@@ -32,6 +33,8 @@ __all__ = [
     "load_target_set_config",
     "load_suite_config",
     "resolve_suite",
+    "convert_experiments_config_dict",
+    "write_converted_configs",
 ]
 
 
