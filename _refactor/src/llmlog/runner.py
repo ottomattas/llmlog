@@ -18,6 +18,8 @@ from .parsers import parse_contradiction, parse_yes_no
 from .problems.reader import iter_problem_rows
 from .providers.router import run_chat
 from .prompts.render import render_prompt
+from .pricing.loader import load_pricing_table
+from .pricing.cost import compute_cost_usd, match_rate
 
 
 def _find_refactor_root(suite_path: Path) -> Path:
@@ -139,10 +141,8 @@ def _derive_paths(results_path: Path) -> Tuple[Path, Path]:
     # results.jsonl -> results.provenance.jsonl / results.summary.json
     p = str(results_path)
     if p.endswith(".jsonl"):
-        return (
-            Path(p[:-5] + ".provenance.jsonl"),
-            Path(p[:-5] + ".summary.json"),
-        )
+        base = p[: -len(".jsonl")]
+        return (Path(base + ".provenance.jsonl"), Path(base + ".summary.json"))
     return (Path(p + ".provenance.jsonl"), Path(p + ".summary.json"))
 
 
@@ -178,6 +178,14 @@ def run_suite(
     if not targets:
         raise ValueError("No targets selected")
 
+    pricing_table = None
+    if cfg.pricing_table:
+        p = Path(cfg.pricing_table)
+        if not p.is_absolute():
+            p = (root / cfg.pricing_table).resolve()
+        if p.exists():
+            pricing_table = load_pricing_table(str(p))
+
     dataset_path = cfg.dataset.path
     data_path = Path(dataset_path)
     if not data_path.is_absolute():
@@ -207,12 +215,19 @@ def run_suite(
         _ensure_dir(prov_path)
         _ensure_dir(summary_path)
         done_ids = _load_done_ids(results_path) if cfg.resume else set()
+        rate = None
+        if pricing_table is not None:
+            try:
+                rate = match_rate(pricing_table, provider=str(t.get("provider")), model=str(t.get("model")))
+            except Exception:
+                rate = None
         out_info.append(
             {
                 "target": t,
                 "results_path": results_path,
                 "provenance_path": prov_path,
                 "summary_path": summary_path,
+                "pricing_rate": rate.model_dump(mode="json", exclude_none=True) if rate is not None else None,
                 "done_ids": done_ids,
                 "stats": {
                     "total": 0,
@@ -225,6 +240,9 @@ def run_suite(
                     "reasoning_tokens": 0,
                     "cache_creation_input_tokens": 0,
                     "cache_read_input_tokens": 0,
+                    "cost_total_usd": 0.0,
+                    "cost_input_usd": 0.0,
+                    "cost_output_usd": 0.0,
                 },
             }
         )
@@ -418,6 +436,19 @@ def run_suite(
                 stats["reasoning_tokens"] += int(usage.get("reasoning_tokens") or 0)
                 stats["cache_creation_input_tokens"] += int(usage.get("cache_creation_input_tokens") or 0)
                 stats["cache_read_input_tokens"] += int(usage.get("cache_read_input_tokens") or 0)
+                if pricing_table is not None and oi.get("pricing_rate") is not None:
+                    rate_obj = oi["pricing_rate"]
+                    # compute_cost_usd expects the ModelRate object; reconstruct via dict
+                    try:
+                        from .pricing.schema import ModelRate
+
+                        rate = ModelRate(**rate_obj)
+                        c = compute_cost_usd(rate, usage)
+                        stats["cost_total_usd"] += float(c.get("total_usd") or 0.0)
+                        stats["cost_input_usd"] += float(c.get("input_usd") or 0.0)
+                        stats["cost_output_usd"] += float(c.get("output_usd") or 0.0)
+                    except Exception:
+                        pass
             except Exception:
                 pass
 
@@ -434,6 +465,8 @@ def run_suite(
             "provider": oi["target"].get("provider"),
             "model": oi["target"].get("model"),
             "thinking_mode": _thinking_mode_label(oi["target"]),
+            "pricing_table": cfg.pricing_table,
+            "pricing_rate": oi.get("pricing_rate"),
             "stats": stats,
             "accuracy": acc,
         }

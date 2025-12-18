@@ -30,6 +30,7 @@ Key fields:
   - `match_formula`: choose one branch for Horn problems and another for non-Horn problems.
 - `targets_ref`: one or more target-set YAML paths (relative to the suite file).
 - `output_pattern`: output path template; supports `${name} ${run} ${provider} ${model} ${thinking_mode}`.
+- `pricing_table` (optional): path to a pricing YAML under `configs/pricing/` used to compute `cost_*` totals in summaries.
 
 ### Prompt templates
 Templates live under `prompts/` and are rendered with Jinja2. The runner injects:

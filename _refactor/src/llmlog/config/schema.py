@@ -149,6 +149,9 @@ class SuiteConfig(BaseModel):
     targets: Optional[List[TargetConfig]] = None
     targets_ref: Optional[List[str]] = None
 
+    # Optional pricing table for cost normalization
+    pricing_table: Optional[str] = None
+
     # Run outputs
     output_pattern: str = "runs/${name}/${run}/${provider}/${model}/${thinking_mode}/results.jsonl"
     resume: bool = True
