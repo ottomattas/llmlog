@@ -82,7 +82,7 @@ def chat_completion(
             enabled = bool(thinking.get("enabled"))
             eff = thinking.get("effort") or thinking.get("reasoning_effort")
         model_lower = str(model).lower()
-        if enabled and isinstance(eff, str) and eff.lower() in ("low", "medium", "high"):
+        if enabled and isinstance(eff, str) and eff.lower() in ("none", "minimal", "low", "medium", "high"):
             payload["reasoning"] = {"effort": eff.lower()}
         elif model_lower.startswith("gpt-5"):
             # Best-effort explicit disable for GPT-5 tiers.

@@ -6,6 +6,10 @@ This document describes how to configure and run experiments inside `_refactor/`
 - **Suite config**: a YAML file in `configs/suites/` describing *what to measure* (task/subset/representation/prompting policy) and where the dataset is.
 - **Target set**: a YAML file in `configs/targets/` listing provider/model combinations (plus thinking/max_tokens/etc).
 
+We include two example target sets:
+- `configs/targets/twelve_models.yaml`: stable 12-model matrix used in earlier experiments
+- `configs/targets/latest_models.yaml`: curated “latest models” set (see provider docs)
+
 ### Running a suite
 From `_refactor/`:
 ```

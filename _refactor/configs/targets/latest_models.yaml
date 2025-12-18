@@ -1,0 +1,105 @@
+name: latest_models
+
+# Curated "latest models" target set (Dec 2025).
+#
+# Source pages:
+# - Claude model family overview: https://platform.claude.com/docs/en/intro
+# - Gemini API docs (model examples): https://ai.google.dev/gemini-api/docs?hl=en
+# - OpenAI API overview + model docs: https://platform.openai.com/docs/overview
+#
+# Note: model IDs evolve. Treat this file as a starting point; update as providers deprecate/rename models.
+
+targets:
+  # Anthropic (latest generation listed in docs)
+  - provider: anthropic
+    model: claude-opus-4-5-20251101
+    temperature: 1
+    seed: 1234
+    max_tokens: 30000
+    thinking:
+      enabled: true
+      budget_tokens: 24576
+
+  - provider: anthropic
+    model: claude-sonnet-4-5-20250929
+    temperature: 1
+    seed: 1234
+    max_tokens: 30000
+    thinking:
+      enabled: true
+      budget_tokens: 24576
+
+  - provider: anthropic
+    model: claude-haiku-4-5-20251001
+    temperature: 1
+    seed: 1234
+    max_tokens: 3000
+    thinking:
+      enabled: true
+      budget_tokens: 1024
+
+  # Google Gemini (examples in docs; update as Gemini 3 Pro IDs are finalized)
+  - provider: google
+    model: gemini-2.5-pro
+    temperature: 0
+    seed: 1234
+    max_tokens: 30000
+    thinking:
+      enabled: true
+      budget_tokens: 24576
+
+  - provider: google
+    model: gemini-2.5-flash
+    temperature: 0
+    seed: 1234
+    max_tokens: 10000
+    thinking:
+      enabled: true
+      budget_tokens: 8192
+
+  - provider: google
+    model: gemini-3-flash-preview
+    temperature: 0
+    seed: 1234
+    max_tokens: 3000
+    thinking:
+      enabled: true
+      budget_tokens: 1024
+
+  # OpenAI (latest GPT-5 family + a fast reasoning model)
+  - provider: openai
+    model: gpt-5.2-pro
+    temperature: 0
+    seed: 1234
+    max_tokens: 30000
+    thinking:
+      enabled: true
+      effort: high
+
+  - provider: openai
+    model: gpt-5.2
+    temperature: 0
+    seed: 1234
+    max_tokens: 10000
+    thinking:
+      enabled: true
+      effort: medium
+
+  - provider: openai
+    model: gpt-5.1
+    temperature: 0
+    seed: 1234
+    max_tokens: 3000
+    thinking:
+      enabled: true
+      effort: low
+
+  - provider: openai
+    model: o4-mini
+    temperature: 0
+    seed: 1234
+    max_tokens: 3000
+    thinking:
+      enabled: false
+
+

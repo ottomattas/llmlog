@@ -62,7 +62,7 @@ class ThinkingOptions(BaseModel):
     # Anthropic/Gemini
     budget_tokens: Optional[int] = None
     # OpenAI
-    effort: Optional[Literal["low", "medium", "high"]] = None
+    effort: Optional[Literal["none", "minimal", "low", "medium", "high"]] = None
 
 
 class OutputsConfig(BaseModel):
