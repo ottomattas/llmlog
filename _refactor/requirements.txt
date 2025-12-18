@@ -1,0 +1,15 @@
+PyYAML>=6.0,<7
+pydantic>=2.0,<3
+jinja2>=3.1,<4
+pytest>=8.0,<9
+
+# Provider SDKs (kept minimal; OpenAI/Gemini clients are implemented via HTTPS stdlib)
+anthropic>=0.66,<1
+
+# Analysis/plots
+matplotlib>=3.8,<4
+
+# Optional: SAT solving used by scripts/generate_problems.py (PySAT)
+python-sat[pblib,aiger]>=0.1.8.dev20
+
+
