@@ -15,12 +15,14 @@ runs/<suite>/<run>/<provider>/<model>/<thinking_mode>/
   results.jsonl
   results.provenance.jsonl
   results.summary.json
+  run.manifest.json
 ```
 
 ### File semantics
 - `results.jsonl`: minimal rows for fast aggregation.
 - `results.provenance.jsonl`: optional full provenance (prompt, raw response, usage, timing, thinking text when available).
 - `results.summary.json`: per-target aggregate stats (accuracy, token totals, etc).
+- `run.manifest.json`: reproducibility snapshot (suite inputs + target config + matched pricing rate row).
 
 ### Export for inspection
 To export a provenance file into prompt/response text files:

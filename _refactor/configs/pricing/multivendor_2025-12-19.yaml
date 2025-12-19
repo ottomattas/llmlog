@@ -1,0 +1,44 @@
+name: multivendor_2025-12-19
+currency: USD
+sources:
+  - source_url: https://platform.openai.com/pricing
+    retrieved_at: "2025-12-18"
+    notes: "OpenAI rates were initially seeded in configs/pricing/openai_2025-12-18.yaml; duplicated here for multi-provider runs."
+  - source_url: https://platform.claude.com/docs/en/about-claude/models/overview
+    retrieved_at: "2025-12-19"
+    notes: "Anthropic model overview includes headline per-MTok input/output pricing for current + legacy models."
+
+rates:
+  # OpenAI (copied from openai_2025-12-18.yaml)
+  - provider: openai
+    model: gpt-5.2
+    input_per_million_usd: 1.75
+    output_per_million_usd: 14.0
+
+  - provider: openai
+    model_prefix: gpt-5.2
+    input_per_million_usd: 1.75
+    output_per_million_usd: 14.0
+
+  - provider: openai
+    model: o4-mini
+    input_per_million_usd: 1.10
+    output_per_million_usd: 4.40
+
+  # Anthropic (Claude API) — use prefixes so aliases and snapshot IDs match.
+  - provider: anthropic
+    model_prefix: claude-sonnet-4-5
+    input_per_million_usd: 3.0
+    output_per_million_usd: 15.0
+
+  - provider: anthropic
+    model_prefix: claude-haiku-4-5
+    input_per_million_usd: 1.0
+    output_per_million_usd: 5.0
+
+  - provider: anthropic
+    model_prefix: claude-opus-4-5
+    input_per_million_usd: 5.0
+    output_per_million_usd: 25.0
+
+

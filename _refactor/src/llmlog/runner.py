@@ -381,6 +381,9 @@ def run_suite(
             if exp is not None and parsed in (0, 1):
                 correct = parsed == exp
 
+            # Provider-resolved model id (best-effort). Useful when using aliases.
+            model_resolved = meta.get("model") if isinstance(meta, dict) else None
+
             # Minimal results row
             result_row: Dict[str, Any] = {
                 "id": getattr(row, "id", None),
@@ -392,6 +395,7 @@ def run_suite(
                 },
                 "provider": t.get("provider"),
                 "model": t.get("model"),
+                "model_resolved": model_resolved,
                 "parsed_answer": parsed,
                 "correct": correct,
                 "error": err,
@@ -459,6 +463,7 @@ def run_suite(
         summary_path: Path = oi["summary_path"]
         stats = oi["stats"]
         acc = (stats["correct"] / stats["total"]) if stats["total"] else 0.0
+        manifest_path = summary_path.parent / "run.manifest.json"
         payload = {
             "suite": cfg.name,
             "run": rid,
@@ -471,5 +476,22 @@ def run_suite(
             "accuracy": acc,
         }
         summary_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n")
+
+        # Reproducibility: record what we actually ran (suite config inputs + target + pricing rate).
+        try:
+            manifest = {
+                "suite_path": str(suite_file),
+                "suite": cfg.name,
+                "run": rid,
+                "dataset": cfg.dataset.model_dump(mode="json"),
+                "prompting": cfg.prompting.model_dump(mode="json"),
+                "target": oi["target"],
+                "thinking_mode": _thinking_mode_label(oi["target"]),
+                "pricing_table": cfg.pricing_table,
+                "pricing_rate": oi.get("pricing_rate"),
+            }
+            manifest_path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n")
+        except Exception:
+            pass
 
 

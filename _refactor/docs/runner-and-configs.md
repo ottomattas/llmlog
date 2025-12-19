@@ -8,12 +8,23 @@ This document describes how to configure and run experiments inside `_refactor/`
 
 We include two example target sets:
 - `configs/targets/twelve_models.yaml`: stable 12-model matrix used in earlier experiments
-- `configs/targets/latest_models.yaml`: curated “latest models” set (see provider docs)
+- `configs/targets/latest_models.yaml`: curated pinned “latest models” set (see provider docs)
+- `configs/targets/rolling_latest.yaml`: uses provider aliases where supported (fast adoption; less reproducible)
+
+If you want to refresh targets automatically from provider APIs, use:
+```
+python scripts/sync_targets.py --out configs/targets/generated_latest_models.yaml --inventory-out reports/models_inventory.json
+```
 
 ### Running a suite
 From `_refactor/`:
 ```
 python scripts/run.py --suite configs/suites/sat__repr-cnf_compact__subset-mixed.yaml --run demo-001 --limit 10 --resume --lockstep
+```
+
+You can also do a preflight (targets + pricing + rough cost upper bound) without running:
+```
+python scripts/run.py --suite configs/suites/sat__repr-cnf_compact__subset-mixed.yaml --preflight-only --estimate-cost
 ```
 
 ### Suite YAML fields (current)

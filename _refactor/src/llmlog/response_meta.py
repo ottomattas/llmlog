@@ -38,6 +38,13 @@ def normalize_meta(provider: str, model: str, meta: Dict[str, Any]) -> Dict[str,
 
     # Anthropic
     if provider_l == "anthropic":
+        # Prefer the provider-returned model id when present (useful when calling aliases).
+        try:
+            m = raw.get("model")
+            if isinstance(m, str) and m:
+                normalized["model"] = m
+        except Exception:
+            pass
         usage = meta.get("usage") or _safe_get(raw, "usage") or {}
         normalized["usage"]["input_tokens"] = usage.get("input_tokens")
         normalized["usage"]["output_tokens"] = usage.get("output_tokens")
@@ -60,6 +67,7 @@ def normalize_meta(provider: str, model: str, meta: Dict[str, Any]) -> Dict[str,
 
     # Google Gemini
     if provider_l in ("google", "gemini"):
+        # Gemini responses do not consistently include the resolved model id; keep requested id.
         usage_md = meta.get("usage") or _safe_get(raw, "usageMetadata") or {}
         normalized["usage"]["input_tokens"] = usage_md.get("promptTokenCount") or usage_md.get("prompt_tokens")
         normalized["usage"]["output_tokens"] = usage_md.get("candidatesTokenCount") or usage_md.get("candidates_tokens")
@@ -68,6 +76,13 @@ def normalize_meta(provider: str, model: str, meta: Dict[str, Any]) -> Dict[str,
 
     # OpenAI
     if provider_l == "openai":
+        # Prefer provider-returned model id when present (useful when using aliases or routed endpoints).
+        try:
+            m = raw.get("model") or _safe_get(raw, "response", "model")
+            if isinstance(m, str) and m:
+                normalized["model"] = m
+        except Exception:
+            pass
         usage = meta.get("usage") or raw.get("usage") or {}
         if usage:
             normalized["usage"]["input_tokens"] = usage.get("prompt_tokens") or usage.get("input_tokens")

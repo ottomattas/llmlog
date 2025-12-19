@@ -19,6 +19,8 @@ prompting:
 targets_ref:
   - ../targets/latest_models.yaml
 
+pricing_table: configs/pricing/multivendor_2025-12-19.yaml
+
 output_pattern: runs/${name}/${run}/${provider}/${model}/${thinking_mode}/results.jsonl
 resume: true
 

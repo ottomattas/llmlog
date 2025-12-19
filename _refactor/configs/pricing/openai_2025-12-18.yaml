@@ -12,6 +12,13 @@ rates:
     input_per_million_usd: 1.75
     output_per_million_usd: 14.0
 
+  # Prefix match to cover closely related variants (e.g., gpt-5.2-pro) when priced the same.
+  # If OpenAI splits pricing by variant, add an explicit `model:` row for the variant.
+  - provider: openai
+    model_prefix: gpt-5.2
+    input_per_million_usd: 1.75
+    output_per_million_usd: 14.0
+
   - provider: openai
     model: o4-mini
     input_per_million_usd: 1.10
