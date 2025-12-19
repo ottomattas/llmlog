@@ -1,0 +1,27 @@
+name: sat__repr-cnf_compact__subset-mixed__targets-rolling
+description: "SAT decision (compact CNF) on mixed dataset using configs/targets/rolling_latest.yaml (provider aliases when available)."
+
+task: sat_decision
+subset: mixed
+
+dataset:
+  path: datasets/validation/vars10_len3-5_hornmixed_per20_seed12345.jsonl
+  skip_rows: 1
+
+prompting:
+  render_policy: fixed
+  representation: cnf_compact
+  template: prompts/sat_decision__cnf_compact__answer_only.j2
+  prompt_profile: direct
+  response_style: answer_only
+  answer_format: contradiction_satisfiable
+
+targets_ref:
+  - ../targets/rolling_latest.yaml
+
+pricing_table: configs/pricing/multivendor_2025-12-19.yaml
+
+output_pattern: runs/${name}/${run}/${provider}/${model}/${thinking_mode}/results.jsonl
+resume: true
+
+

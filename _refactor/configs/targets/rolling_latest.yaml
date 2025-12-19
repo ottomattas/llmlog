@@ -1,0 +1,86 @@
+name: rolling_latest
+
+# "Rolling latest" target set:
+# - Prefer provider aliases when supported (Anthropic) so you can use newly released snapshots immediately.
+# - For reproducible research runs, prefer pinned snapshot IDs (see latest_models.yaml) and commit updates deliberately.
+#
+# References:
+# - Anthropic model aliases + pricing are documented in the models overview:
+#   https://platform.claude.com/docs/en/about-claude/models/overview
+
+targets:
+  # Anthropic: use aliases (they automatically move to the most recent snapshot).
+  - provider: anthropic
+    model: claude-opus-4-5
+    temperature: 1
+    seed: 1234
+    max_tokens: 30000
+    thinking:
+      enabled: true
+      budget_tokens: 24576
+
+  - provider: anthropic
+    model: claude-sonnet-4-5
+    temperature: 1
+    seed: 1234
+    max_tokens: 30000
+    thinking:
+      enabled: true
+      budget_tokens: 24576
+
+  - provider: anthropic
+    model: claude-haiku-4-5
+    temperature: 1
+    seed: 1234
+    max_tokens: 3000
+    thinking:
+      enabled: true
+      budget_tokens: 1024
+
+  # Google Gemini (no alias mechanism; update/sync as needed)
+  - provider: google
+    model: gemini-2.5-pro
+    temperature: 0
+    seed: 1234
+    max_tokens: 30000
+    thinking:
+      enabled: true
+      budget_tokens: 24576
+
+  - provider: google
+    model: gemini-2.5-flash
+    temperature: 0
+    seed: 1234
+    max_tokens: 10000
+    thinking:
+      enabled: true
+      budget_tokens: 8192
+
+  # OpenAI (no alias mechanism; update/sync as needed)
+  - provider: openai
+    model: gpt-5.2-pro
+    temperature: 0
+    seed: 1234
+    max_tokens: 30000
+    thinking:
+      enabled: true
+      effort: high
+
+  - provider: openai
+    model: gpt-5.2
+    temperature: 0
+    seed: 1234
+    max_tokens: 10000
+    thinking:
+      enabled: true
+      effort: medium
+
+  - provider: openai
+    model: o4-mini
+    temperature: 0
+    seed: 1234
+    max_tokens: 3000
+    thinking:
+      enabled: false
+
+
