@@ -1,0 +1,18 @@
+{
+  "name": "openai_gpt5_2_high_cnf2_refactor",
+  "provider": "openai",
+  "model": "gpt-5.2-pro-2025-12-11",
+  "run": "vars10_api_tempfix",
+  "total": 1,
+  "correct": 0,
+  "accuracy": 0.0,
+  "unclear": 1,
+  "sat_total": 1,
+  "sat_correct": 0,
+  "sat_accuracy": 0.0,
+  "unsat_total": 0,
+  "unsat_correct": 0,
+  "unsat_accuracy": null,
+  "avg_timing_ms": null,
+  "timestamp": 1765870843
+}

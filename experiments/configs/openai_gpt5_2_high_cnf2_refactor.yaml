@@ -1,0 +1,62 @@
+# OpenAI GPT-5.2 (high reasoning effort) on _refactor "step" datasets
+#
+# Usage (from repo root):
+#   python -m experiments.runner --config experiments/configs/openai_gpt5_2_high_cnf2_refactor.yaml \
+#     --input-file _refactor/datasets/validation/vars10_len3-5_hornmixed_per20_seed12345.jsonl \
+#     --run vars10 --limit 5 --dry-run
+#
+# Then run for real (no --dry-run) and/or loop over vars20/vars30/... by changing --input-file + --run.
+
+name: openai_gpt5_2_high_cnf2_refactor
+
+targets:
+  - provider: openai
+    model: gpt-5.2-pro-2025-12-11
+    temperature: 0
+    seed: 1234
+    max_tokens: 30000
+    thinking:
+      enabled: true
+      effort: high
+
+# Default input (override via --input-file)
+input_file: _refactor/datasets/validation/vars10_len3-5_hornmixed_per20_seed12345.jsonl
+
+filters:
+  horn_only: false
+  skip_rows: 1
+  limit_rows: null
+
+output_pattern: experiments/runs/${name}/${run}/${provider}/${model}/results.jsonl
+
+outputs:
+  results:
+    enabled: true
+  provenance:
+    enabled: true
+    include_prompt: true
+    include_raw_response: true
+
+prompt:
+  template: prompts/_template_unified.j2
+  style: cnf_v2
+  variables: {}
+
+parse:
+  type: contradiction
+  yes_tokens: []
+  no_tokens: []
+
+concurrency:
+  # NOTE: current runner executes problems sequentially per target; these are mainly for retries/backoff.
+  workers: 1
+  lockstep: false
+  targets_workers: 1
+  rate_limit_per_min: 60
+  retry:
+    max_attempts: 3
+    backoff_seconds: [2, 5, 10]
+
+resume: true
+
+
