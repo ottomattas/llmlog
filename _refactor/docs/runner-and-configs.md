@@ -27,6 +27,25 @@ You can also do a preflight (targets + pricing + rough cost upper bound) without
 python scripts/run.py --suite configs/suites/sat__repr-cnf_compact__subset-mixed.yaml --preflight-only --estimate-cost
 ```
 
+### Dataset drilldown (vars/len/id filters)
+For iterative sweeps and “zoom in” experiments, `scripts/run.py` supports filtering rows from a larger dataset:
+- `--maxvars 10,20,30,40,50` or `--maxvars 35-45`
+- `--maxlen 3,4,5`
+- `--ids 123,456,789` (exact row ids)
+- `--case-limit N`: cap rows per case `(maxvarnr,maxlen,mustbehorn)` after filtering (useful for cheap sweeps)
+
+Examples:
+```
+# Sweep just var=10 and var=20 on the full dataset, 10 rows per (vars,len,horn) case
+python scripts/run.py --suite <suite.yaml> --run sweep_vars10_20 --maxvars 10,20 --case-limit 10
+
+# Drill into a suspected drop region
+python scripts/run.py --suite <suite.yaml> --run drill_vars35_45 --maxvars 35-45 --case-limit 10
+
+# Re-run specific problematic items by id
+python scripts/run.py --suite <suite.yaml> --run ids_debug --ids 123,456,789
+```
+
 ### Suite YAML fields (current)
 See `src/llmlog/config/schema.py` for the full schema.
 

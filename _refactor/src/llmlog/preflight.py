@@ -2,13 +2,19 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from .config.loader import resolve_suite
 from .config.schema import PromptFixedConfig, PromptMatchFormulaConfig, Representation, SuiteConfig
 from .pricing.cost import match_rate
 from .pricing.loader import load_pricing_table
 from .problems.reader import iter_problem_rows
+from .problems.filters import (
+    limit_per_case,
+    only_ids as filter_only_ids,
+    only_maxlen as filter_only_maxlen,
+    only_maxvars as filter_only_maxvars,
+)
 from .prompts.render import render_prompt
 
 
@@ -88,6 +94,10 @@ def preflight_suite(
     suite_path: str,
     limit: Optional[int] = None,
     only_providers: Optional[List[str]] = None,
+    only_maxvars: Optional[Set[int]] = None,
+    only_maxlen: Optional[Set[int]] = None,
+    only_ids: Optional[Set[str]] = None,
+    case_limit: Optional[int] = None,
 ) -> SuitePreflight:
     suite_file = Path(suite_path).resolve()
     root = _find_refactor_root(suite_file)
@@ -116,9 +126,19 @@ def preflight_suite(
 
     sample_prompts: List[str] = []
     run_rows = 0
-    for row in iter_problem_rows(str(data_path), skip_rows=cfg.dataset.skip_rows):
-        if not _subset_keep(cfg, row):
-            continue
+
+    rows = iter_problem_rows(str(data_path), skip_rows=cfg.dataset.skip_rows)
+    rows = (r for r in rows if _subset_keep(cfg, r))
+    if only_ids:
+        rows = filter_only_ids(rows, only_ids)
+    if only_maxvars:
+        rows = filter_only_maxvars(rows, only_maxvars)
+    if only_maxlen:
+        rows = filter_only_maxlen(rows, only_maxlen)
+    if case_limit is not None:
+        rows = limit_per_case(rows, int(case_limit))
+
+    for row in rows:
         run_rows += 1
         if len(sample_prompts) < 5:
             rep, tmpl_rel, vars_ = _select_prompting(cfg.prompting, row)

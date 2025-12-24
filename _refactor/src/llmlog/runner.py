@@ -16,6 +16,14 @@ from .config.schema import (
 )
 from .parsers import parse_contradiction, parse_yes_no
 from .problems.reader import iter_problem_rows
+from typing import Set
+
+from .problems.filters import (
+    limit_per_case,
+    only_ids as filter_only_ids,
+    only_maxlen as filter_only_maxlen,
+    only_maxvars as filter_only_maxvars,
+)
 from .providers.router import run_chat
 from .prompts.render import render_prompt
 from .pricing.loader import load_pricing_table
@@ -156,6 +164,10 @@ def run_suite(
     only_providers: Optional[List[str]] = None,
     resume: Optional[bool] = None,
     lockstep: Optional[bool] = None,
+    only_maxvars: Optional[Set[int]] = None,
+    only_maxlen: Optional[Set[int]] = None,
+    only_ids: Optional[Set[str]] = None,
+    case_limit: Optional[int] = None,
 ) -> None:
     suite_file = Path(suite_path).resolve()
     root = _find_refactor_root(suite_file)
@@ -196,6 +208,14 @@ def run_suite(
     # Pre-load problems (small enough for our current datasets; simplifies lockstep)
     rows_iter = iter_problem_rows(str(data_path), skip_rows=cfg.dataset.skip_rows)
     rows_iter = _subset_filter(cfg, rows_iter)
+    if only_ids:
+        rows_iter = filter_only_ids(rows_iter, only_ids)
+    if only_maxvars:
+        rows_iter = filter_only_maxvars(rows_iter, only_maxvars)
+    if only_maxlen:
+        rows_iter = filter_only_maxlen(rows_iter, only_maxlen)
+    if case_limit is not None:
+        rows_iter = limit_per_case(rows_iter, int(case_limit))
     if cfg.dataset.limit_rows is not None:
         n = int(cfg.dataset.limit_rows)
         rows: List[Any] = []
@@ -205,6 +225,15 @@ def run_suite(
             rows.append(r)
     else:
         rows = list(rows_iter)
+    if not rows:
+        raise ValueError("No dataset rows selected after applying filters")
+
+    dataset_selection = {
+        "only_maxvars": sorted(list(only_maxvars)) if only_maxvars else None,
+        "only_maxlen": sorted(list(only_maxlen)) if only_maxlen else None,
+        "only_ids": sorted(list(only_ids)) if only_ids else None,
+        "case_limit": int(case_limit) if case_limit is not None else None,
+    }
 
     # Prepare per-target outputs + resume sets
     out_info: List[Dict[str, Any]] = []
@@ -470,6 +499,7 @@ def run_suite(
             "provider": oi["target"].get("provider"),
             "model": oi["target"].get("model"),
             "thinking_mode": _thinking_mode_label(oi["target"]),
+            "dataset_selection": dataset_selection,
             "pricing_table": cfg.pricing_table,
             "pricing_rate": oi.get("pricing_rate"),
             "stats": stats,
@@ -484,6 +514,7 @@ def run_suite(
                 "suite": cfg.name,
                 "run": rid,
                 "dataset": cfg.dataset.model_dump(mode="json"),
+                "dataset_selection": dataset_selection,
                 "prompting": cfg.prompting.model_dump(mode="json"),
                 "target": oi["target"],
                 "thinking_mode": _thinking_mode_label(oi["target"]),

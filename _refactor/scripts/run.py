@@ -19,6 +19,7 @@ def main() -> int:
 
     from llmlog.runner import run_suite
     from llmlog.preflight import estimate_cost_upper_bound_usd, preflight_suite
+    from llmlog.problems.filters import parse_int_set_spec, parse_str_set_spec
 
     ap = argparse.ArgumentParser(description="Run a `_refactor` suite config.")
     ap.add_argument("--suite", required=True, help="Path to a suite YAML (e.g. _refactor/configs/suites/<suite>.yaml)")
@@ -30,6 +31,30 @@ def main() -> int:
     ap.add_argument("--no-resume", action="store_true", help="Disable resume even if suite enables it")
     ap.add_argument("--lockstep", action="store_true", help="Run targets in lockstep per-problem")
     ap.add_argument("--only", type=str, default=None, help="Comma-separated providers to include (e.g. openai,google)")
+    ap.add_argument(
+        "--maxvars",
+        type=str,
+        default=None,
+        help="Filter dataset rows by maxvarnr (e.g. '10,20,30,40,50' or '35-45').",
+    )
+    ap.add_argument(
+        "--maxlen",
+        type=str,
+        default=None,
+        help="Filter dataset rows by maxlen (e.g. '3,4,5').",
+    )
+    ap.add_argument(
+        "--ids",
+        type=str,
+        default=None,
+        help="Filter dataset rows by id (comma-separated). Useful for drilling into specific items.",
+    )
+    ap.add_argument(
+        "--case-limit",
+        type=int,
+        default=None,
+        help="Max rows per case (maxvarnr,maxlen,mustbehorn) after filtering. Useful for quick sweeps.",
+    )
     ap.add_argument("--preflight", action="store_true", help="Print selected targets + pricing info before running")
     ap.add_argument("--preflight-only", action="store_true", help="Print preflight info and exit (no run)")
     ap.add_argument("--estimate-cost", action="store_true", help="Estimate an upper bound USD cost (heuristic)")
@@ -42,6 +67,10 @@ def main() -> int:
     args = ap.parse_args()
 
     only = [p.strip() for p in (args.only or "").split(",") if p.strip()] or None
+    maxvars = parse_int_set_spec(args.maxvars) if args.maxvars else None
+    maxlen = parse_int_set_spec(args.maxlen) if args.maxlen else None
+    ids = parse_str_set_spec(args.ids) if args.ids else None
+    case_limit = int(args.case_limit) if args.case_limit is not None else None
 
     resume = None
     if args.resume:
@@ -52,7 +81,15 @@ def main() -> int:
     lockstep = True if args.lockstep else None
 
     if args.preflight or args.preflight_only or args.estimate_cost or args.max_estimated_total_usd is not None:
-        pf = preflight_suite(suite_path=args.suite, limit=args.limit, only_providers=only)
+        pf = preflight_suite(
+            suite_path=args.suite,
+            limit=args.limit,
+            only_providers=only,
+            only_maxvars=maxvars,
+            only_maxlen=maxlen,
+            only_ids=ids,
+            case_limit=case_limit,
+        )
         print(f"[preflight] suite={pf.suite_name} rows={pf.run_rows} avg_prompt_tokens_est~{pf.avg_prompt_tokens_est}")
         print(f"[preflight] pricing_table={pf.pricing_table or '(none)'}")
         for t in pf.targets:
@@ -97,6 +134,10 @@ def main() -> int:
         only_providers=only,
         resume=resume,
         lockstep=lockstep,
+        only_maxvars=maxvars,
+        only_maxlen=maxlen,
+        only_ids=ids,
+        case_limit=case_limit,
     )
     return 0
 
