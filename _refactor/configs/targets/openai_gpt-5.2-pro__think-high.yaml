@@ -1,0 +1,19 @@
+name: openai_gpt-5.2-pro__think-high
+
+# Single-target set for focused prompt/dataset experiments.
+#
+# Notes:
+# - We enable "thinking" and set reasoning effort to high.
+# - We still require the model to print a human-readable trace in the completion_text,
+#   because provider "reasoning tokens" are usually not returned as full text.
+targets:
+  - provider: openai
+    model: gpt-5.2-pro
+    temperature: 0
+    seed: 1234
+    max_tokens: 30000
+    thinking:
+      enabled: true
+      effort: high
+
+
