@@ -1,0 +1,110 @@
+{
+  "prompt_c012d6f2e6": {
+    "prompt_id": "prompt_c012d6f2e6",
+    "prompt_template": "prompts/_template_unified.j2",
+    "prompt_style": "cnf_v2",
+    "parse_family": "contradiction",
+    "instruction_text": "Your task is to solve a propositional logic problem.\n\nChoose the appropriate interpretation based on how the statements are rendered below.\n- If you see facts like \"p1.\" and rules like \"if p2 and p3 then p4.\", treat them as Horn facts and implications, and determine whether p0 can be derived.\n- If you see disjunctions like \"p1 is true or p2 is false.\" or compact forms like \"p1 or not(p2).\", treat them as CNF clauses, and determine whether the set is a contradiction (unsatisfiable) or satisfiable.\n\nConventions\n- Propositional variables are written as pN, where N is a number.\n- All statements are jointly assumed true (conjoined).\n\nAnswer format\n- For Horn tasks (style: horn_if_then): Output exactly one final word on the last line, lowercase with no punctuation: \"yes\" if p0 is derivable from the given facts and rules; otherwise \"no\". Do not output any other words (do not output \"contradiction\"/\"satisfiable\"/\"unknown\").\n- For CNF contradiction tasks (styles: cnf_v1 or cnf_v2): Output exactly one final word on the last line, lowercase with no punctuation: \"contradiction\" if the set is a contradiction (unsatisfiable); otherwise \"satisfiable\", or \"unknown\" if undecidable. Do not output any other words (do not output \"yes\"/\"no\").\n\nExamples (Horn, yes/no)\n- p1. if p1 then p0. → yes\n- p1. if p1 then p9. → no\n- p1. if p1 then p2. if p2 then p0. → yes\n\nExamples (CNF, contradiction)\n- p1 is true. not(p1) or p2. p2 is false. → contradiction.\n- p1. not(p1) or p2. not(p2). → contradiction.\n- p1. p1 or p2. not(p2). → satisfiable.",
+    "has_provenance": true,
+    "leaf_runs_count": 89
+  },
+  "prompt_7b28aa32dc": {
+    "prompt_id": "prompt_7b28aa32dc",
+    "prompt_template": "prompts/_template_unified.j2",
+    "prompt_style": "horn_if_then",
+    "parse_family": "yes_no",
+    "instruction_text": "Your task is to solve a propositional logic problem.\n\nChoose the appropriate interpretation based on how the statements are rendered below.\n- If you see facts like \"p1.\" and rules like \"if p2 and p3 then p4.\", treat them as Horn facts and implications, and determine whether p0 can be derived.\n- If you see disjunctions like \"p1 is true or p2 is false.\" or compact forms like \"p1 or not(p2).\", treat them as CNF clauses, and determine whether the set is a contradiction (unsatisfiable) or satisfiable.\nHorn answer rule\n- Output ONLY a single final word: \"yes\" if p0 is derivable, otherwise \"no\". Do not output any other words.\n\nConventions\n- Propositional variables are written as pN, where N is a number.\n- All statements are jointly assumed true (conjoined).\n\nAnswer format\n- For Horn tasks (style: horn_if_then): Output exactly one final word on the last line, lowercase with no punctuation: \"yes\" if p0 is derivable from the given facts and rules; otherwise \"no\". Do not output any other words (do not output \"contradiction\"/\"satisfiable\"/\"unknown\").\n- For CNF contradiction tasks (styles: cnf_v1 or cnf_v2): Output exactly one final word on the last line, lowercase with no punctuation: \"contradiction\" if the set is a contradiction (unsatisfiable); otherwise \"satisfiable\", or \"unknown\" if undecidable. Do not output any other words (do not output \"yes\"/\"no\").\n\nExamples (Horn, yes/no)\n- p1. if p1 then p0. → yes\n- p1. if p1 then p9. → no\n- p1. if p1 then p2. if p2 then p0. → yes\n\nExamples (CNF, contradiction)\n- p1 is true. not(p1) or p2. p2 is false. → contradiction.\n- p1. not(p1) or p2. not(p2). → contradiction.\n- p1. p1 or p2. not(p2). → satisfiable.",
+    "has_provenance": true,
+    "leaf_runs_count": 40
+  },
+  "prompt_62ba908560": {
+    "prompt_id": "prompt_62ba908560",
+    "prompt_template": "prompts/_template_unified.j2",
+    "prompt_style": "horn_if_then",
+    "parse_family": "yes_no",
+    "instruction_text": "Your task is to solve a propositional logic problem.\n\nChoose the appropriate interpretation based on how the statements are rendered below.\n- If you see facts like \"p1.\" and rules like \"if p2 and p3 then p4.\", treat them as Horn facts and implications, and determine whether p0 can be derived.\n- If you see disjunctions like \"p1 is true or p2 is false.\" or compact forms like \"p1 or not(p2).\", treat them as CNF clauses, and determine whether the set is a contradiction (unsatisfiable) or satisfiable.\nUnified answer rule (mixed cases)\n- Regardless of how the statements are rendered, output only a final single word: \"yes\" if p0 is derivable OR the set is a contradiction; otherwise \"no\". Do not output any other words.\n\nConventions\n- Propositional variables are written as pN, where N is a number.\n- All statements are jointly assumed true (conjoined).\n\nAnswer format\n- For Horn tasks (style: horn_if_then): Output exactly one final word on the last line, lowercase with no punctuation: \"yes\" if p0 is derivable from the given facts and rules; otherwise \"no\". Do not output any other words (do not output \"contradiction\"/\"satisfiable\"/\"unknown\").\n- For CNF contradiction tasks (styles: cnf_v1 or cnf_v2): Output exactly one final word on the last line, lowercase with no punctuation: \"contradiction\" if the set is a contradiction (unsatisfiable); otherwise \"satisfiable\", or \"unknown\" if undecidable. Do not output any other words (do not output \"yes\"/\"no\").\n\nExamples (Horn, yes/no)\n- p1. if p1 then p0. → yes\n- p1. if p1 then p9. → no\n- p1. if p1 then p2. if p2 then p0. → yes\n\nExamples (CNF, contradiction)\n- p1 is true. not(p1) or p2. p2 is false. → contradiction.\n- p1. not(p1) or p2. not(p2). → contradiction.\n- p1. p1 or p2. not(p2). → satisfiable.",
+    "has_provenance": true,
+    "leaf_runs_count": 55
+  },
+  "prompt_21889a86a3": {
+    "prompt_id": "prompt_21889a86a3",
+    "prompt_template": "prompts/_template_unified.j2",
+    "prompt_style": "cnf_v1",
+    "parse_family": "contradiction",
+    "instruction_text": "Your task is to solve a propositional logic problem.\n\nChoose the appropriate interpretation based on how the statements are rendered below.\n- If you see facts like \"p1.\" and rules like \"if p2 and p3 then p4.\", treat them as Horn facts and implications, and determine whether p0 can be derived.\n- If you see disjunctions like \"p1 is true or p2 is false.\" or compact forms like \"p1 or not(p2).\", treat them as CNF clauses, and determine whether the set is a contradiction (unsatisfiable) or satisfiable.\n\nConventions\n- Propositional variables are written as pN, where N is a number.\n- All statements are jointly assumed true (conjoined).\n\nAnswer format\n- For Horn tasks (style: horn_if_then): Output only a final single word \"yes\" if p0 is derivable from the given facts and rules, or \"no\" otherwise.\n- For CNF contradiction tasks (styles: cnf_v1 or cnf_v2): Output a final single word as your last token: \"contradiction\" if the set is a contradiction (unsatisfiable), otherwise \"satisfiable\" or \"unknown\".\n\nExamples (Horn, yes/no)\n- p1. if p1 then p0. → yes\n- p1. if p1 then p9. → no\n- p1. if p1 then p2. if p2 then p0. → yes\n\nExamples (CNF, contradiction)\n- p1 is true. not(p1) or p2. p2 is false. → contradiction.\n- p1. not(p1) or p2. not(p2). → contradiction.\n- p1. p1 or p2. not(p2). → satisfiable.",
+    "has_provenance": true,
+    "leaf_runs_count": 96
+  },
+  "prompt_0b276d34e8": {
+    "prompt_id": "prompt_0b276d34e8",
+    "prompt_template": "prompts/_template_unified.j2",
+    "prompt_style": "cnf_v1",
+    "parse_family": "contradiction",
+    "instruction_text": "Your task is to solve a propositional logic problem.\n\nChoose the appropriate interpretation based on how the statements are rendered below.\n- If you see facts like \"p1.\" and rules like \"if p2 and p3 then p4.\", treat them as Horn facts and implications, and determine whether p0 can be derived.\n- If you see disjunctions like \"p1 is true or p2 is false.\" or compact forms like \"p1 or not(p2).\", treat them as CNF clauses, and determine whether the set is a contradiction (unsatisfiable) or satisfiable.\n\nConventions\n- Propositional variables are written as pN, where N is a number.\n- All statements are jointly assumed true (conjoined).\n\nAnswer format\n- For Horn tasks (style: horn_if_then): Output exactly one final word on the last line, lowercase with no punctuation: \"yes\" if p0 is derivable from the given facts and rules; otherwise \"no\". Do not output any other words (do not output \"contradiction\"/\"satisfiable\"/\"unknown\").\n- For CNF contradiction tasks (styles: cnf_v1 or cnf_v2): Output exactly one final word on the last line, lowercase with no punctuation: \"contradiction\" if the set is a contradiction (unsatisfiable); otherwise \"satisfiable\", or \"unknown\" if undecidable. Do not output any other words (do not output \"yes\"/\"no\").\n\nExamples (Horn, yes/no)\n- p1. if p1 then p0. → yes\n- p1. if p1 then p9. → no\n- p1. if p1 then p2. if p2 then p0. → yes\n\nExamples (CNF, contradiction)\n- p1 is true. not(p1) or p2. p2 is false. → contradiction.\n- p1. not(p1) or p2. not(p2). → contradiction.\n- p1. p1 or p2. not(p2). → satisfiable.",
+    "has_provenance": true,
+    "leaf_runs_count": 48
+  },
+  "prompt_2e9c5ccddf": {
+    "prompt_id": "prompt_2e9c5ccddf",
+    "prompt_template": "prompts/_template_unified.j2",
+    "prompt_style": "cnf_v2",
+    "parse_family": "contradiction",
+    "instruction_text": "Your task is to solve a propositional logic problem.\n\nChoose the appropriate interpretation based on how the statements are rendered below.\n- If you see facts like \"p1.\" and rules like \"if p2 and p3 then p4.\", treat them as Horn facts and implications, and determine whether p0 can be derived.\n- If you see disjunctions like \"p1 is true or p2 is false.\" or compact forms like \"p1 or not(p2).\", treat them as CNF clauses, and determine whether the set is a contradiction (unsatisfiable) or satisfiable.\n\nConventions\n- Propositional variables are written as pN, where N is a number.\n- All statements are jointly assumed true (conjoined).\n\nAnswer format\n- For Horn tasks (style: horn_if_then): Output only a final single word \"yes\" if p0 is derivable from the given facts and rules, or \"no\" otherwise.\n- For CNF contradiction tasks (styles: cnf_v1 or cnf_v2): Output a final single word as your last token: \"contradiction\" if the set is a contradiction (unsatisfiable), otherwise \"satisfiable\" or \"unknown\".\n\nExamples (Horn, yes/no)\n- p1. if p1 then p0. → yes\n- p1. if p1 then p9. → no\n- p1. if p1 then p2. if p2 then p0. → yes\n\nExamples (CNF, contradiction)\n- p1 is true. not(p1) or p2. p2 is false. → contradiction.\n- p1. not(p1) or p2. not(p2). → contradiction.\n- p1. p1 or p2. not(p2). → satisfiable.",
+    "has_provenance": true,
+    "leaf_runs_count": 72
+  },
+  "prompt_c1b2be97aa": {
+    "prompt_id": "prompt_c1b2be97aa",
+    "prompt_template": "prompts/_template_unified.j2",
+    "prompt_style": "horn_if_then",
+    "parse_family": "yes_no",
+    "instruction_text": "Your task is to solve a propositional logic problem.\n\nChoose the appropriate interpretation based on how the statements are rendered below.\n- If you see facts like \"p1.\" and rules like \"if p2 and p3 then p4.\", treat them as Horn facts and implications, and determine whether p0 can be derived.\n- If you see disjunctions like \"p1 is true or p2 is false.\" or compact forms like \"p1 or not(p2).\", treat them as CNF clauses, and determine whether the set is a contradiction (unsatisfiable) or satisfiable.\n\nConventions\n- Propositional variables are written as pN, where N is a number.\n- All statements are jointly assumed true (conjoined).\n\nAnswer format\n- For Horn tasks (style: horn_if_then): Output only a final single word \"yes\" if p0 is derivable from the given facts and rules, or \"no\" otherwise.\n- For CNF contradiction tasks (styles: cnf_v1 or cnf_v2): Output a final single word as your last token: \"contradiction\" if the set is a contradiction (unsatisfiable), otherwise \"satisfiable\" or \"unknown\".\n\nExamples (Horn, yes/no)\n- p1. if p1 then p0. → yes\n- p1. if p1 then p9. → no\n- p1. if p1 then p2. if p2 then p0. → yes\n\nExamples (CNF, contradiction)\n- p1 is true. not(p1) or p2. p2 is false. → contradiction.\n- p1. not(p1) or p2. not(p2). → contradiction.\n- p1. p1 or p2. not(p2). → satisfiable.",
+    "has_provenance": true,
+    "leaf_runs_count": 120
+  },
+  "prompt_73ecab0579": {
+    "prompt_id": "prompt_73ecab0579",
+    "prompt_template": "",
+    "prompt_style": "horn_if_then",
+    "parse_family": "yes_no",
+    "instruction_text": "",
+    "has_provenance": false,
+    "leaf_runs_count": 12
+  },
+  "prompt_2376d1fca7": {
+    "prompt_id": "prompt_2376d1fca7",
+    "prompt_template": "prompts/_template_unified.j2",
+    "prompt_style": "horn_if_then",
+    "parse_family": "yes_no",
+    "instruction_text": "Your task is to solve a propositional logic problem.\n\nChoose the appropriate interpretation based on how the statements are rendered below.\n- If you see facts like \"p1.\" and rules like \"if p2 and p3 then p4.\", treat them as Horn facts and implications, and determine whether p0 can be derived.\n- If you see disjunctions like \"p1 is true or p2 is false.\" or compact forms like \"p1 or not(p2).\", treat them as CNF clauses, and determine whether the set is a contradiction (unsatisfiable) or satisfiable.\nUnified answer rule (mixed cases)\n- Regardless of how the statements are rendered, output only a final single word: \"yes\" if p0 is derivable OR the set is a contradiction; otherwise \"no\". Do not output any other words.\n\nConventions\n- Propositional variables are written as pN, where N is a number.\n- All statements are jointly assumed true (conjoined).\n\nAnswer format\n- For Horn tasks (style: horn_if_then): Output only a final single word \"yes\" if p0 is derivable from the given facts and rules, or \"no\" otherwise.\n- For CNF contradiction tasks (styles: cnf_v1 or cnf_v2): Output a final single word as your last token: \"contradiction\" if the set is a contradiction (unsatisfiable), otherwise \"satisfiable\" or \"unknown\".\n\nExamples (Horn, yes/no)\n- p1. if p1 then p0. → yes\n- p1. if p1 then p9. → no\n- p1. if p1 then p2. if p2 then p0. → yes\n\nExamples (CNF, contradiction)\n- p1 is true. not(p1) or p2. p2 is false. → contradiction.\n- p1. not(p1) or p2. not(p2). → contradiction.\n- p1. p1 or p2. not(p2). → satisfiable.",
+    "has_provenance": true,
+    "leaf_runs_count": 12
+  },
+  "prompt_c6875730a1": {
+    "prompt_id": "prompt_c6875730a1",
+    "prompt_template": "prompts/exp6_horn_yesno.j2",
+    "prompt_style": "horn_if_then",
+    "parse_family": "yes_no",
+    "instruction_text": "Your task is to solve a problem in propositional logic containing both facts and if-then rules.\nYou will get a list of facts and if-then rules and have to determine whether a fact p0 can be derived from this list.\nIf a fact p0 can be derived, the last word of your answer should be 'yes',\notherwise the last word should be 'no'.\n\nFacts are represented as 'pN' where N is a number. \nAll the statements are either facts or if-then rules allowing to derive a single fact.  \nAll the given statements are implicitly connected with 'and': they are all claimed to be true.\n \nDo not print out anything except the final yes or no.\n\nTwelve examples:\nExample 1.",
+    "has_provenance": true,
+    "leaf_runs_count": 9
+  },
+  "prompt_83b02d3a05": {
+    "prompt_id": "prompt_83b02d3a05",
+    "prompt_template": "prompts/exp1_cnf_v1_contradiction.j2",
+    "prompt_style": "cnf_v1",
+    "parse_family": "contradiction",
+    "instruction_text": "Your task is to solve a problem in propositional logic.\nYou will get a list of statements and have to determine whether the statements form a logical contradiction or not.\nIf the statements form a contradiction, the last word of your answer should be 'contradiction',\notherwise the last word should be either 'satisfiable' or 'unknown'.\n\nPropositional variables are represent as 'pN' where N is a number. They are either true or false.\n'X or Y' means that X is true or Y is true or both X and Y are true.\nAll the given statements are implicitly connected with 'and': they are all claimed to be true.\n\nTwo examples:\nExample 1.",
+    "has_provenance": true,
+    "leaf_runs_count": 9
+  },
+  "prompt_154dcb992a": {
+    "prompt_id": "prompt_154dcb992a",
+    "prompt_template": "",
+    "prompt_style": "horn_if_then",
+    "parse_family": "yes_no",
+    "instruction_text": "",
+    "has_provenance": true,
+    "leaf_runs_count": 1
+  }
+}

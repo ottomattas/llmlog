@@ -1,0 +1,2 @@
+provider,model,thinking_mode,prompt_id,prompt_style,parse_family,prompt_template,horn,total,correct,accuracy,unclear,unclear_rate,sat_total,sat_correct,sat_accuracy,unsat_total,unsat_correct,unsat_accuracy
+anthropic,claude-sonnet-4-20250514,,prompt_c6875730a1,horn_if_then,yes_no,prompts/exp6_horn_yesno.j2,1,520,514,0.988,5,0.010,260,257,0.988,260,257,0.988

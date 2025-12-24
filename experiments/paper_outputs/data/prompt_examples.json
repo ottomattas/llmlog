@@ -1,0 +1,368 @@
+{
+  "prompt_0b276d34e8": {
+    "0": {
+      "low": {
+        "maxvars": 4,
+        "maxlen": 2,
+        "satflag": 1,
+        "statements": "p4 is true.\np4 is false or p1 is false.\np3 is false or p1 is false.\np3 is false or p4 is true.\np2 is false or p1 is false.\np1 is false or p4 is true.\np2 is true or p4 is true."
+      },
+      "mid": {
+        "maxvars": 10,
+        "maxlen": 4,
+        "satflag": 1,
+        "statements": "p9 is true or p10 is true.\np10 is false or p3 is true or p9 is true.\np9 is false or p8 is false or p4 is true.\np9 is false or p7 is false or p4 is false.\np9 is false or p3 is true or p4 is true.\np8 is false or p5 is false or p2 is true.\np8 is false or p4 is false or p1 is true.\np8 is false or p3 is false or p9 is true.\np8 is false or p2 is true or p3 is true.\np8 is false or p2 is true or p9 is true.\np6 is false or p1 is false or p2 is true.\np5 is false or p3 is false or p8 is true.\np5 is false or p1 is false or p6 is true.\np5 is false or p1 is false or p7 is true.\np5 is false or p3 is true or p4 is true.\np5 is false or p6 is true or p7 is true.\np4 is false or p3 is false or p1 is true.\np4 is false or p3 is false or p5 is true.\np4 is false or p3 is false or p10 is true.\np4 is false or p2 is false or p10 is true.\np3 is false or p2 is true or p9 is true.\np3 is false or p7 is true or p9 is true.\np2 is false or p1 is false or p7 is true.\np1 is true or p3 is true or p4 is true.\np1 is true or p4 is true or p5 is true.\np1 is true or p4 is true or p10 is true.\np2 is true or p4 is true or p5 is true.\np2 is true or p5 is true or p10 is true.\np2 is true or p9 is true or p10 is true.\np3 is true or p7 is true or p10 is true.\np7 is true or p8 is true or p9 is true.\np10 is false or p9 is false or p5 is false or p7 is true.\np10 is false or p8 is false or p1 is true or p3 is true.\np10 is false or p8 is false or p4 is true or p9 is true.\np10 is false or p7 is false or p3 is false or p2 is true.\np10 is false or p7 is false or p3 is false or p8 is true.\np10 is false or p6 is false or p1 is false or p9 is true.\np10 is false or p6 is false or p4 is true or p5 is true.\np10 is false or p5 is false or p1 is true or p9 is true.\np10 is false or p3 is false or p4 is true or p7 is true.\np10 is false or p2 is false or p3 is true or p9 is true.\np10 is false or p1 is false or p4 is true or p6 is true.\np9 is false or p7 is false or p1 is true or p5 is true.\np9 is false or p6 is false or p5 is false or p1 is false.\np8 is false or p7 is false or p6 is false or p5 is true.\np8 is false or p7 is false or p5 is false or p9 is true.\np8 is false or p7 is false or p3 is false or p2 is true.\np8 is false or p5 is false or p2 is false or p1 is true.\np8 is false or p5 is false or p2 is true or p6 is true.\np8 is false or p5 is false or p4 is true or p10 is true.\np8 is false or p3 is false or p2 is true or p4 is true.\np7 is false or p6 is false or p1 is true or p4 is true.\np7 is false or p5 is false or p2 is false or p10 is true.\np7 is false or p5 is false or p1 is false or p3 is true.\np7 is false or p5 is false or p1 is false or p10 is true.\np7 is false or p4 is false or p3 is false or p2 is true.\np7 is false or p4 is false or p2 is true or p8 is true.\np7 is false or p2 is false or p3 is true or p5 is true.\np7 is false or p2 is true or p5 is true or p6 is true.\np6 is false or p5 is false or p4 is false or p9 is true.\np6 is false or p4 is false or p2 is true or p9 is true.\np6 is false or p4 is false or p8 is true or p10 is true.\np6 is false or p3 is false or p2 is false or p4 is true.\np6 is false or p1 is true or p7 is true or p9 is true.\np6 is false or p2 is true or p5 is true or p10 is true.\np5 is false or p1 is false or p3 is true or p9 is true.\np5 is false or p1 is false or p8 is true or p9 is true.\np5 is false or p7 is true or p8 is true or p9 is true.\np4 is false or p2 is true or p3 is true or p10 is true.\np4 is false or p3 is true or p6 is true or p10 is true.\np3 is false or p2 is true or p4 is true or p7 is true.\np2 is false or p1 is true or p3 is true or p7 is true.\np2 is false or p4 is true or p6 is true or p7 is true.\np1 is false or p2 is true or p4 is true or p7 is true.\np3 is true or p6 is true or p7 is true or p8 is true.\np4 is true or p5 is true or p6 is true or p10 is true."
+      },
+      "high": {
+        "maxvars": 15,
+        "maxlen": 3,
+        "satflag": 0,
+        "statements": "p14 is false or p10 is true.\np12 is false or p10 is false.\np12 is false or p2 is true.\np11 is false or p2 is false.\np7 is false or p6 is true.\np5 is false or p2 is true.\np2 is true or p9 is true.\np6 is true or p10 is true.\np8 is true or p14 is true.\np15 is false or p11 is false or p10 is false.\np15 is false or p9 is false or p6 is false.\np15 is false or p9 is false or p10 is true.\np15 is false or p6 is false or p1 is false.\np15 is false or p4 is true or p14 is true.\np14 is false or p4 is false or p3 is false.\np14 is false or p3 is false or p9 is true.\np14 is false or p2 is true or p12 is true.\np13 is false or p12 is false or p7 is true.\np13 is false or p12 is false or p9 is true.\np13 is false or p10 is false or p14 is true.\np13 is false or p9 is false or p6 is false.\np13 is false or p8 is false or p6 is false.\np13 is false or p8 is false or p12 is true.\np13 is false or p3 is false or p8 is true.\np11 is false or p9 is false or p4 is true.\np11 is false or p4 is false or p1 is false.\np11 is false or p7 is true or p15 is true.\np10 is false or p4 is false or p1 is false.\np10 is false or p3 is false or p4 is true.\np10 is false or p1 is true or p6 is true.\np9 is false or p7 is false or p4 is true.\np9 is false or p2 is true or p7 is true.\np8 is false or p7 is false or p5 is false.\np8 is false or p5 is false or p10 is true.\np8 is false or p3 is false or p15 is true.\np8 is false or p2 is false or p1 is true.\np8 is false or p10 is true or p13 is true.\np7 is false or p4 is false or p15 is true.\np7 is false or p2 is false or p1 is false.\np7 is false or p2 is true or p10 is true.\np7 is false or p6 is true or p12 is true.\np6 is false or p3 is false or p1 is false.\np6 is false or p2 is false or p1 is false.\np6 is false or p1 is true or p10 is true.\np6 is false or p9 is true or p13 is true.\np4 is false or p7 is true or p13 is true.\np3 is false or p4 is true or p13 is true.\np3 is false or p8 is true or p14 is true.\np2 is false or p1 is false or p4 is true.\np2 is false or p7 is true or p8 is true.\np2 is false or p7 is true or p14 is true.\np2 is false or p8 is true or p11 is true.\np1 is false or p12 is true or p14 is true.\np1 is true or p8 is true or p9 is true.\np1 is true or p8 is true or p12 is true.\np1 is true or p12 is true or p15 is true.\np2 is true or p10 is true or p13 is true.\np3 is true or p7 is true or p14 is true.\np4 is true or p8 is true or p13 is true.\np4 is true or p13 is true or p15 is true."
+      }
+    },
+    "1": {
+      "low": {
+        "maxvars": 4,
+        "maxlen": 2,
+        "satflag": 1,
+        "statements": "p4 is false.\np2 is true.\np3 is false or p1 is true.\np3 is false or p4 is true.\np2 is false or p1 is true."
+      },
+      "mid": {
+        "maxvars": 12,
+        "maxlen": 4,
+        "satflag": 1,
+        "statements": "p1 is true.\np3 is true.\np4 is true.\np5 is true.\np8 is true.\np12 is false or p1 is true.\np12 is false or p8 is true.\np9 is false or p5 is true.\np8 is false or p7 is true.\np8 is false or p11 is true.\np7 is false or p12 is true.\np4 is false or p2 is true.\np4 is false or p7 is true.\np3 is false or p2 is true.\np3 is false or p9 is true.\np2 is false or p6 is true.\np12 is false or p4 is false or p6 is true.\np11 is false or p10 is false or p6 is true.\np11 is false or p1 is false or p4 is true.\np10 is false or p9 is false or p4 is true.\np10 is false or p3 is false or p2 is true.\np9 is false or p6 is false or p1 is true.\np8 is false or p7 is false or p12 is true.\np7 is false or p3 is false or p1 is true.\np7 is false or p3 is false or p8 is true.\np7 is false or p1 is false or p5 is true.\np3 is false or p2 is false or p12 is true.\np12 is false or p9 is false or p5 is false or p6 is true.\np12 is false or p7 is false or p3 is false or p8 is true.\np12 is false or p7 is false or p1 is false or p9 is true.\np12 is false or p6 is false or p3 is false or p4 is true.\np11 is false or p9 is false or p5 is false or p12 is true.\np10 is false or p7 is false or p6 is false or p2 is false.\np10 is false or p7 is false or p2 is false or p11 is true.\np9 is false or p7 is false or p5 is false or p6 is true.\np7 is false or p6 is false or p4 is false or p8 is true.\np6 is false or p2 is false or p1 is false or p7 is true."
+      },
+      "high": {
+        "maxvars": 20,
+        "maxlen": 5,
+        "satflag": 0,
+        "statements": "p6 is true.\np11 is true.\np16 is true.\np17 is true.\np20 is false or p2 is true.\np20 is false or p10 is true.\np20 is false or p14 is true.\np19 is false or p9 is true.\np18 is false or p2 is true.\np16 is false or p11 is true.\np15 is false or p14 is true.\np15 is false or p17 is true.\np14 is false or p19 is true.\np12 is false or p8 is true.\np11 is false or p8 is true.\np9 is false or p1 is true.\np9 is false or p15 is true.\np8 is false or p4 is true.\np8 is false or p12 is true.\np7 is false or p1 is true.\np6 is false or p11 is true.\np3 is false or p2 is true.\np2 is false or p14 is true.\np2 is false or p18 is true.\np2 is false or p19 is true.\np20 is false or p10 is false or p7 is true.\np20 is false or p3 is false or p13 is true.\np19 is false or p8 is false or p18 is true.\np18 is false or p9 is false or p3 is true.\np17 is false or p11 is false or p10 is true.\np17 is false or p10 is false or p14 is true.\np16 is false or p14 is false or p3 is true.\np16 is false or p10 is false or p13 is true.\np15 is false or p11 is false or p19 is true.\np15 is false or p9 is false or p10 is true.\np15 is false or p6 is false or p4 is true.\np15 is false or p5 is false or p6 is true.\np14 is false or p12 is false or p4 is true.\np14 is false or p9 is false or p20 is true.\np14 is false or p6 is false or p9 is true.\np14 is false or p5 is false or p16 is true.\np14 is false or p4 is false or p11 is true.\np14 is false or p2 is false or p1 is true.\np12 is false or p9 is false or p17 is true.\np12 is false or p2 is false or p11 is true.\np11 is false or p7 is false or p8 is true.\np11 is false or p7 is false or p16 is true.\np11 is false or p5 is false or p7 is true.\np11 is false or p3 is false or p13 is true.\np10 is false or p5 is false or p4 is true.\np10 is false or p2 is false or p18 is true.\np10 is false or p1 is false or p16 is true.\np9 is false or p1 is false or p15 is true.\np8 is false or p4 is false or p3 is true.\np8 is false or p1 is false or p4 is true.\np6 is false or p4 is false or p18 is true.\np4 is false or p2 is false or p3 is true.\np20 is false or p16 is false or p14 is false or p10 is true.\np20 is false or p15 is false or p14 is false or p16 is true.\np20 is false or p12 is false or p8 is false or p4 is true.\np19 is false or p5 is false or p4 is false or p16 is true.\np18 is false or p16 is false or p15 is false or p13 is true.\np18 is false or p15 is false or p9 is false or p4 is false.\np18 is false or p15 is false or p7 is false or p13 is true.\np18 is false or p11 is false or p5 is false or p4 is true.\np17 is false or p16 is false or p9 is false or p13 is true.\np17 is false or p13 is false or p2 is false or p10 is true.\np17 is false or p13 is false or p1 is false or p4 is true.\np17 is false or p9 is false or p6 is false or p14 is true.\np16 is false or p14 is false or p3 is false or p18 is true.\np16 is false or p9 is false or p4 is false or p19 is true.\np16 is false or p2 is false or p1 is false or p17 is true.\np15 is false or p10 is false or p6 is false or p20 is true.\np15 is false or p9 is false or p3 is false or p10 is true.\np14 is false or p12 is false or p4 is false or p1 is true.\np14 is false or p10 is false or p8 is false or p1 is true.\np14 is false or p8 is false or p2 is false or p10 is true.\np13 is false or p11 is false or p1 is false or p17 is true.\np12 is false or p9 is false or p8 is false or p18 is true.\np12 is false or p7 is false or p3 is false or p2 is false.\np10 is false or p8 is false or p7 is false or p18 is true.\np6 is false or p4 is false or p3 is false or p20 is true.\np20 is false or p17 is false or p14 is false or p8 is false or p19 is true.\np19 is false or p17 is false or p12 is false or p2 is false or p10 is true.\np18 is false or p17 is false or p16 is false or p6 is false or p10 is true.\np17 is false or p12 is false or p10 is false or p6 is false or p19 is true.\np17 is false or p12 is false or p10 is false or p1 is false or p2 is true.\np16 is false or p15 is false or p10 is false or p1 is false or p9 is true.\np16 is false or p9 is false or p4 is false or p3 is false or p13 is true.\np14 is false or p12 is false or p7 is false or p5 is false or p20 is true.\np13 is false or p10 is false or p4 is false or p1 is false or p8 is true.\np8 is false or p7 is false or p3 is false or p1 is false or p17 is true."
+      }
+    }
+  },
+  "prompt_154dcb992a": {
+    "1": {}
+  },
+  "prompt_21889a86a3": {
+    "0": {
+      "low": {
+        "maxvars": 4,
+        "maxlen": 2,
+        "satflag": 1,
+        "statements": "p4 is true.\np4 is false or p1 is false.\np3 is false or p1 is false.\np3 is false or p4 is true.\np2 is false or p1 is false.\np1 is false or p4 is true.\np2 is true or p4 is true."
+      },
+      "mid": {
+        "maxvars": 4,
+        "maxlen": 2,
+        "satflag": 1,
+        "statements": "p4 is true.\np4 is false or p1 is false.\np3 is false or p1 is false.\np3 is false or p4 is true.\np2 is false or p1 is false.\np1 is false or p4 is true.\np2 is true or p4 is true."
+      },
+      "high": {
+        "maxvars": 4,
+        "maxlen": 2,
+        "satflag": 0,
+        "statements": "p1 is false.\np4 is false or p2 is true.\np3 is false or p2 is false.\np2 is false or p4 is true.\np1 is false or p4 is true.\np1 is true or p2 is true.\np1 is true or p3 is true."
+      }
+    },
+    "1": {
+      "low": {
+        "maxvars": 4,
+        "maxlen": 2,
+        "satflag": 1,
+        "statements": "p4 is false.\np2 is true.\np3 is false or p1 is true.\np3 is false or p4 is true.\np2 is false or p1 is true."
+      },
+      "mid": {
+        "maxvars": 4,
+        "maxlen": 2,
+        "satflag": 0,
+        "statements": "p2 is false.\np3 is true.\np3 is false or p1 is false.\np3 is false or p2 is true.\np1 is false or p4 is true."
+      },
+      "high": {
+        "maxvars": 4,
+        "maxlen": 3,
+        "satflag": 0,
+        "statements": "p3 is true.\np4 is false or p1 is false.\np4 is false or p1 is true.\np4 is false or p3 is true.\np3 is false or p1 is false.\np3 is false or p1 is true.\np3 is false or p4 is true.\np3 is false or p1 is false or p4 is true."
+      }
+    }
+  },
+  "prompt_2376d1fca7": {
+    "0": {
+      "low": {
+        "maxvars": 4,
+        "maxlen": 2,
+        "satflag": 1,
+        "statements": "p4.\nif p4 and p1 then p0.\nif p3 and p1 then p0.\nif p3 then p4.\nif p2 and p1 then p0.\nif p1 then p4.\np2 or p4."
+      },
+      "mid": {
+        "maxvars": 4,
+        "maxlen": 2,
+        "satflag": 1,
+        "statements": "p4.\nif p4 and p1 then p0.\nif p3 and p1 then p0.\nif p3 then p4.\nif p2 and p1 then p0.\nif p1 then p4.\np2 or p4."
+      },
+      "high": {
+        "maxvars": 4,
+        "maxlen": 2,
+        "satflag": 0,
+        "statements": "if p1 then p0.\nif p4 then p2.\nif p3 and p2 then p0.\nif p2 then p4.\nif p1 then p4.\np1 or p2.\np1 or p3."
+      }
+    },
+    "1": {
+      "low": {
+        "maxvars": 4,
+        "maxlen": 2,
+        "satflag": 1,
+        "statements": "if p4 then p0.\np2.\nif p3 then p1.\nif p3 then p4.\nif p2 then p1."
+      },
+      "mid": {
+        "maxvars": 4,
+        "maxlen": 2,
+        "satflag": 1,
+        "statements": "if p4 then p0.\np2.\nif p3 then p1.\nif p3 then p4.\nif p2 then p1."
+      },
+      "high": {
+        "maxvars": 4,
+        "maxlen": 2,
+        "satflag": 0,
+        "statements": "p1.\np3.\nif p4 and p1 then p0.\nif p3 then p1.\nif p1 then p4."
+      }
+    }
+  },
+  "prompt_2e9c5ccddf": {
+    "0": {
+      "low": {
+        "maxvars": 4,
+        "maxlen": 2,
+        "satflag": 1,
+        "statements": "p4.\nnot(p4) or not(p1).\nnot(p3) or not(p1).\nnot(p3) or p4.\nnot(p2) or not(p1).\nnot(p1) or p4.\np2 or p4."
+      },
+      "mid": {
+        "maxvars": 4,
+        "maxlen": 2,
+        "satflag": 1,
+        "statements": "p4.\nnot(p4) or not(p1).\nnot(p3) or not(p1).\nnot(p3) or p4.\nnot(p2) or not(p1).\nnot(p1) or p4.\np2 or p4."
+      },
+      "high": {
+        "maxvars": 4,
+        "maxlen": 2,
+        "satflag": 0,
+        "statements": "not(p1).\nnot(p4) or p2.\nnot(p3) or not(p2).\nnot(p2) or p4.\nnot(p1) or p4.\np1 or p2.\np1 or p3."
+      }
+    },
+    "1": {
+      "low": {
+        "maxvars": 4,
+        "maxlen": 2,
+        "satflag": 1,
+        "statements": "not(p4).\np2.\nnot(p3) or p1.\nnot(p3) or p4.\nnot(p2) or p1."
+      },
+      "mid": {
+        "maxvars": 4,
+        "maxlen": 2,
+        "satflag": 1,
+        "statements": "not(p4).\np2.\nnot(p3) or p1.\nnot(p3) or p4.\nnot(p2) or p1."
+      },
+      "high": {
+        "maxvars": 4,
+        "maxlen": 3,
+        "satflag": 0,
+        "statements": "p3.\nnot(p4) or not(p1).\nnot(p4) or p1.\nnot(p4) or p3.\nnot(p3) or not(p1).\nnot(p3) or p1.\nnot(p3) or p4.\nnot(p3) or not(p1) or p4."
+      }
+    }
+  },
+  "prompt_62ba908560": {
+    "0": {
+      "low": {
+        "maxvars": 4,
+        "maxlen": 2,
+        "satflag": 1,
+        "statements": "p4.\nif p4 and p1 then p0.\nif p3 and p1 then p0.\nif p3 then p4.\nif p2 and p1 then p0.\nif p1 then p4.\np2 or p4."
+      },
+      "mid": {
+        "maxvars": 10,
+        "maxlen": 4,
+        "satflag": 1,
+        "statements": "p9 or p10.\nnot(p10) or p3 or p9.\nif p9 and p8 then p4.\nif p9 and p7 and p4 then p0.\nnot(p9) or p3 or p4.\nif p8 and p5 then p2.\nif p8 and p4 then p1.\nif p8 and p3 then p9.\nnot(p8) or p2 or p3.\nnot(p8) or p2 or p9.\nif p6 and p1 then p2.\nif p5 and p3 then p8.\nif p5 and p1 then p6.\nif p5 and p1 then p7.\nnot(p5) or p3 or p4.\nnot(p5) or p6 or p7.\nif p4 and p3 then p1.\nif p4 and p3 then p5.\nif p4 and p3 then p10.\nif p4 and p2 then p10.\nnot(p3) or p2 or p9.\nnot(p3) or p7 or p9.\nif p2 and p1 then p7.\np1 or p3 or p4.\np1 or p4 or p5.\np1 or p4 or p10.\np2 or p4 or p5.\np2 or p5 or p10.\np2 or p9 or p10.\np3 or p7 or p10.\np7 or p8 or p9.\nif p10 and p9 and p5 then p7.\nnot(p10) or not(p8) or p1 or p3.\nnot(p10) or not(p8) or p4 or p9.\nif p10 and p7 and p3 then p2.\nif p10 and p7 and p3 then p8.\nif p10 and p6 and p1 then p9.\nnot(p10) or not(p6) or p4 or p5.\nnot(p10) or not(p5) or p1 or p9.\nnot(p10) or not(p3) or p4 or p7.\nnot(p10) or not(p2) or p3 or p9.\nnot(p10) or not(p1) or p4 or p6.\nnot(p9) or not(p7) or p1 or p5.\nif p9 and p6 and p5 and p1 then p0.\nif p8 and p7 and p6 then p5.\nif p8 and p7 and p5 then p9.\nif p8 and p7 and p3 then p2.\nif p8 and p5 and p2 then p1.\nnot(p8) or not(p5) or p2 or p6.\nnot(p8) or not(p5) or p4 or p10.\nnot(p8) or not(p3) or p2 or p4.\nnot(p7) or not(p6) or p1 or p4.\nif p7 and p5 and p2 then p10.\nif p7 and p5 and p1 then p3.\nif p7 and p5 and p1 then p10.\nif p7 and p4 and p3 then p2.\nnot(p7) or not(p4) or p2 or p8.\nnot(p7) or not(p2) or p3 or p5.\nnot(p7) or p2 or p5 or p6.\nif p6 and p5 and p4 then p9.\nnot(p6) or not(p4) or p2 or p9.\nnot(p6) or not(p4) or p8 or p10.\nif p6 and p3 and p2 then p4.\nnot(p6) or p1 or p7 or p9.\nnot(p6) or p2 or p5 or p10.\nnot(p5) or not(p1) or p3 or p9.\nnot(p5) or not(p1) or p8 or p9.\nnot(p5) or p7 or p8 or p9.\nnot(p4) or p2 or p3 or p10.\nnot(p4) or p3 or p6 or p10.\nnot(p3) or p2 or p4 or p7.\nnot(p2) or p1 or p3 or p7.\nnot(p2) or p4 or p6 or p7.\nnot(p1) or p2 or p4 or p7.\np3 or p6 or p7 or p8.\np4 or p5 or p6 or p10."
+      },
+      "high": {
+        "maxvars": 15,
+        "maxlen": 4,
+        "satflag": 0,
+        "statements": "p9 or p15.\nif p15 and p13 and p8 then p0.\nif p15 and p1 then p5.\nnot(p15) or p1 or p11.\nif p14 and p6 then p11.\nif p13 and p8 and p3 then p0.\nif p13 and p2 then p1.\nnot(p13) or p6 or p15.\nif p12 and p7 then p6.\nif p12 and p4 then p6.\nif p12 and p3 then p10.\nnot(p12) or p3 or p7.\nnot(p12) or p7 or p10.\nnot(p11) or p2 or p6.\nif p10 and p8 then p11.\nif p10 and p2 and p1 then p0.\nnot(p10) or p8 or p13.\nif p9 and p6 then p7.\nnot(p9) or p4 or p13.\nif p8 and p3 then p9.\nif p7 and p6 then p14.\nif p15 and p13 and p11 and p9 then p0.\nif p15 and p13 and p9 and p2 then p0.\nif p15 and p13 and p7 then p4.\nnot(p15) or not(p12) or p8 or p13.\nif p15 and p11 and p9 and p4 then p0.\nif p15 and p11 and p3 then p8.\nif p15 and p8 and p7 and p5 then p0.\nif p15 and p8 and p7 then p11.\nnot(p15) or not(p7) or p3 or p12.\nnot(p15) or not(p6) or p2 or p10.\nnot(p15) or not(p6) or p10 or p13.\nif p15 and p4 and p1 then p3.\nnot(p15) or p9 or p12 or p13.\nif p14 and p13 and p8 then p12.\nnot(p14) or not(p13) or p3 or p7.\nif p14 and p12 and p11 then p8.\nif p14 and p12 and p7 then p2.\nif p14 and p12 and p3 then p4.\nif p14 and p10 and p4 then p1.\nnot(p14) or not(p10) or p5 or p12.\nif p14 and p9 and p6 then p12.\nnot(p14) or not(p5) or p3 or p9.\nnot(p14) or not(p4) or p1 or p12.\nnot(p14) or not(p4) or p3 or p12.\nnot(p14) or not(p3) or p5 or p11.\nnot(p14) or not(p2) or p4 or p10.\nnot(p14) or not(p2) or p8 or p9.\nnot(p14) or not(p1) or p3 or p4.\nnot(p14) or p4 or p6 or p8.\nnot(p14) or p11 or p12 or p13.\nif p13 and p12 and p2 and p1 then p0.\nif p13 and p10 and p1 then p15.\nif p13 and p9 and p1 then p15.\nif p13 and p8 and p3 then p15.\nnot(p13) or not(p7) or p8 or p11.\nnot(p13) or not(p6) or p2 or p8.\nif p13 and p5 and p3 then p9.\nif p13 and p4 and p1 then p7.\nnot(p13) or not(p2) or p5 or p12.\nnot(p13) or p1 or p7 or p8.\nnot(p13) or p5 or p6 or p7.\nnot(p13) or p5 or p7 or p14.\nnot(p12) or not(p11) or p8 or p10.\nif p12 and p6 and p1 then p13.\nif p12 and p4 and p2 then p6.\nnot(p11) or not(p10) or p1 or p4.\nnot(p11) or not(p2) or p4 or p5.\nnot(p11) or not(p2) or p8 or p13.\nnot(p11) or not(p1) or p8 or p15.\nnot(p11) or p1 or p6 or p13.\nnot(p11) or p7 or p10 or p13.\nif p10 and p8 and p5 then p7.\nif p10 and p7 and p6 then p4.\nif p10 and p7 and p5 and p1 then p0.\nnot(p10) or p4 or p7 or p11.\nnot(p10) or p5 or p8 or p11.\nnot(p10) or p7 or p11 or p13.\nif p9 and p5 and p1 then p10.\nnot(p9) or not(p4) or p2 or p8.\nnot(p9) or not(p2) or p12 or p15.\nif p8 and p6 and p2 then p10.\nif p8 and p6 and p1 then p13.\nnot(p8) or not(p3) or p1 or p6.\nnot(p8) or p1 or p2 or p13.\nnot(p8) or p2 or p13 or p15.\nnot(p8) or p6 or p12 or p15.\nif p7 and p6 and p4 then p12.\nnot(p7) or not(p4) or p6 or p12.\nif p7 and p3 and p2 then p10.\nnot(p7) or not(p3) or p2 or p15.\nnot(p7) or p3 or p10 or p15.\nnot(p7) or p4 or p8 or p12.\nnot(p7) or p11 or p12 or p14.\nnot(p6) or not(p1) or p4 or p5.\nnot(p6) or not(p1) or p4 or p11.\nnot(p6) or p1 or p9 or p14.\nnot(p5) or not(p4) or p1 or p14.\nif p5 and p3 and p1 then p13.\nnot(p5) or not(p1) or p2 or p10.\nnot(p5) or p3 or p8 or p11.\nnot(p5) or p8 or p9 or p13.\nnot(p2) or p3 or p5 or p8.\nnot(p1) or p2 or p13 or p15.\nnot(p1) or p3 or p8 or p9.\nnot(p1) or p6 or p8 or p13.\nnot(p1) or p7 or p11 or p15.\np1 or p2 or p3 or p15.\np1 or p2 or p4 or p11.\np1 or p3 or p6 or p10.\np1 or p10 or p11 or p14.\np2 or p4 or p5 or p7.\np2 or p10 or p11 or p12.\np6 or p9 or p10 or p11."
+      }
+    },
+    "1": {
+      "low": {
+        "maxvars": 4,
+        "maxlen": 2,
+        "satflag": 1,
+        "statements": "if p4 then p0.\np2.\nif p3 then p1.\nif p3 then p4.\nif p2 then p1."
+      },
+      "mid": {
+        "maxvars": 10,
+        "maxlen": 4,
+        "satflag": 1,
+        "statements": "p10.\nif p10 then p6.\nif p9 then p6.\nif p9 then p10.\nif p8 then p9.\nif p8 then p10.\nif p6 then p9.\nif p4 then p1.\nif p4 then p6.\nif p2 then p1.\nif p2 then p10.\nif p1 then p5.\nif p1 then p10.\nif p10 and p7 then p9.\nif p10 and p4 then p1.\nif p10 and p4 then p8.\nif p10 and p3 then p2.\nif p10 and p3 then p7.\nif p8 and p7 then p9.\nif p7 and p6 then p4.\nif p7 and p5 then p4.\nif p7 and p2 then p5.\nif p4 and p3 then p8.\nif p4 and p3 then p10.\nif p10 and p9 and p7 and p2 then p0.\nif p10 and p7 and p5 then p3.\nif p10 and p6 and p5 then p7.\nif p7 and p6 and p5 then p10.\nif p7 and p6 and p4 then p3.\nif p7 and p6 and p3 then p2.\nif p7 and p4 and p2 then p8."
+      },
+      "high": {
+        "maxvars": 15,
+        "maxlen": 5,
+        "satflag": 1,
+        "statements": "p2.\nif p15 then p4.\nif p15 then p8.\nif p14 then p5.\nif p14 then p7.\nif p12 then p9.\nif p11 then p8.\nif p11 then p10.\nif p10 then p4.\nif p10 then p11.\nif p9 then p5.\nif p7 then p12.\nif p3 then p1.\nif p3 then p8.\nif p2 then p11.\nif p1 then p3.\nif p1 then p4.\nif p1 then p12.\nif p15 and p14 then p6.\nif p15 and p10 then p12.\nif p15 and p1 then p9.\nif p13 and p10 then p8.\nif p13 and p10 then p15.\nif p13 and p6 then p7.\nif p13 and p3 then p4.\nif p12 and p11 then p14.\nif p12 and p9 then p11.\nif p12 and p5 then p1.\nif p12 and p5 then p6.\nif p12 and p5 then p14.\nif p12 and p4 then p15.\nif p11 and p4 then p10.\nif p10 and p8 then p11.\nif p10 and p1 then p15.\nif p9 and p6 then p14.\nif p9 and p5 then p11.\nif p9 and p1 then p4.\nif p8 and p7 then p11.\nif p8 and p2 then p4.\nif p7 and p2 then p3.\nif p6 and p5 then p9.\nif p5 and p1 then p2.\nif p4 and p3 then p11.\nif p4 and p2 then p11.\nif p14 and p13 and p6 then p1.\nif p14 and p13 and p2 then p8.\nif p14 and p10 and p9 and p3 then p0.\nif p14 and p10 and p8 and p2 then p0.\nif p13 and p10 and p9 then p15.\nif p12 and p10 and p7 then p8.\nif p12 and p9 and p6 then p8.\nif p12 and p8 and p6 then p4.\nif p12 and p4 and p1 then p2.\nif p11 and p10 and p1 then p9.\nif p11 and p8 and p5 then p12.\nif p11 and p8 and p1 then p10.\nif p10 and p8 and p6 then p9.\nif p10 and p4 and p2 then p11.\nif p9 and p6 and p3 then p8.\nif p8 and p7 and p5 then p1.\nif p8 and p7 and p2 then p6.\nif p6 and p5 and p4 then p12.\nif p15 and p12 and p10 and p5 then p11.\nif p15 and p12 and p7 and p6 then p14.\nif p15 and p10 and p9 and p2 then p7.\nif p15 and p6 and p2 and p1 then p9.\nif p14 and p7 and p6 and p1 then p11.\nif p13 and p11 and p7 and p4 then p14.\nif p13 and p8 and p7 and p3 then p15."
+      }
+    }
+  },
+  "prompt_73ecab0579": {
+    "1": {}
+  },
+  "prompt_7b28aa32dc": {
+    "1": {
+      "low": {
+        "maxvars": 4,
+        "maxlen": 2,
+        "satflag": 1,
+        "statements": "if p4 then p0.\np2.\nif p3 then p1.\nif p3 then p4.\nif p2 then p1."
+      },
+      "mid": {
+        "maxvars": 12,
+        "maxlen": 4,
+        "satflag": 1,
+        "statements": "p1.\np3.\np4.\np5.\np8.\nif p12 then p1.\nif p12 then p8.\nif p9 then p5.\nif p8 then p7.\nif p8 then p11.\nif p7 then p12.\nif p4 then p2.\nif p4 then p7.\nif p3 then p2.\nif p3 then p9.\nif p2 then p6.\nif p12 and p4 then p6.\nif p11 and p10 then p6.\nif p11 and p1 then p4.\nif p10 and p9 then p4.\nif p10 and p3 then p2.\nif p9 and p6 then p1.\nif p8 and p7 then p12.\nif p7 and p3 then p1.\nif p7 and p3 then p8.\nif p7 and p1 then p5.\nif p3 and p2 then p12.\nif p12 and p9 and p5 then p6.\nif p12 and p7 and p3 then p8.\nif p12 and p7 and p1 then p9.\nif p12 and p6 and p3 then p4.\nif p11 and p9 and p5 then p12.\nif p10 and p7 and p6 and p2 then p0.\nif p10 and p7 and p2 then p11.\nif p9 and p7 and p5 then p6.\nif p7 and p6 and p4 then p8.\nif p6 and p2 and p1 then p7."
+      },
+      "high": {
+        "maxvars": 20,
+        "maxlen": 5,
+        "satflag": 0,
+        "statements": "p6.\np11.\np16.\np17.\nif p20 then p2.\nif p20 then p10.\nif p20 then p14.\nif p19 then p9.\nif p18 then p2.\nif p16 then p11.\nif p15 then p14.\nif p15 then p17.\nif p14 then p19.\nif p12 then p8.\nif p11 then p8.\nif p9 then p1.\nif p9 then p15.\nif p8 then p4.\nif p8 then p12.\nif p7 then p1.\nif p6 then p11.\nif p3 then p2.\nif p2 then p14.\nif p2 then p18.\nif p2 then p19.\nif p20 and p10 then p7.\nif p20 and p3 then p13.\nif p19 and p8 then p18.\nif p18 and p9 then p3.\nif p17 and p11 then p10.\nif p17 and p10 then p14.\nif p16 and p14 then p3.\nif p16 and p10 then p13.\nif p15 and p11 then p19.\nif p15 and p9 then p10.\nif p15 and p6 then p4.\nif p15 and p5 then p6.\nif p14 and p12 then p4.\nif p14 and p9 then p20.\nif p14 and p6 then p9.\nif p14 and p5 then p16.\nif p14 and p4 then p11.\nif p14 and p2 then p1.\nif p12 and p9 then p17.\nif p12 and p2 then p11.\nif p11 and p7 then p8.\nif p11 and p7 then p16.\nif p11 and p5 then p7.\nif p11 and p3 then p13.\nif p10 and p5 then p4.\nif p10 and p2 then p18.\nif p10 and p1 then p16.\nif p9 and p1 then p15.\nif p8 and p4 then p3.\nif p8 and p1 then p4.\nif p6 and p4 then p18.\nif p4 and p2 then p3.\nif p20 and p16 and p14 then p10.\nif p20 and p15 and p14 then p16.\nif p20 and p12 and p8 then p4.\nif p19 and p5 and p4 then p16.\nif p18 and p16 and p15 then p13.\nif p18 and p15 and p9 and p4 then p0.\nif p18 and p15 and p7 then p13.\nif p18 and p11 and p5 then p4.\nif p17 and p16 and p9 then p13.\nif p17 and p13 and p2 then p10.\nif p17 and p13 and p1 then p4.\nif p17 and p9 and p6 then p14.\nif p16 and p14 and p3 then p18.\nif p16 and p9 and p4 then p19.\nif p16 and p2 and p1 then p17.\nif p15 and p10 and p6 then p20.\nif p15 and p9 and p3 then p10.\nif p14 and p12 and p4 then p1.\nif p14 and p10 and p8 then p1.\nif p14 and p8 and p2 then p10.\nif p13 and p11 and p1 then p17.\nif p12 and p9 and p8 then p18.\nif p12 and p7 and p3 and p2 then p0.\nif p10 and p8 and p7 then p18.\nif p6 and p4 and p3 then p20.\nif p20 and p17 and p14 and p8 then p19.\nif p19 and p17 and p12 and p2 then p10.\nif p18 and p17 and p16 and p6 then p10.\nif p17 and p12 and p10 and p6 then p19.\nif p17 and p12 and p10 and p1 then p2.\nif p16 and p15 and p10 and p1 then p9.\nif p16 and p9 and p4 and p3 then p13.\nif p14 and p12 and p7 and p5 then p20.\nif p13 and p10 and p4 and p1 then p8.\nif p8 and p7 and p3 and p1 then p17."
+      }
+    }
+  },
+  "prompt_83b02d3a05": {
+    "1": {
+      "low": {
+        "maxvars": 10,
+        "maxlen": 3,
+        "satflag": 1,
+        "statements": "p1 is true. p1 is false or p2 is true. p2 is false. Answer: contradiction.\nExample 2. Statements: p1 is true. p1 is true or p2 is true. p2 is false. Answer: satisfiable.\n\nStatements:\np2 is true.\np4 is true.\np10 is false or p2 is true.\np10 is false or p4 is true.\np9 is false or p1 is false.\np9 is false or p1 is true.\np8 is false or p2 is true.\np8 is false or p4 is true.\np8 is false or p5 is true.\np7 is false or p3 is true.\np6 is false or p2 is true.\np6 is false or p3 is true.\np6 is false or p10 is true.\np3 is false or p9 is true.\np2 is false or p8 is true.\np2 is false or p10 is true.\np10 is false or p3 is false or p2 is false.\np10 is false or p3 is false or p6 is true.\np6 is false or p4 is false or p1 is true.\np3 is false or p1 is false or p7 is true.\n\nPlease think step by step and answer whether the given statements form a logical contradiction or is satisfiable."
+      },
+      "mid": {
+        "maxvars": 10,
+        "maxlen": 3,
+        "satflag": 1,
+        "statements": "p1 is true. p1 is false or p2 is true. p2 is false. Answer: contradiction.\nExample 2. Statements: p1 is true. p1 is true or p2 is true. p2 is false. Answer: satisfiable.\n\nStatements:\np1 is true.\np4 is true.\np6 is true.\np10 is false or p9 is true.\np7 is false or p1 is true.\np6 is false or p7 is true.\np5 is false or p2 is true.\np5 is false or p10 is true.\np3 is false or p4 is true.\np10 is false or p8 is false or p2 is true.\np10 is false or p7 is false or p2 is true.\np10 is false or p7 is false or p6 is true.\np10 is false or p5 is false or p8 is true.\np9 is false or p8 is false or p1 is true.\np9 is false or p5 is false or p1 is true.\np9 is false or p4 is false or p3 is false.\np9 is false or p3 is false or p10 is true.\np6 is false or p3 is false or p2 is true.\np6 is false or p3 is false or p8 is true.\np2 is false or p1 is false or p8 is true.\n\nPlease think step by step and answer whether the given statements form a logical contradiction or is satisfiable."
+      },
+      "high": {
+        "maxvars": 10,
+        "maxlen": 3,
+        "satflag": 1,
+        "statements": "p1 is true. p1 is false or p2 is true. p2 is false. Answer: contradiction.\nExample 2. Statements: p1 is true. p1 is true or p2 is true. p2 is false. Answer: satisfiable.\n\nStatements:\np3 is true.\np5 is true.\np8 is true.\np10 is false or p4 is true.\np9 is false or p3 is true.\np9 is false or p7 is true.\np7 is false or p1 is true.\np7 is false or p5 is true.\np6 is false or p3 is false.\np3 is false or p5 is true.\np1 is false or p3 is true.\np1 is false or p7 is true.\np10 is false or p4 is false or p1 is false.\np10 is false or p1 is false or p2 is true.\np10 is false or p1 is false or p7 is true.\np9 is false or p7 is false or p3 is false.\np7 is false or p2 is false or p10 is true.\np6 is false or p4 is false or p3 is true.\np6 is false or p3 is false or p2 is true.\np5 is false or p2 is false or p1 is false.\n\nPlease think step by step and answer whether the given statements form a logical contradiction or is satisfiable."
+      }
+    }
+  },
+  "prompt_c012d6f2e6": {
+    "0": {
+      "low": {
+        "maxvars": 4,
+        "maxlen": 2,
+        "satflag": 1,
+        "statements": "p4.\nnot(p4) or not(p1).\nnot(p3) or not(p1).\nnot(p3) or p4.\nnot(p2) or not(p1).\nnot(p1) or p4.\np2 or p4."
+      },
+      "mid": {
+        "maxvars": 12,
+        "maxlen": 4,
+        "satflag": 1,
+        "statements": "not(p4) or not(p2).\np1 or p11.\nnot(p12) or p7 or p11.\nnot(p11) or p1 or p7.\nnot(p11) or p2 or p12.\nnot(p10) or not(p9) or p5.\nnot(p10) or not(p4) or not(p2).\nnot(p10) or not(p2) or p8.\nnot(p10) or not(p1) or p8.\nnot(p10) or not(p1) or p12.\nnot(p10) or p11 or p12.\nnot(p9) or not(p3) or not(p1).\nnot(p9) or p5 or p6.\nnot(p8) or not(p4) or p7.\nnot(p5) or p1 or p9.\np3 or p8 or p10.\np4 or p5 or p10.\np7 or p10 or p12.\nnot(p12) or not(p10) or not(p6) or p9.\nnot(p12) or not(p10) or not(p4) or not(p2).\nnot(p12) or not(p9) or not(p3) or p6.\nnot(p12) or not(p9) or p1 or p3.\nnot(p12) or not(p9) or p6 or p8.\nnot(p12) or not(p8) or not(p7) or not(p3).\nnot(p12) or not(p7) or p1 or p5.\nnot(p12) or not(p7) or p6 or p9.\nnot(p12) or not(p5) or not(p4) or p6.\nnot(p12) or not(p5) or p3 or p6.\nnot(p12) or not(p4) or p2 or p10.\nnot(p12) or not(p2) or p7 or p10.\nnot(p12) or p1 or p3 or p4.\nnot(p12) or p1 or p8 or p10.\nnot(p11) or not(p10) or not(p8) or p12.\nnot(p11) or not(p10) or not(p6) or not(p3).\nnot(p11) or not(p10) or not(p3) or p6.\nnot(p11) or not(p10) or not(p1) or p5.\nnot(p11) or not(p9) or p4 or p8.\nnot(p11) or not(p7) or not(p4) or p9.\nnot(p11) or not(p6) or not(p5) or p7.\nnot(p11) or not(p5) or not(p4) or p1.\nnot(p11) or not(p5) or not(p2) or p6.\nnot(p11) or not(p5) or not(p1) or p12.\nnot(p11) or not(p3) or p1 or p12.\nnot(p11) or not(p1) or p4 or p6.\nnot(p11) or p1 or p5 or p12.\nnot(p11) or p5 or p7 or p12.\nnot(p10) or not(p8) or not(p6) or not(p3).\nnot(p10) or not(p7) or not(p6) or p1.\nnot(p10) or not(p7) or p1 or p2.\nnot(p10) or not(p6) or not(p4) or p2.\nnot(p10) or not(p6) or p2 or p12.\nnot(p10) or not(p2) or p4 or p5.\nnot(p10) or p1 or p3 or p11.\nnot(p10) or p3 or p6 or p8.\nnot(p9) or not(p7) or not(p6) or p11.\nnot(p9) or not(p6) or p2 or p5.\nnot(p9) or not(p5) or p1 or p6.\nnot(p9) or not(p4) or not(p2) or p10.\nnot(p9) or not(p4) or p6 or p12.\nnot(p9) or not(p3) or p4 or p12.\nnot(p9) or p1 or p6 or p10.\nnot(p8) or not(p6) or p3 or p10.\nnot(p8) or not(p6) or p9 or p10.\nnot(p8) or not(p4) or not(p1) or p3.\nnot(p8) or not(p4) or p9 or p11.\nnot(p8) or not(p1) or p10 or p12.\nnot(p8) or p1 or p3 or p7.\nnot(p8) or p2 or p3 or p12.\nnot(p7) or not(p5) or not(p3) or p6.\nnot(p7) or not(p4) or p1 or p8.\nnot(p7) or not(p4) or p5 or p11.\nnot(p7) or not(p3) or not(p2) or p8.\nnot(p7) or not(p2) or p5 or p9.\nnot(p7) or not(p1) or p9 or p10.\nnot(p7) or not(p1) or p10 or p12.\nnot(p7) or p3 or p5 or p6.\nnot(p6) or not(p5) or not(p2) or p7.\nnot(p6) or not(p5) or not(p1) or p2.\nnot(p6) or not(p1) or p3 or p12.\nnot(p6) or not(p1) or p10 or p12.\nnot(p5) or not(p2) or p6 or p12.\nnot(p5) or not(p2) or p11 or p12.\nnot(p5) or p1 or p2 or p6.\nnot(p5) or p3 or p7 or p12.\nnot(p4) or p2 or p6 or p8.\nnot(p2) or p1 or p3 or p6.\nnot(p2) or p1 or p6 or p7.\nnot(p2) or p6 or p9 or p10.\nnot(p1) or p4 or p5 or p10.\np1 or p6 or p8 or p10.\np8 or p10 or p11 or p12."
+      },
+      "high": {
+        "maxvars": 50,
+        "maxlen": 3,
+        "satflag": 0,
+        "statements": "not(p49) or p21.\nnot(p31) or not(p18).\np25 or p40.\np42 or p49.\nnot(p50) or not(p27) or not(p7).\nnot(p50) or not(p10) or p8.\nnot(p50) or not(p5) or p29.\nnot(p50) or p7 or p16.\nnot(p50) or p7 or p42.\nnot(p50) or p39 or p46.\nnot(p49) or not(p47) or not(p23).\nnot(p49) or not(p41) or p46.\nnot(p49) or not(p36) or not(p14).\nnot(p49) or not(p15) or p48.\nnot(p49) or p16 or p41.\nnot(p49) or p17 or p18.\nnot(p49) or p22 or p31.\nnot(p48) or not(p43) or p20.\nnot(p48) or not(p40) or not(p30).\nnot(p48) or not(p25) or not(p15).\nnot(p48) or not(p9) or p21.\nnot(p48) or not(p6) or p29.\nnot(p48) or p12 or p25.\nnot(p47) or not(p46) or p42.\nnot(p47) or not(p44) or not(p1).\nnot(p47) or not(p33) or not(p12).\nnot(p47) or not(p21) or not(p15).\nnot(p47) or p9 or p40.\nnot(p46) or not(p35) or p49.\nnot(p46) or not(p25) or p10.\nnot(p46) or not(p25) or p48.\nnot(p46) or p1 or p17.\nnot(p46) or p6 or p49.\nnot(p46) or p39 or p45.\nnot(p45) or not(p36) or p24.\nnot(p45) or not(p30) or not(p6).\nnot(p45) or not(p30) or p13.\nnot(p45) or not(p3) or p38.\nnot(p45) or p7 or p17.\nnot(p45) or p27 or p44.\nnot(p45) or p32 or p43.\nnot(p44) or not(p39) or p23.\nnot(p44) or p16 or p36.\nnot(p43) or not(p29) or p38.\nnot(p43) or not(p28) or not(p10).\nnot(p43) or not(p8) or p14.\nnot(p43) or p6 or p19.\nnot(p43) or p27 or p50.\nnot(p42) or not(p39) or p28.\nnot(p42) or not(p25) or p37.\nnot(p42) or not(p9) or p39.\nnot(p42) or p24 or p46.\nnot(p41) or not(p30) or p18.\nnot(p41) or p4 or p15.\nnot(p41) or p6 or p8.\nnot(p40) or not(p37) or not(p3).\nnot(p39) or not(p10) or p14.\nnot(p39) or p2 or p20.\nnot(p38) or not(p24) or p33.\nnot(p38) or not(p18) or p49.\nnot(p38) or p3 or p7.\nnot(p38) or p6 or p48.\nnot(p38) or p7 or p47.\nnot(p38) or p15 or p30.\nnot(p38) or p27 or p29.\nnot(p37) or not(p24) or not(p12).\nnot(p37) or p9 or p19.\nnot(p37) or p10 or p32.\nnot(p37) or p23 or p46.\nnot(p36) or not(p32) or not(p25).\nnot(p36) or not(p22) or p20.\nnot(p36) or not(p16) or not(p5).\nnot(p36) or not(p2) or p23.\nnot(p35) or not(p26) or p18.\nnot(p35) or not(p8) or p31.\nnot(p35) or not(p6) or p14.\nnot(p35) or p3 or p5.\nnot(p35) or p45 or p48.\nnot(p34) or not(p22) or p48.\nnot(p34) or not(p18) or p27.\nnot(p34) or p3 or p46.\nnot(p34) or p7 or p39.\nnot(p33) or not(p31) or not(p12).\nnot(p33) or not(p11) or not(p10).\nnot(p33) or not(p10) or p9.\nnot(p33) or not(p1) or p40.\nnot(p33) or p12 or p37.\nnot(p33) or p19 or p20.\nnot(p32) or not(p31) or not(p27).\nnot(p32) or not(p22) or p17.\nnot(p32) or not(p4) or p34.\nnot(p32) or p10 or p30.\nnot(p32) or p19 or p30.\nnot(p31) or not(p23) or p37.\nnot(p31) or not(p23) or p41.\nnot(p31) or not(p17) or p40.\nnot(p31) or not(p16) or p37.\nnot(p31) or not(p8) or not(p3).\nnot(p31) or p38 or p39.\nnot(p30) or not(p18) or p34.\nnot(p30) or not(p17) or p50.\nnot(p30) or not(p3) or p29.\nnot(p30) or p2 or p49.\nnot(p30) or p49 or p50.\nnot(p29) or not(p27) or p7.\nnot(p29) or not(p8) or p41.\nnot(p29) or not(p6) or p27.\nnot(p29) or p2 or p8.\nnot(p28) or not(p18) or p8.\nnot(p28) or not(p12) or p30.\nnot(p28) or p4 or p14.\nnot(p28) or p16 or p35.\nnot(p27) or not(p24) or not(p11).\nnot(p27) or not(p18) or not(p16).\nnot(p26) or not(p13) or p15.\nnot(p26) or p4 or p33.\nnot(p26) or p17 or p45.\nnot(p26) or p38 or p46.\nnot(p25) or not(p23) or not(p3).\nnot(p25) or not(p23) or p26.\nnot(p25) or p2 or p17.\nnot(p25) or p9 or p45.\nnot(p25) or p12 or p32.\nnot(p25) or p20 or p49.\nnot(p25) or p43 or p48.\nnot(p25) or p45 or p49.\nnot(p24) or not(p15) or p32.\nnot(p24) or not(p5) or p18.\nnot(p23) or p10 or p33.\nnot(p23) or p31 or p35.\nnot(p22) or not(p19) or p6.\nnot(p22) or not(p17) or p24.\nnot(p22) or p10 or p33.\nnot(p22) or p11 or p43.\nnot(p22) or p16 or p30.\nnot(p21) or not(p12) or p46.\nnot(p21) or not(p6) or p37.\nnot(p21) or p19 or p25.\nnot(p21) or p22 or p35.\nnot(p20) or not(p16) or p28.\nnot(p20) or not(p9) or p29.\nnot(p20) or p11 or p41.\nnot(p20) or p35 or p40.\nnot(p19) or not(p1) or p46.\nnot(p18) or not(p16) or p8.\nnot(p18) or not(p10) or not(p5).\nnot(p18) or not(p1) or p10.\nnot(p18) or p4 or p39.\nnot(p18) or p23 or p39.\nnot(p17) or not(p1) or p19.\nnot(p17) or p2 or p28.\nnot(p17) or p14 or p19.\nnot(p16) or p29 or p46.\nnot(p15) or not(p13) or p10.\nnot(p15) or p16 or p32.\nnot(p14) or p5 or p19.\nnot(p13) or not(p11) or not(p6).\nnot(p13) or not(p5) or p46.\nnot(p13) or not(p4) or p19.\nnot(p13) or p19 or p24.\nnot(p12) or p13 or p39.\nnot(p11) or p20 or p45.\nnot(p11) or p21 or p27.\nnot(p10) or not(p1) or p18.\nnot(p10) or p7 or p47.\nnot(p8) or not(p4) or p48.\nnot(p8) or p12 or p27.\nnot(p8) or p14 or p47.\nnot(p8) or p24 or p26.\nnot(p7) or p11 or p21.\nnot(p6) or not(p1) or p50.\nnot(p6) or p29 or p38.\nnot(p6) or p38 or p46.\nnot(p5) or p1 or p8.\nnot(p5) or p21 or p25.\nnot(p5) or p29 or p36.\nnot(p3) or p19 or p47.\nnot(p3) or p27 or p40.\nnot(p1) or p28 or p43.\np1 or p12 or p15.\np2 or p5 or p7.\np2 or p7 or p16.\np3 or p10 or p34.\np3 or p38 or p43.\np4 or p8 or p27.\np4 or p45 or p48.\np7 or p17 or p41.\np7 or p41 or p46.\np8 or p32 or p35.\np10 or p35 or p40.\np12 or p16 or p44.\np12 or p32 or p43.\np14 or p25 or p35.\np15 or p27 or p50.\np18 or p25 or p31.\np19 or p33 or p39.\np21 or p23 or p50.\np21 or p26 or p42.\np24 or p45 or p46.\np31 or p34 or p49."
+      }
+    },
+    "1": {
+      "low": {
+        "maxvars": 4,
+        "maxlen": 2,
+        "satflag": 1,
+        "statements": "not(p4).\np2.\nnot(p3) or p1.\nnot(p3) or p4.\nnot(p2) or p1."
+      },
+      "mid": {
+        "maxvars": 14,
+        "maxlen": 4,
+        "satflag": 1,
+        "statements": "p1.\np2.\np4.\np9.\np12.\nnot(p11) or p4.\nnot(p7) or p5.\nnot(p5) or p10.\nnot(p4) or p7.\nnot(p3) or p1.\nnot(p14) or not(p5) or p4.\nnot(p13) or not(p2) or p5.\nnot(p12) or not(p10) or p7.\nnot(p12) or not(p7) or p11.\nnot(p12) or not(p7) or p13.\nnot(p12) or not(p5) or p2.\nnot(p12) or not(p1) or p4.\nnot(p11) or not(p8) or p3.\nnot(p11) or not(p6) or p14.\nnot(p11) or not(p3) or p14.\nnot(p10) or not(p9) or p11.\nnot(p10) or not(p7) or p13.\nnot(p10) or not(p2) or p1.\nnot(p10) or not(p2) or p12.\nnot(p9) or not(p8) or p11.\nnot(p9) or not(p7) or p2.\nnot(p9) or not(p5) or p2.\nnot(p7) or not(p4) or p12.\nnot(p7) or not(p2) or p14.\nnot(p6) or not(p5) or p7.\nnot(p5) or not(p3) or p12.\nnot(p4) or not(p1) or p12.\nnot(p14) or not(p12) or not(p3) or p7.\nnot(p14) or not(p11) or not(p5) or not(p3).\nnot(p14) or not(p10) or not(p8) or p3.\nnot(p13) or not(p10) or not(p6) or p12.\nnot(p13) or not(p9) or not(p7) or p12.\nnot(p13) or not(p7) or not(p3) or p11.\nnot(p12) or not(p5) or not(p2) or p6.\nnot(p11) or not(p8) or not(p2) or p4.\nnot(p10) or not(p6) or not(p3) or p4.\nnot(p8) or not(p5) or not(p3) or not(p1).\nnot(p7) or not(p4) or not(p1) or p13."
+      },
+      "high": {
+        "maxvars": 50,
+        "maxlen": 3,
+        "satflag": 0,
+        "statements": "p4.\np17.\np24.\np28.\np29.\np31.\np40.\np47.\np50.\nnot(p50) or p22.\nnot(p49) or p10.\nnot(p46) or p14.\nnot(p46) or p30.\nnot(p45) or not(p42).\nnot(p45) or p28.\nnot(p43) or p25.\nnot(p42) or p21.\nnot(p41) or p11.\nnot(p41) or p19.\nnot(p40) or p20.\nnot(p40) or p23.\nnot(p38) or p7.\nnot(p38) or p8.\nnot(p38) or p25.\nnot(p37) or p13.\nnot(p37) or p47.\nnot(p28) or p23.\nnot(p28) or p43.\nnot(p26) or p16.\nnot(p25) or p21.\nnot(p24) or p21.\nnot(p23) or p25.\nnot(p22) or p1.\nnot(p22) or p30.\nnot(p21) or p14.\nnot(p21) or p45.\nnot(p19) or p37.\nnot(p17) or p19.\nnot(p16) or p46.\nnot(p15) or p10.\nnot(p15) or p12.\nnot(p15) or p34.\nnot(p14) or p20.\nnot(p13) or p49.\nnot(p11) or p2.\nnot(p11) or p28.\nnot(p11) or p39.\nnot(p6) or p8.\nnot(p6) or p9.\nnot(p4) or p14.\nnot(p3) or p7.\nnot(p1) or p13.\nnot(p50) or not(p44) or p43.\nnot(p50) or not(p43) or p45.\nnot(p50) or not(p37) or p48.\nnot(p49) or not(p46) or not(p34).\nnot(p49) or not(p42) or p20.\nnot(p49) or not(p20) or p13.\nnot(p49) or not(p10) or p24.\nnot(p49) or not(p4) or p7.\nnot(p48) or not(p46) or not(p11).\nnot(p47) or not(p40) or p30.\nnot(p47) or not(p28) or p25.\nnot(p46) or not(p39) or p37.\nnot(p46) or not(p37) or not(p36).\nnot(p45) or not(p18) or p2.\nnot(p45) or not(p13) or p1.\nnot(p44) or not(p42) or p22.\nnot(p44) or not(p40) or p1.\nnot(p44) or not(p40) or p9.\nnot(p44) or not(p34) or not(p18).\nnot(p44) or not(p11) or p20.\nnot(p43) or not(p17) or not(p4).\nnot(p43) or not(p1) or p15.\nnot(p42) or not(p22) or p11.\nnot(p42) or not(p2) or p12.\nnot(p41) or not(p28) or not(p15).\nnot(p40) or not(p22) or not(p8).\nnot(p37) or not(p26) or p4.\nnot(p37) or not(p18) or p15.\nnot(p36) or not(p31) or not(p12).\nnot(p36) or not(p2) or p27.\nnot(p35) or not(p29) or p1.\nnot(p35) or not(p9) or p41.\nnot(p33) or not(p2) or p20.\nnot(p32) or not(p26) or p34.\nnot(p31) or not(p24) or not(p13).\nnot(p31) or not(p22) or p16.\nnot(p30) or not(p13) or p2.\nnot(p29) or not(p15) or p27.\nnot(p28) or not(p24) or not(p8).\nnot(p27) or not(p25) or p35.\nnot(p25) or not(p11) or p48.\nnot(p24) or not(p23) or not(p4).\nnot(p24) or not(p4) or p41.\nnot(p22) or not(p4) or p17.\nnot(p18) or not(p9) or p23.\nnot(p16) or not(p11) or p50.\nnot(p10) or not(p2) or p49.\nnot(p6) or not(p3) or p32."
+      }
+    }
+  },
+  "prompt_c1b2be97aa": {
+    "0": {
+      "low": {
+        "maxvars": 4,
+        "maxlen": 2,
+        "satflag": 1,
+        "statements": "p4.\nif p4 and p1 then p0.\nif p3 and p1 then p0.\nif p3 then p4.\nif p2 and p1 then p0.\nif p1 then p4.\np2 or p4."
+      },
+      "mid": {
+        "maxvars": 4,
+        "maxlen": 2,
+        "satflag": 0,
+        "statements": "if p4 then p0.\nif p4 and p2 then p0.\nif p4 then p2.\nif p3 then p1.\nif p3 then p4.\nif p2 then p1.\np3 or p4."
+      },
+      "high": {
+        "maxvars": 4,
+        "maxlen": 2,
+        "satflag": 1,
+        "statements": "p4.\nif p4 and p1 then p0.\nif p3 and p1 then p0.\nif p3 then p4.\nif p2 and p1 then p0.\nif p1 then p4.\np2 or p4."
+      }
+    },
+    "1": {
+      "low": {
+        "maxvars": 4,
+        "maxlen": 2,
+        "satflag": 1,
+        "statements": "if p4 then p0.\np2.\nif p3 then p1.\nif p3 then p4.\nif p2 then p1."
+      },
+      "mid": {
+        "maxvars": 12,
+        "maxlen": 4,
+        "satflag": 1,
+        "statements": "p1.\np3.\np4.\np5.\np8.\nif p12 then p1.\nif p12 then p8.\nif p9 then p5.\nif p8 then p7.\nif p8 then p11.\nif p7 then p12.\nif p4 then p2.\nif p4 then p7.\nif p3 then p2.\nif p3 then p9.\nif p2 then p6.\nif p12 and p4 then p6.\nif p11 and p10 then p6.\nif p11 and p1 then p4.\nif p10 and p9 then p4.\nif p10 and p3 then p2.\nif p9 and p6 then p1.\nif p8 and p7 then p12.\nif p7 and p3 then p1.\nif p7 and p3 then p8.\nif p7 and p1 then p5.\nif p3 and p2 then p12.\nif p12 and p9 and p5 then p6.\nif p12 and p7 and p3 then p8.\nif p12 and p7 and p1 then p9.\nif p12 and p6 and p3 then p4.\nif p11 and p9 and p5 then p12.\nif p10 and p7 and p6 and p2 then p0.\nif p10 and p7 and p2 then p11.\nif p9 and p7 and p5 then p6.\nif p7 and p6 and p4 then p8.\nif p6 and p2 and p1 then p7."
+      },
+      "high": {
+        "maxvars": 20,
+        "maxlen": 5,
+        "satflag": 0,
+        "statements": "p6.\np11.\np16.\np17.\nif p20 then p2.\nif p20 then p10.\nif p20 then p14.\nif p19 then p9.\nif p18 then p2.\nif p16 then p11.\nif p15 then p14.\nif p15 then p17.\nif p14 then p19.\nif p12 then p8.\nif p11 then p8.\nif p9 then p1.\nif p9 then p15.\nif p8 then p4.\nif p8 then p12.\nif p7 then p1.\nif p6 then p11.\nif p3 then p2.\nif p2 then p14.\nif p2 then p18.\nif p2 then p19.\nif p20 and p10 then p7.\nif p20 and p3 then p13.\nif p19 and p8 then p18.\nif p18 and p9 then p3.\nif p17 and p11 then p10.\nif p17 and p10 then p14.\nif p16 and p14 then p3.\nif p16 and p10 then p13.\nif p15 and p11 then p19.\nif p15 and p9 then p10.\nif p15 and p6 then p4.\nif p15 and p5 then p6.\nif p14 and p12 then p4.\nif p14 and p9 then p20.\nif p14 and p6 then p9.\nif p14 and p5 then p16.\nif p14 and p4 then p11.\nif p14 and p2 then p1.\nif p12 and p9 then p17.\nif p12 and p2 then p11.\nif p11 and p7 then p8.\nif p11 and p7 then p16.\nif p11 and p5 then p7.\nif p11 and p3 then p13.\nif p10 and p5 then p4.\nif p10 and p2 then p18.\nif p10 and p1 then p16.\nif p9 and p1 then p15.\nif p8 and p4 then p3.\nif p8 and p1 then p4.\nif p6 and p4 then p18.\nif p4 and p2 then p3.\nif p20 and p16 and p14 then p10.\nif p20 and p15 and p14 then p16.\nif p20 and p12 and p8 then p4.\nif p19 and p5 and p4 then p16.\nif p18 and p16 and p15 then p13.\nif p18 and p15 and p9 and p4 then p0.\nif p18 and p15 and p7 then p13.\nif p18 and p11 and p5 then p4.\nif p17 and p16 and p9 then p13.\nif p17 and p13 and p2 then p10.\nif p17 and p13 and p1 then p4.\nif p17 and p9 and p6 then p14.\nif p16 and p14 and p3 then p18.\nif p16 and p9 and p4 then p19.\nif p16 and p2 and p1 then p17.\nif p15 and p10 and p6 then p20.\nif p15 and p9 and p3 then p10.\nif p14 and p12 and p4 then p1.\nif p14 and p10 and p8 then p1.\nif p14 and p8 and p2 then p10.\nif p13 and p11 and p1 then p17.\nif p12 and p9 and p8 then p18.\nif p12 and p7 and p3 and p2 then p0.\nif p10 and p8 and p7 then p18.\nif p6 and p4 and p3 then p20.\nif p20 and p17 and p14 and p8 then p19.\nif p19 and p17 and p12 and p2 then p10.\nif p18 and p17 and p16 and p6 then p10.\nif p17 and p12 and p10 and p6 then p19.\nif p17 and p12 and p10 and p1 then p2.\nif p16 and p15 and p10 and p1 then p9.\nif p16 and p9 and p4 and p3 then p13.\nif p14 and p12 and p7 and p5 then p20.\nif p13 and p10 and p4 and p1 then p8.\nif p8 and p7 and p3 and p1 then p17."
+      }
+    }
+  },
+  "prompt_c6875730a1": {
+    "1": {
+      "low": {
+        "maxvars": 3,
+        "maxlen": 3,
+        "satflag": 1,
+        "statements": "p1. p2. if p1 then p0. Answer: yes.\nExample 2. Statements: p1. p2. if p1 then p9. Answer: no.\nExample 3. Statements: p1. if p1 then p2. if p2 then p0. Answer: yes.\nExample 4. Statements: p1. if p1 then p3. if p2 and p1 then p0. Answer: no.\nExample 5. Statements: p1. if p1 then p2. if p2 then p3. if p3 then p0. Answer: yes.\nExample 6. Statements: p1. if p1 then p2. if p2 then p1. if p3 then p0. Answer: no.\nExample 7. Statements: p1. p3. if p1 then p2. if p2 and p3 then p4. if p4 then p0. Answer: yes.\nExample 8. Statements: p1. if p1 then p2. if p2 and p3 then p4. if p4 then p0. Answer: no.\nExample 9.  Statements: p6. p3. if p3 then p1. if p3 then p1. if p4 and p5 then p0. if p1 and p6 then p4. Answer: yes.\nExample 10. Statements: p6. p3. if p3 then p1. if p4 then p5. if p1 and p6 then p4. Answer: no\nExample 11. Statements: p6. if p3 then p4. if p6 then p7. if p5 and p6 then p0. if p7 then p3. if p4 then p5.  Answer: yes.\nExample 12. Statements: p6. if p3 then p4. if p6 then p7. if p5 and p6 then p0. if p7 then p3. if p4 then p7.  Answer: no.\n\nPlease answer whether a fact p0 can be derived from the following facts and rules.\n\nStatements:\np1.\nif p3 then p1.\nif p3 then p2.\nif p2 and p1 then p0.\nif p2 then p1.\nif p3 and p2 then p1."
+      },
+      "mid": {
+        "maxvars": 9,
+        "maxlen": 4,
+        "satflag": 1,
+        "statements": "p1. p2. if p1 then p0. Answer: yes.\nExample 2. Statements: p1. p2. if p1 then p9. Answer: no.\nExample 3. Statements: p1. if p1 then p2. if p2 then p0. Answer: yes.\nExample 4. Statements: p1. if p1 then p3. if p2 and p1 then p0. Answer: no.\nExample 5. Statements: p1. if p1 then p2. if p2 then p3. if p3 then p0. Answer: yes.\nExample 6. Statements: p1. if p1 then p2. if p2 then p1. if p3 then p0. Answer: no.\nExample 7. Statements: p1. p3. if p1 then p2. if p2 and p3 then p4. if p4 then p0. Answer: yes.\nExample 8. Statements: p1. if p1 then p2. if p2 and p3 then p4. if p4 then p0. Answer: no.\nExample 9.  Statements: p6. p3. if p3 then p1. if p3 then p1. if p4 and p5 then p0. if p1 and p6 then p4. Answer: yes.\nExample 10. Statements: p6. p3. if p3 then p1. if p4 then p5. if p1 and p6 then p4. Answer: no\nExample 11. Statements: p6. if p3 then p4. if p6 then p7. if p5 and p6 then p0. if p7 then p3. if p4 then p5.  Answer: yes.\nExample 12. Statements: p6. if p3 then p4. if p6 then p7. if p5 and p6 then p0. if p7 then p3. if p4 then p7.  Answer: no.\n\nPlease answer whether a fact p0 can be derived from the following facts and rules.\n\nStatements:\np5.\nif p9 then p4.\nif p9 then p8.\nif p8 then p3.\nif p7 then p9.\nif p6 then p4.\nif p4 then p7.\nif p1 then p7.\nif p9 and p4 then p8.\nif p8 and p7 then p2.\nif p8 and p6 then p1.\nif p8 and p4 then p1.\nif p8 and p3 then p5.\nif p7 and p2 then p6.\nif p6 and p4 then p8.\nif p6 and p1 then p8.\nif p5 and p4 and p2 then p0.\nif p5 and p2 then p4.\nif p5 and p1 then p2.\nif p5 and p1 then p9.\nif p3 and p1 then p2.\nif p9 and p7 and p6 and p4 then p0.\nif p9 and p6 and p1 then p5.\nif p9 and p5 and p3 then p2.\nif p8 and p2 and p1 then p6.\nif p6 and p2 and p1 then p7.\nif p4 and p2 and p1 then p7."
+      },
+      "high": {
+        "maxvars": 15,
+        "maxlen": 4,
+        "satflag": 0,
+        "statements": "p1. p2. if p1 then p0. Answer: yes.\nExample 2. Statements: p1. p2. if p1 then p9. Answer: no.\nExample 3. Statements: p1. if p1 then p2. if p2 then p0. Answer: yes.\nExample 4. Statements: p1. if p1 then p3. if p2 and p1 then p0. Answer: no.\nExample 5. Statements: p1. if p1 then p2. if p2 then p3. if p3 then p0. Answer: yes.\nExample 6. Statements: p1. if p1 then p2. if p2 then p1. if p3 then p0. Answer: no.\nExample 7. Statements: p1. p3. if p1 then p2. if p2 and p3 then p4. if p4 then p0. Answer: yes.\nExample 8. Statements: p1. if p1 then p2. if p2 and p3 then p4. if p4 then p0. Answer: no.\nExample 9.  Statements: p6. p3. if p3 then p1. if p3 then p1. if p4 and p5 then p0. if p1 and p6 then p4. Answer: yes.\nExample 10. Statements: p6. p3. if p3 then p1. if p4 then p5. if p1 and p6 then p4. Answer: no\nExample 11. Statements: p6. if p3 then p4. if p6 then p7. if p5 and p6 then p0. if p7 then p3. if p4 then p5.  Answer: yes.\nExample 12. Statements: p6. if p3 then p4. if p6 then p7. if p5 and p6 then p0. if p7 then p3. if p4 then p7.  Answer: no.\n\nPlease answer whether a fact p0 can be derived from the following facts and rules.\n\nStatements:\np2.\np12.\nif p15 then p5.\nif p15 then p6.\nif p15 then p11.\nif p14 then p15.\nif p10 then p2.\nif p10 then p13.\nif p9 then p4.\nif p8 then p5.\nif p6 then p11.\nif p6 then p14.\nif p5 then p2.\nif p4 then p1.\nif p2 then p11.\nif p2 then p14.\nif p1 then p12.\nif p15 and p13 then p12.\nif p15 and p12 then p9.\nif p15 and p9 then p13.\nif p15 and p7 then p9.\nif p15 and p1 then p9.\nif p14 and p12 then p7.\nif p14 and p9 then p3.\nif p14 and p3 then p11.\nif p13 and p10 then p4.\nif p12 and p3 then p5.\nif p11 and p4 then p6.\nif p10 and p4 then p15.\nif p9 and p6 then p8.\nif p9 and p3 then p13.\nif p9 and p2 then p1.\nif p8 and p7 then p3.\nif p8 and p2 then p11.\nif p7 and p1 then p12.\nif p6 and p1 then p7.\nif p15 and p13 and p12 then p6.\nif p15 and p13 and p5 and p4 then p0.\nif p15 and p12 and p2 then p8.\nif p15 and p11 and p3 then p4.\nif p14 and p8 and p2 then p5.\nif p13 and p8 and p5 then p10.\nif p11 and p8 and p3 then p6.\nif p11 and p7 and p5 and p4 then p0.\nif p10 and p6 and p4 and p1 then p0.\nif p9 and p2 and p1 then p15."
+      }
+    }
+  }
+}
