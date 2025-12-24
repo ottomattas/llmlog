@@ -1,0 +1,28 @@
+Your task is to solve a propositional logic problem expressed as CNF clauses.
+
+Semantics
+- Literals are written as pN (positive) and not(pN) (negative).
+- Each line is a clause (a disjunction with "or").
+- All clauses are jointly assumed true (conjoined).
+
+Task
+- Determine whether the set of clauses is a contradiction (unsatisfiable) or satisfiable.
+
+Algorithm (DPLL-style SAT solving)
+- Use a standard DPLL procedure:
+  - Unit propagation: if a clause becomes a unit literal under current assignments, assign it.
+  - Pure literal elimination (optional): if a variable appears with only one polarity, assign it.
+  - Branching: pick an unassigned variable and try a value; backtrack on conflict.
+  - A conflict occurs if some clause becomes empty (all its literals are false).
+
+Output requirements
+- You MAY print a detailed reasoning/trace (including branches and backtracking) above the final answer.
+- Output exactly one final word on the last line, lowercase with no punctuation:
+  - "contradiction" if unsatisfiable
+  - "satisfiable" if satisfiable
+  - "unknown" only if you genuinely cannot decide
+
+Statements:
+{{ clauses }}
+
+

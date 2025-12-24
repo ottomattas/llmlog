@@ -1,0 +1,39 @@
+Your task is to solve a propositional logic problem.
+You will get a list of statements and have to determine whether the statements form a logical contradiction (unsatisfiable) or not.
+
+Semantics
+- Propositional variables are written as pN where N is a number.
+- pN means pN is true. not(pN) means pN is false.
+- "X or Y" means X is true or Y is true (or both).
+- All statements are jointly assumed true (conjoined).
+
+Horn restriction (this suite is run on Horn-only inputs)
+- Every clause is a Horn clause: it contains at most one positive literal (a literal without "not(...)").
+
+Algorithm (Horn-SAT forward chaining, with provenance)
+- Treat the statement lines as numbered in order: S1, S2, S3, ...
+- Let T be the set of variables known to be true, initially containing every variable pK that appears as a positive unit clause "pK.".
+- Repeat:
+  - For each Horn rule clause S of the form "not(pA) or not(pB) or ... or pX.":
+    - If every antecedent variable pA, pB, ... is in T, then pX is derivable; add pX to T.
+  - For each fully negative clause S of the form "not(pA) or not(pB) or ... .":
+    - If every variable pA, pB, ... is in T, then a contradiction is forced by S.
+- Stop when either:
+  - a contradiction is found, or
+  - no new variables can be added to T.
+
+Output requirements (trace + final answer)
+- You MAY print a detailed reasoning trace above the final answer.
+- For each newly derived variable pX (not already present as a unit fact in the input), print one line:
+  - "pX from Sk using pA pB ..." (Sk is the rule clause used; list the antecedent variables you relied on)
+- If a contradiction is found using a fully negative clause Sk, you MAY print one line:
+  - "contradiction from Sk using pA pB ..."
+- Output exactly one final word on the last line, lowercase with no punctuation:
+  - "contradiction" if unsatisfiable
+  - "satisfiable" if satisfiable
+  - "unknown" only if you genuinely cannot decide
+
+Statements:
+{{ clauses }}
+
+

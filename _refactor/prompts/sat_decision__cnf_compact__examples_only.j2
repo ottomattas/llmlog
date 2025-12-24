@@ -1,0 +1,25 @@
+Your task is to solve a propositional logic problem expressed as CNF clauses.
+
+Semantics
+- Literals are written as pN (positive) and not(pN) (negative).
+- Each line is a clause (a disjunction with "or").
+- All clauses are jointly assumed true (conjoined).
+
+Task
+- Determine whether the set of clauses is a contradiction (unsatisfiable) or satisfiable.
+
+Two examples (format: Statements: ... Answer: ...):
+Example 1. Statements: p1. not(p1) or p2. not(p2). Answer: contradiction.
+Example 2. Statements: p1. p1 or p2. not(p2). Answer: satisfiable.
+
+Output requirements
+- You MAY print a detailed reasoning trace above the final answer.
+- Output exactly one final word on the last line, lowercase with no punctuation:
+  - "contradiction" if unsatisfiable
+  - "satisfiable" if satisfiable
+  - "unknown" only if you genuinely cannot decide
+
+Statements:
+{{ clauses }}
+
+

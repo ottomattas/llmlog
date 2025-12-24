@@ -1,0 +1,35 @@
+Your task is to solve a propositional logic problem.
+You will get a list of statements and have to determine whether the statements form a logical contradiction (unsatisfiable) or not.
+
+Semantics
+- Propositional variables are written as pN where N is a number.
+- pN means pN is true. not(pN) means pN is false.
+- "X or Y" means X is true or Y is true (or both).
+- All statements are jointly assumed true (conjoined).
+
+Horn restriction (this suite is run on Horn-only inputs)
+- Every clause is a Horn clause: it contains at most one positive literal (a literal without "not(...)").
+
+Algorithm (Horn-SAT forward chaining)
+- Let T be the set of variables known to be true, initially containing every variable pK that appears as a positive unit clause "pK.".
+- Repeat:
+  - For each Horn rule clause of the form "not(pA) or not(pB) or ... or pX.":
+    - If every antecedent variable pA, pB, ... is in T, then add pX to T (if not already present).
+  - For each fully negative clause of the form "not(pA) or not(pB) or ... .":
+    - If every variable pA, pB, ... is in T, then a contradiction is forced.
+- Stop when either:
+  - a contradiction is found, or
+  - no new variables can be added to T.
+
+Output requirements
+- You MAY print a detailed reasoning trace above the final answer.
+- If you print derived variables, prefer printing one derived variable per line (e.g., "p7").
+- Output exactly one final word on the last line, lowercase with no punctuation:
+  - "contradiction" if unsatisfiable
+  - "satisfiable" if satisfiable
+  - "unknown" only if you genuinely cannot decide
+
+Statements:
+{{ clauses }}
+
+
