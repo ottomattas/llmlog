@@ -154,6 +154,40 @@ The run is intended to be **append-only** and **resumable**:
 - Re-running the exact same command with `--resume` will skip ids that already have a “good enough” latest row.
 - If you increase `--case-limit`, `--resume` will keep prior ids and only run the additional ids.
 
+#### TODO (required): post-run “gap fill” for failed/unclear ids
+In practice, API/network flakiness means many runs need **one or more extra passes** after the first sweep.
+Treat this as part of “done”:
+- [ ] **Run gap-fill passes** until there are **no remaining errors/unclear** in the *latest-per-id* view:
+  - `--rerun-errors` (fills transient API failures)
+  - `--rerun-unclear` (fills parse failures / ambiguous answers)
+- [ ] **If only a few ids are failing**, rerun *just those ids* with `--ids ...` (keeps costs down and makes progress visible).
+- [ ] **Only after gap-fill**, aggregate + dashboard (otherwise the dashboard reflects partial coverage).
+
+Important note: `results.jsonl` is **append-only** — old error rows remain in the file even after an id later succeeds.
+When deciding what to rerun (and when deciding if a run is “complete”), always reason about the **latest row per id**.
+
+Helper: list remaining ids to rerun (latest-per-id) from a leaf `results.jsonl`:
+```
+python3 - <<'PY'
+import json
+from pathlib import Path
+
+path = Path("runs/<suite>/<run>/<provider>/<model>/<thinking_mode>/results.jsonl")
+latest = {}
+for line in path.read_text().splitlines():
+    if not line.strip():
+        continue
+    row = json.loads(line)
+    latest[str(row.get("id"))] = row
+
+error_ids = sorted(int(k) for k,v in latest.items() if v.get("error"))
+unclear_ids = sorted(int(k) for k,v in latest.items() if (v.get("parsed_answer") == 2 and not v.get("error")))
+
+print("error_ids:", error_ids)
+print("unclear_ids:", unclear_ids)
+PY
+```
+
 #### Rerun transient failures
 If some rows have `error!=null` (rate limits, timeouts, 5xx), rerun just those:
 ```
