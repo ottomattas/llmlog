@@ -22,9 +22,12 @@ def chat_completion(
         raise RuntimeError("Missing OpenAI API key in secrets.json or OPENAI_API_KEY")
 
     host = "api.openai.com"
+    # Avoid indefinite hangs on connect/read. This is intentionally generous to allow
+    # long-running reasoning responses while still guaranteeing eventual progress.
+    timeout_s = 300
 
     def _request(path: str, payload: Dict[str, Any]) -> Dict[str, Any]:
-        conn = http.client.HTTPSConnection(host)
+        conn = http.client.HTTPSConnection(host, timeout=timeout_s)
         conn.request(
             "POST",
             path,
