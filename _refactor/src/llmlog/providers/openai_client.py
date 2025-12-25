@@ -54,159 +54,127 @@ def chat_completion(
             conn.close()
         return data
 
-    # Prefer Responses API (newer unified generation endpoint). If unsupported for a model,
-    # we fall back to Chat Completions.
-    try_responses = True
-    if try_responses:
-        input_blocks: List[Dict[str, Any]] = []
-        for m in messages:
-            role = m.get("role", "user")
-            text = m.get("content") or ""
-            input_blocks.append({"role": role, "content": [{"type": "input_text", "text": text}]})
+    # Responses API (unified generation endpoint).
+    #
+    # We intentionally do NOT support Chat Completions here. OpenAI is converging on Responses,
+    # and many newer models (e.g. GPT-5 tiers) are not chat-completions compatible.
+    input_blocks: List[Dict[str, Any]] = []
+    for m in messages:
+        role = m.get("role", "user")
+        text = m.get("content") or ""
+        input_blocks.append({"role": role, "content": [{"type": "input_text", "text": text}]})
 
-        payload: Dict[str, Any] = {
-            "model": model,
-            "input": input_blocks,
-        }
-        if max_tokens is not None:
-            payload["max_output_tokens"] = int(max_tokens)
-        # Best-effort: include temperature when provided (some models may ignore/forbid it).
-        try:
-            payload["temperature"] = float(temperature or 0.0)
-        except Exception:
-            pass
-
-        eff = None
-        enabled = False
-        if thinking:
-            enabled = bool(thinking.get("enabled"))
-            eff = thinking.get("effort") or thinking.get("reasoning_effort")
-        model_lower = str(model).lower()
-        if enabled and isinstance(eff, str) and eff.lower() in ("none", "minimal", "low", "medium", "high"):
-            payload["reasoning"] = {"effort": eff.lower()}
-        elif model_lower.startswith("gpt-5"):
-            # Best-effort explicit disable for GPT-5 tiers.
-            payload["reasoning"] = {"effort": "minimal"}
-
-        def _extract_text_and_reasoning(resp_obj: Any) -> Tuple[str, Optional[str]]:
-            text_accum: List[str] = []
-            reasoning_accum: List[str] = []
-
-            if isinstance(resp_obj, dict):
-                # Direct convenience field
-                if isinstance(resp_obj.get("output_text"), str):
-                    text_accum.append(resp_obj["output_text"])
-
-                # Some rollouts attach reasoning summaries separately.
-                r = resp_obj.get("reasoning")
-                if isinstance(r, dict):
-                    rs = r.get("summary") or r.get("text")
-                    if isinstance(rs, str) and rs.strip():
-                        reasoning_accum.append(rs.strip())
-
-                output = resp_obj.get("output") or []
-                if isinstance(output, list):
-                    for item in output:
-                        content = (item or {}).get("content") or []
-                        if not isinstance(content, list):
-                            continue
-                        for part in content:
-                            if not isinstance(part, dict):
-                                continue
-                            ptype = (part.get("type") or "").lower()
-
-                            # Visible response text
-                            if ptype in ("output_text", "text"):
-                                t = part.get("text") or part.get("content")
-                                if isinstance(t, str) and t:
-                                    text_accum.append(t)
-
-                            # Reasoning summary / thinking (when exposed)
-                            if ptype in ("reasoning", "reasoning_summary", "output_reasoning", "thinking"):
-                                rs = part.get("summary") or part.get("text") or part.get("thinking") or part.get("content")
-                                if isinstance(rs, str) and rs.strip():
-                                    reasoning_accum.append(rs.strip())
-                            else:
-                                # Some schemas use a generic type but store a summary field.
-                                rs = part.get("summary")
-                                if isinstance(rs, str) and rs.strip():
-                                    reasoning_accum.append(rs.strip())
-
-            text_out = "\n".join([t for t in text_accum if t]).strip()
-            reasoning_out = "\n".join([t for t in reasoning_accum if t]).strip()
-            return text_out, (reasoning_out or None)
-
-        def _responses_call(payload_in: Dict[str, Any]) -> Tuple[str, Dict[str, Any], Optional[str]]:
-            data = _request("/v1/responses", payload_in)
-            resp_obj = data.get("response") or data
-
-            text_out, thinking_text = _extract_text_and_reasoning(resp_obj)
-
-            finish_reason = None
-            if isinstance(resp_obj, dict):
-                finish_reason = resp_obj.get("finish_reason") or resp_obj.get("status")
-
-            usage = None
-            if isinstance(resp_obj, dict) and isinstance(resp_obj.get("usage"), dict):
-                usage = resp_obj.get("usage")
-            elif isinstance(data.get("usage"), dict):
-                usage = data.get("usage")
-
-            meta: Dict[str, Any] = {
-                "raw_response": data,
-                "finish_reason": finish_reason,
-                "usage": usage,
-            }
-            return (text_out or str(data)), meta, thinking_text
-
-        try:
-            # Some Responses API deployments reject seed; try it only for non-GPT-5 by default.
-            if seed is not None and not model_lower.startswith("gpt-5"):
-                payload["seed"] = int(seed)
-            return _responses_call(payload)
-        except Exception:
-            # Retry once without seed if that was the issue, then fall back.
-            if "seed" in payload:
-                try:
-                    payload2 = dict(payload)
-                    payload2.pop("seed", None)
-                    return _responses_call(payload2)
-                except Exception:
-                    pass
-            # fall through to Chat Completions
-            pass
-
-    # Default: Chat Completions API
-    call: Dict[str, Any] = {
+    payload: Dict[str, Any] = {
         "model": model,
-        "messages": messages,
-        "temperature": temperature,
+        "input": input_blocks,
     }
-    if seed is not None:
-        call["seed"] = seed
     if max_tokens is not None:
-        call["max_tokens"] = max_tokens
-    if thinking:
-        eff = thinking.get("effort") or thinking.get("reasoning_effort")
-        if isinstance(eff, str) and eff.lower() in ("low", "medium", "high"):
-            call["reasoning"] = {"effort": eff.lower()}
+        payload["max_output_tokens"] = int(max_tokens)
 
-    data = _request("/v1/chat/completions", call)
-    if "choices" not in data:
-        raise RuntimeError("OpenAI response missing 'choices'")
-    res = ""
-    for ch in data["choices"]:
-        if "message" in ch and "content" in ch["message"]:
-            res += ch["message"]["content"]
-        elif "text" in ch:
-            if res:
-                res += "\n"
-            res += ch["text"].strip()
-    meta: Dict[str, Any] = {
-        "raw_response": data,
-        "finish_reason": (data.get("choices", [{}])[0] or {}).get("finish_reason"),
-        "usage": data.get("usage"),
-    }
-    return res, meta, None
+    model_lower = str(model).lower()
+
+    # Some OpenAI models (notably GPT-5 tiers) reject `temperature` on the Responses API.
+    # For non-GPT-5 models we keep passing temperature when provided (e.g. 0 for determinism).
+    if not model_lower.startswith("gpt-5"):
+        try:
+            if temperature is not None:
+                payload["temperature"] = float(temperature)
+        except Exception:
+            # If temperature is non-numeric, just omit it.
+            pass
+
+    enabled = False
+    eff: Optional[str] = None
+    if thinking:
+        enabled = bool(thinking.get("enabled"))
+        eff = thinking.get("effort") or thinking.get("reasoning_effort")
+    if enabled and isinstance(eff, str) and eff.strip():
+        eff_l = eff.strip().lower()
+        # Keep this list permissive; unsupported values will be surfaced as a 4xx.
+        if eff_l in ("none", "minimal", "low", "medium", "high", "xhigh"):
+            payload["reasoning"] = {"effort": eff_l}
+
+    def _extract_text_and_reasoning(resp_obj: Any) -> Tuple[str, Optional[str]]:
+        text_accum: List[str] = []
+        reasoning_accum: List[str] = []
+
+        if isinstance(resp_obj, dict):
+            # Direct convenience field
+            if isinstance(resp_obj.get("output_text"), str):
+                text_accum.append(resp_obj["output_text"])
+
+            # Some rollouts attach reasoning summaries separately.
+            r = resp_obj.get("reasoning")
+            if isinstance(r, dict):
+                rs = r.get("summary") or r.get("text")
+                if isinstance(rs, str) and rs.strip():
+                    reasoning_accum.append(rs.strip())
+
+            output = resp_obj.get("output") or []
+            if isinstance(output, list):
+                for item in output:
+                    content = (item or {}).get("content") or []
+                    if not isinstance(content, list):
+                        continue
+                    for part in content:
+                        if not isinstance(part, dict):
+                            continue
+                        ptype = (part.get("type") or "").lower()
+
+                        # Visible response text
+                        if ptype in ("output_text", "text"):
+                            t = part.get("text") or part.get("content")
+                            if isinstance(t, str) and t:
+                                text_accum.append(t)
+
+                        # Reasoning summary / thinking (when exposed)
+                        if ptype in ("reasoning", "reasoning_summary", "output_reasoning", "thinking"):
+                            rs = part.get("summary") or part.get("text") or part.get("thinking") or part.get("content")
+                            if isinstance(rs, str) and rs.strip():
+                                reasoning_accum.append(rs.strip())
+                        else:
+                            # Some schemas use a generic type but store a summary field.
+                            rs = part.get("summary")
+                            if isinstance(rs, str) and rs.strip():
+                                reasoning_accum.append(rs.strip())
+
+        text_out = "\n".join([t for t in text_accum if t]).strip()
+        reasoning_out = "\n".join([t for t in reasoning_accum if t]).strip()
+        return text_out, (reasoning_out or None)
+
+    def _responses_call(payload_in: Dict[str, Any]) -> Tuple[str, Dict[str, Any], Optional[str]]:
+        data = _request("/v1/responses", payload_in)
+        resp_obj = data.get("response") or data
+
+        text_out, thinking_text = _extract_text_and_reasoning(resp_obj)
+
+        finish_reason = None
+        if isinstance(resp_obj, dict):
+            finish_reason = resp_obj.get("finish_reason") or resp_obj.get("status")
+
+        usage = None
+        if isinstance(resp_obj, dict) and isinstance(resp_obj.get("usage"), dict):
+            usage = resp_obj.get("usage")
+        elif isinstance(data.get("usage"), dict):
+            usage = data.get("usage")
+
+        meta: Dict[str, Any] = {
+            "raw_response": data,
+            "finish_reason": finish_reason,
+            "usage": usage,
+        }
+        return (text_out or str(data)), meta, thinking_text
+
+    # Some Responses API deployments reject seed; try it only for non-GPT-5 by default.
+    if seed is not None and not model_lower.startswith("gpt-5"):
+        payload["seed"] = int(seed)
+    try:
+        return _responses_call(payload)
+    except Exception:
+        if "seed" in payload:
+            payload2 = dict(payload)
+            payload2.pop("seed", None)
+            return _responses_call(payload2)
+        raise
 
 
