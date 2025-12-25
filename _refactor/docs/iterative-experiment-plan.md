@@ -343,6 +343,53 @@ All suites support the same drilldown flags:
 - `--resume`
 - `--rerun-errors` / `--rerun-unclear` (when filling gaps)
 
+#### Parallel execution (recommended for faster iteration)
+The full matrix is large and long-running. To get useful signal quickly:
+- Run **2 suites in parallel** (or 3 if you have plenty of quota and low error rate).
+- Keep `--lockstep` enabled (fair comparisons across targets) but avoid running *too many* jobs concurrently (rate limits and transient API failures get worse).
+- For `*_from_*` suites (trace-rich), use a **smaller `--case-limit`** (e.g. 4 or 6) on the first pass.
+
+Two practical patterns:
+
+**A) Multiple terminals (simplest):**
+- Start one suite+len sweep per terminal.
+- Re-run with `--resume --rerun-errors` until coverage is good.
+
+**B) Single terminal, run 2 suites concurrently (copy/paste):**
+```
+cd _refactor
+
+VAR_STEPS="10,20,30,40,50"
+CASE_LIMIT_LINEAR=10
+CASE_LIMIT_FROM=4
+
+run_suite() {
+  local SUITE="$1"
+  local PREFIX="$2"
+  local CASE_LIMIT="$3"
+  for LEN in 3 4 5; do
+    RUN="${PREFIX}_len${LEN}_vars10_50_case${CASE_LIMIT}"
+    python3 scripts/run.py --suite "$SUITE" --run "$RUN" \
+      --maxvars "$VAR_STEPS" --maxlen "$LEN" --case-limit "$CASE_LIMIT" \
+      --resume --lockstep
+  done
+}
+
+# Example starter set (fast signal): horn_alg_linear + dpll_alg_linear, compact + nl
+run_suite "$HORN_COMPACT_HORN_LINEAR" horn_alg_linear_cnf_compact "$CASE_LIMIT_LINEAR" &
+run_suite "$NONHORN_COMPACT_DPLL_LINEAR" nonhorn_dpll_linear_cnf_compact "$CASE_LIMIT_LINEAR" &
+wait
+
+run_suite "$HORN_NL_HORN_LINEAR" horn_alg_linear_cnf_nl "$CASE_LIMIT_LINEAR" &
+run_suite "$NONHORN_NL_DPLL_LINEAR" nonhorn_dpll_linear_cnf_nl "$CASE_LIMIT_LINEAR" &
+wait
+
+# Optional trace-rich runs (start smaller; these can be slow/expensive)
+run_suite "$HORN_COMPACT_HORN_FROM" horn_alg_from_cnf_compact "$CASE_LIMIT_FROM" &
+run_suite "$NONHORN_COMPACT_DPLL_FROM" nonhorn_dpll_from_cnf_compact "$CASE_LIMIT_FROM" &
+wait
+```
+
 Run the full matrix (edit the list to only include what you want):
 ```
 cd _refactor
