@@ -3,6 +3,7 @@
 These documents describe llmlog.
 
 - **Problem generation (`makeproblems`)**: [`problem-generation.md`](problem-generation.md)
+- **Iterative experimentation plan**: [`iterative-experiment-plan.md`](iterative-experiment-plan.md)
 - **Prompt variants (examples vs algorithm)**: [`prompt-variants.md`](prompt-variants.md)
 - **Repository layout (target structure)**: [`repository-layout.md`](repository-layout.md)
 - **Datasets (naming, storage, metadata)**: [`datasets.md`](datasets.md)
