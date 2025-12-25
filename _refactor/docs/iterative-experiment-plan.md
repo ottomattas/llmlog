@@ -10,6 +10,33 @@ The goal is to gather enough data to answer: **where does the model stop being r
 
 ---
 
+### Quick context (for a fresh agent)
+This repository contains multiple experiment frameworks. **All work in this plan is for `_refactor/`**.
+
+Key paths under `_refactor/`:
+- **Suites** (what to run): `configs/suites/*.yaml`
+- **Targets** (which provider/model): `configs/targets/*.yaml`
+- **Datasets**: `datasets/validation/*.jsonl`
+- **Runner CLI**: `scripts/run.py` (calls `src/llmlog/runner.py`)
+- **Artifacts (gitignored)**: `runs/<suite>/<run>/<provider>/<model>/<thinking_mode>/...`
+- **Reports (gitignored)**: `reports/` (dashboards, exports)
+
+Per target run folder you should expect:
+- `results.jsonl`: minimal rows (`parsed_answer`, `correct`, `error`)
+- `results.provenance.jsonl`: prompt + full completion + usage + raw response (when enabled)
+- `results.summary.json`: per-target stats (accuracy, counts, token totals)
+- `run.manifest.json`: reproducibility snapshot (suite, dataset selection, target)
+
+Note: `_refactor/.gitignore` intentionally ignores `runs/` and `reports/`.
+For third-party validation, export provenance into a standalone folder (see below) or archive the run folder.
+
+### What counts as “done” (for a run id)
+For a given `--suite` + `--run` + dataset selection:
+- Every selected problem id has a row in `results.jsonl`
+- Most rows are parseable (`parsed_answer` is 0/1, not 2)
+- Transient API failures were rerun until acceptable coverage is reached
+- Aggregation/dashboard exists, and provenance can be exported for spot checks
+
 ### Goals + hypothesis
 - **Hypothesis**: performance is strong for small instances, then drops after some threshold in:
   - **variable count** (`maxvarnr`)
@@ -34,6 +61,19 @@ The goal is to gather enough data to answer: **where does the model stop being r
   - `configs/suites/sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2-pro__think-high.yaml`
 
 ---
+
+### Execution checklist (agent-friendly)
+- [ ] **Environment**: from repo root, `cd _refactor`; ensure API keys are set (`OPENAI_API_KEY` etc).
+- [ ] **Preflight**: run `--preflight --estimate-cost` for the intended sweep filters.
+- [ ] **Coarse sweep**: run vars 10/20/30/40/50 for each maxlen (3,4,5), with `--case-limit 10 --resume`.
+- [ ] **Sanity**: ensure results exist under `runs/<suite>/<run>/...` and are parseable (few/no `parsed_answer==2`).
+- [ ] **Rerun failures**:
+  - `--rerun-errors` to retry rows with an error
+  - `--rerun-unclear` to retry rows that parsed as unclear
+- [ ] **Aggregate + dashboard**: create `reports/<run>.aggregated.json` + `<run>.dashboard.html` for review.
+- [ ] **Drill down**: bracket the drop region with narrower `--maxvars` ranges (and/or fixed vars with varying `--maxlen`).
+- [ ] **Export provenance**: export representative successes + failures to human-readable files for validation.
+- [ ] **Repeat**: run the same sweep/drill loop across the other suite variants (see “Planned suite matrix”).
 
 ### Important concept: what is a “case”?
 In the full dataset, rows are naturally grouped into “cases” by:
@@ -105,6 +145,44 @@ python3 scripts/run.py --suite "$SUITE" --run horn_ex_only_len3_vars10_50_case10
 
 ---
 
+### Handling errors, reruns, and “completing” a run
+The runner writes a row per problem id to `results.jsonl` with:
+- `parsed_answer`: `0|1|2` (`2` means unclear)
+- `error`: string or `null` (API/network/config errors show up here)
+
+The run is intended to be **append-only** and **resumable**:
+- Re-running the exact same command with `--resume` will skip ids that already have a “good enough” latest row.
+- If you increase `--case-limit`, `--resume` will keep prior ids and only run the additional ids.
+
+#### Rerun transient failures
+If some rows have `error!=null` (rate limits, timeouts, 5xx), rerun just those:
+```
+python3 scripts/run.py --suite "$SUITE" --run horn_ex_only_len5_vars10_50_case10 \
+  --maxvars 10,20,30,40,50 --maxlen 5 --case-limit 10 \
+  --resume --lockstep --rerun-errors
+```
+
+#### Rerun unclear parses
+If some rows have `parsed_answer==2`, rerun them (same selection filters):
+```
+python3 scripts/run.py --suite "$SUITE" --run horn_ex_only_len5_vars10_50_case10 \
+  --maxvars 10,20,30,40,50 --maxlen 5 --case-limit 10 \
+  --resume --lockstep --rerun-unclear
+```
+
+#### Rerun a specific set of ids
+When drilling into particular interesting failures, rerun by id:
+```
+python3 scripts/run.py --suite "$SUITE" --run horn_ex_only_len5_vars10_50_case10 \
+  --ids 123,456,789 --resume --lockstep --rerun-errors --rerun-unclear
+```
+
+#### Common error causes (and fixes)
+- **HTTP 429 / rate limit**: rerun with `--rerun-errors`; if it persists, reduce `--case-limit` or run fewer suites in parallel.
+- **Missing API key**: set `OPENAI_API_KEY` (or add `_refactor/secrets.json`, which is gitignored).
+- **Token limits**: ensure targets have enough `max_tokens` (gpt-5.2-pro target uses 30000 by default).
+- **Model id mismatch**: update the target model id in `configs/targets/*.yaml`.
+
 ### Drilldown plan (zooming in on the drop)
 
 #### Vars drilldown
@@ -139,7 +217,11 @@ python3 scripts/run.py --suite "$SUITE" --run horn_ex_only_vars40_len3_5_case10 
 
 ### Analysis loop (after each pass)
 
-Aggregate + dashboard:
+Before aggregating, it’s usually worth ensuring you don’t have many `error` / `unclear` rows:
+- rerun errors: `--rerun-errors`
+- rerun unclear parses: `--rerun-unclear`
+
+Aggregate + dashboard (overview):
 ```
 python3 scripts/aggregate_results.py --run-id horn_ex_only_len5_vars10_50_case10 \
   --output reports/horn_ex_only_len5_vars10_50_case10.aggregated.json
@@ -153,11 +235,23 @@ Where the reasoning trace is stored:
   - `runs/<suite>/<run>/<provider>/<model>/<thinking_mode>/results.provenance.jsonl`
   - the full text is in `completion_text` (plus `raw_response` and best-effort `thinking_text` if present)
 
-Export a handful of provenance rows to readable files:
+Export a handful of provenance rows to readable files (good for third-party validation):
 ```
 python3 scripts/export_provenance.py \
   --provenance runs/<suite>/<run>/<provider>/<model>/<thinking_mode>/results.provenance.jsonl \
-  --out reports/exports --limit 50 --no-raw
+  --out reports/exports/<run_name> --limit 50 --no-raw
+```
+
+Export specific ids (repeat `--id`):
+```
+python3 scripts/export_provenance.py \
+  --provenance runs/<suite>/<run>/<provider>/<model>/<thinking_mode>/results.provenance.jsonl \
+  --out reports/exports/<run_name> --id 123 --id 456 --no-raw
+```
+
+Archive an export folder for sharing:
+```
+tar -czf reports/exports_<run_name>.tar.gz -C reports "exports/<run_name>"
 ```
 
 ---
@@ -180,15 +274,75 @@ Rule of thumb:
 ---
 
 ### After the horn-only baseline
-Once the horn-only examples-only baseline is understood, repeat the same sweep/drill loop for:
-- **hornonly + algorithmic prompts** (linear vs “from”)
-- **nonhornonly** (examples-only, DPLL linear, DPLL “from”)
-- **representation**: compact CNF vs natural-language CNF
+Once the horn-only examples-only baseline is understood, repeat the same sweep/drill loop across the **full suite matrix**:
+- **subset**: `hornonly` vs `nonhornonly`
+- **representation**: `cnf_compact` vs `cnf_nl`
+- **prompt policy**:
+  - `examples_only` (baseline)
+  - `horn_alg_linear` / `horn_alg_from` (hornonly; “from” is trace-rich)
+  - `dpll_alg_linear` / `dpll_alg_from` (nonhornonly; “from” is trace-rich)
 
-The same drilldown CLI flags apply across all suites:
-- `--maxvars ...`
-- `--maxlen ...`
+#### Suite paths (copy/paste)
+```
+HORN_COMPACT_EX="configs/suites/sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2-pro__think-high.yaml"
+HORN_COMPACT_HORN_LINEAR="configs/suites/sat__repr-cnf_compact__subset-hornonly__prompt-horn_alg_linear__openai_gpt-5.2-pro__think-high.yaml"
+HORN_COMPACT_HORN_FROM="configs/suites/sat__repr-cnf_compact__subset-hornonly__prompt-horn_alg_from__openai_gpt-5.2-pro__think-high.yaml"
+
+HORN_NL_EX="configs/suites/sat__repr-cnf_nl__subset-hornonly__prompt-examples_only__openai_gpt-5.2-pro__think-high.yaml"
+HORN_NL_HORN_LINEAR="configs/suites/sat__repr-cnf_nl__subset-hornonly__prompt-horn_alg_linear__openai_gpt-5.2-pro__think-high.yaml"
+HORN_NL_HORN_FROM="configs/suites/sat__repr-cnf_nl__subset-hornonly__prompt-horn_alg_from__openai_gpt-5.2-pro__think-high.yaml"
+
+NONHORN_COMPACT_EX="configs/suites/sat__repr-cnf_compact__subset-nonhornonly__prompt-examples_only__openai_gpt-5.2-pro__think-high.yaml"
+NONHORN_COMPACT_DPLL_LINEAR="configs/suites/sat__repr-cnf_compact__subset-nonhornonly__prompt-dpll_alg_linear__openai_gpt-5.2-pro__think-high.yaml"
+NONHORN_COMPACT_DPLL_FROM="configs/suites/sat__repr-cnf_compact__subset-nonhornonly__prompt-dpll_alg_from__openai_gpt-5.2-pro__think-high.yaml"
+
+NONHORN_NL_EX="configs/suites/sat__repr-cnf_nl__subset-nonhornonly__prompt-examples_only__openai_gpt-5.2-pro__think-high.yaml"
+NONHORN_NL_DPLL_LINEAR="configs/suites/sat__repr-cnf_nl__subset-nonhornonly__prompt-dpll_alg_linear__openai_gpt-5.2-pro__think-high.yaml"
+NONHORN_NL_DPLL_FROM="configs/suites/sat__repr-cnf_nl__subset-nonhornonly__prompt-dpll_alg_from__openai_gpt-5.2-pro__think-high.yaml"
+```
+
+#### Coarse sweep command template
+All suites support the same drilldown flags:
+- `--maxvars ...` (e.g. `10,20,30,40,50`)
+- `--maxlen ...` (e.g. `3`, then `4`, then `5`)
 - `--case-limit ...`
 - `--resume`
+- `--rerun-errors` / `--rerun-unclear` (when filling gaps)
+
+Run the full matrix (edit the list to only include what you want):
+```
+cd _refactor
+
+VAR_STEPS="10,20,30,40,50"
+CASE_LIMIT=10
+
+declare -A SUITES=(
+  [horn_ex_only_cnf_compact]="$HORN_COMPACT_EX"
+  [horn_alg_linear_cnf_compact]="$HORN_COMPACT_HORN_LINEAR"
+  [horn_alg_from_cnf_compact]="$HORN_COMPACT_HORN_FROM"
+  [horn_ex_only_cnf_nl]="$HORN_NL_EX"
+  [horn_alg_linear_cnf_nl]="$HORN_NL_HORN_LINEAR"
+  [horn_alg_from_cnf_nl]="$HORN_NL_HORN_FROM"
+  [nonhorn_ex_only_cnf_compact]="$NONHORN_COMPACT_EX"
+  [nonhorn_dpll_linear_cnf_compact]="$NONHORN_COMPACT_DPLL_LINEAR"
+  [nonhorn_dpll_from_cnf_compact]="$NONHORN_COMPACT_DPLL_FROM"
+  [nonhorn_ex_only_cnf_nl]="$NONHORN_NL_EX"
+  [nonhorn_dpll_linear_cnf_nl]="$NONHORN_NL_DPLL_LINEAR"
+  [nonhorn_dpll_from_cnf_nl]="$NONHORN_NL_DPLL_FROM"
+)
+
+for PREFIX in "${!SUITES[@]}"; do
+  SUITE="${SUITES[$PREFIX]}"
+  for LEN in 3 4 5; do
+    RUN="${PREFIX}_len${LEN}_vars10_50_case${CASE_LIMIT}"
+    python3 scripts/run.py --suite "$SUITE" --run "$RUN" \
+      --maxvars "$VAR_STEPS" --maxlen "$LEN" --case-limit "$CASE_LIMIT" \
+      --resume --lockstep
+  done
+done
+```
+
+Practical note: the `*_from_*` suites encourage much longer traces. Consider using a smaller `--case-limit`
+for the first pass (e.g. 4 or 6), then increase later where needed.
 
 

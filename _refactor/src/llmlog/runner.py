@@ -4,7 +4,7 @@ import json
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import Any, Dict, Iterable, Iterator, List, Optional, Tuple
+from typing import Any, Dict, Iterable, Iterator, List, Optional, Set, Tuple
 
 from .config.loader import resolve_suite
 from .config.schema import (
@@ -16,7 +16,6 @@ from .config.schema import (
 )
 from .parsers import parse_contradiction, parse_yes_no
 from .problems.reader import iter_problem_rows
-from typing import Set
 
 from .problems.filters import (
     limit_per_case,
@@ -77,16 +76,135 @@ def _jsonl_iter(path: Path) -> Iterator[Dict[str, Any]]:
                 yield obj
 
 
-def _load_done_ids(results_path: Path) -> set[str]:
+def _load_latest_results(results_path: Path) -> Dict[str, Dict[str, Any]]:
+    """Return the latest result row per id (append-only JSONL)."""
     if not results_path.exists():
-        return set()
-    done: set[str] = set()
+        return {}
+    latest: Dict[str, Dict[str, Any]] = {}
     for obj in _jsonl_iter(results_path):
         rid = obj.get("id")
         if rid is None:
             continue
-        done.add(str(rid))
+        latest[str(rid)] = obj
+    return latest
+
+
+def _should_rerun_latest(latest_row: Dict[str, Any], *, rerun_errors: bool, rerun_unclear: bool) -> bool:
+    if rerun_errors and latest_row.get("error"):
+        return True
+    if rerun_unclear:
+        try:
+            if int(latest_row.get("parsed_answer")) == 2:
+                return True
+        except Exception:
+            pass
+    return False
+
+
+def _load_done_ids(results_path: Path, *, rerun_errors: bool, rerun_unclear: bool) -> Set[str]:
+    """Return ids considered 'done' for resume, based on the latest row per id.
+
+    If rerun flags are enabled, ids whose latest row matches the rerun criteria are excluded
+    (so they will be reprocessed).
+    """
+    latest = _load_latest_results(results_path)
+    done: Set[str] = set()
+    for rid, row in latest.items():
+        if _should_rerun_latest(row, rerun_errors=rerun_errors, rerun_unclear=rerun_unclear):
+            continue
+        done.add(rid)
     return done
+
+
+def _safe_int(v: Any) -> int:
+    try:
+        return int(v) if v is not None else 0
+    except Exception:
+        return 0
+
+
+def _compute_unique_stats_from_latest(latest_by_id: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
+    """Compute accuracy-related stats over unique problems (latest attempt per id)."""
+    stats: Dict[str, Any] = {
+        "total": len(latest_by_id),
+        "answered": 0,
+        "correct": 0,
+        "unclear": 0,
+        "errors": 0,
+        # Usage/cost fields are filled from provenance (attempt spend) when available.
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "reasoning_tokens": 0,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "cost_total_usd": 0.0,
+        "cost_input_usd": 0.0,
+        "cost_output_usd": 0.0,
+        # Extra: how many attempts were recorded in provenance (useful when rerunning)
+        "attempts_total": 0,
+    }
+    for row in latest_by_id.values():
+        try:
+            parsed = row.get("parsed_answer")
+            parsed_i = int(parsed) if parsed is not None else None
+        except Exception:
+            parsed_i = None
+        if parsed_i == 2 or parsed_i is None:
+            stats["unclear"] += 1
+        else:
+            stats["answered"] += 1
+        if row.get("correct") is True:
+            stats["correct"] += 1
+        if row.get("error"):
+            stats["errors"] += 1
+    return stats
+
+
+def _sum_usage_from_provenance(prov_path: Path) -> Dict[str, Any]:
+    """Sum usage across all attempts in results.provenance.jsonl (represents spend)."""
+    totals: Dict[str, Any] = {
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "reasoning_tokens": 0,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "attempts_total": 0,
+    }
+    if not prov_path.exists():
+        return totals
+    for obj in _jsonl_iter(prov_path):
+        totals["attempts_total"] += 1
+        usage = obj.get("usage") or {}
+        totals["input_tokens"] += _safe_int(usage.get("input_tokens"))
+        totals["output_tokens"] += _safe_int(usage.get("output_tokens"))
+        totals["reasoning_tokens"] += _safe_int(usage.get("reasoning_tokens"))
+        totals["cache_creation_input_tokens"] += _safe_int(usage.get("cache_creation_input_tokens"))
+        totals["cache_read_input_tokens"] += _safe_int(usage.get("cache_read_input_tokens"))
+    return totals
+
+
+def _sum_cost_from_provenance(prov_path: Path, rate_obj: Optional[Dict[str, Any]]) -> Dict[str, float]:
+    """Sum USD cost across all attempts in provenance (represents spend)."""
+    totals: Dict[str, float] = {"cost_total_usd": 0.0, "cost_input_usd": 0.0, "cost_output_usd": 0.0}
+    if not prov_path.exists() or not rate_obj:
+        return totals
+    try:
+        from .pricing.schema import ModelRate
+
+        rate = ModelRate(**rate_obj)
+    except Exception:
+        return totals
+
+    for obj in _jsonl_iter(prov_path):
+        usage = obj.get("usage") or {}
+        try:
+            c = compute_cost_usd(rate, usage)
+            totals["cost_total_usd"] += float(c.get("total_usd") or 0.0)
+            totals["cost_input_usd"] += float(c.get("input_usd") or 0.0)
+            totals["cost_output_usd"] += float(c.get("output_usd") or 0.0)
+        except Exception:
+            continue
+    return totals
 
 
 def _subset_filter(cfg: SuiteConfig, rows: Iterable[Any]) -> Iterator[Any]:
@@ -168,6 +286,8 @@ def run_suite(
     only_maxlen: Optional[Set[int]] = None,
     only_ids: Optional[Set[str]] = None,
     case_limit: Optional[int] = None,
+    rerun_errors: bool = False,
+    rerun_unclear: bool = False,
 ) -> None:
     suite_file = Path(suite_path).resolve()
     root = _find_refactor_root(suite_file)
@@ -243,7 +363,11 @@ def run_suite(
         _ensure_dir(results_path)
         _ensure_dir(prov_path)
         _ensure_dir(summary_path)
-        done_ids = _load_done_ids(results_path) if cfg.resume else set()
+        done_ids = (
+            _load_done_ids(results_path, rerun_errors=rerun_errors, rerun_unclear=rerun_unclear)
+            if cfg.resume
+            else set()
+        )
         rate = None
         if pricing_table is not None:
             try:
@@ -490,7 +614,15 @@ def run_suite(
     # Write summaries
     for oi in out_info:
         summary_path: Path = oi["summary_path"]
-        stats = oi["stats"]
+        results_path: Path = oi["results_path"]
+        prov_path: Path = oi["provenance_path"]
+        latest = _load_latest_results(results_path)
+        stats = _compute_unique_stats_from_latest(latest)
+        # Sum usage/cost from provenance across all attempts (spend); keeps numbers stable across resume.
+        if cfg.outputs.provenance.enabled:
+            stats.update(_sum_usage_from_provenance(prov_path))
+            stats.update(_sum_cost_from_provenance(prov_path, oi.get("pricing_rate")))
+
         acc = (stats["correct"] / stats["total"]) if stats["total"] else 0.0
         manifest_path = summary_path.parent / "run.manifest.json"
         payload = {

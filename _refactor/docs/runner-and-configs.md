@@ -33,6 +33,8 @@ For iterative sweeps and “zoom in” experiments, `scripts/run.py` supports fi
 - `--maxlen 3,4,5`
 - `--ids 123,456,789` (exact row ids)
 - `--case-limit N`: cap rows per case `(maxvarnr,maxlen,mustbehorn)` after filtering (useful for cheap sweeps)
+- `--rerun-errors`: when resuming, re-run rows whose latest recorded result has `error != null`
+- `--rerun-unclear`: when resuming, re-run rows whose latest recorded result has `parsed_answer == 2`
 
 Examples:
 ```

@@ -55,6 +55,16 @@ def main() -> int:
         default=None,
         help="Max rows per case (maxvarnr,maxlen,mustbehorn) after filtering. Useful for quick sweeps.",
     )
+    ap.add_argument(
+        "--rerun-errors",
+        action="store_true",
+        help="When resuming, re-run rows whose latest recorded result has a non-null error field.",
+    )
+    ap.add_argument(
+        "--rerun-unclear",
+        action="store_true",
+        help="When resuming, re-run rows whose latest recorded result has parsed_answer==2 (unclear).",
+    )
     ap.add_argument("--preflight", action="store_true", help="Print selected targets + pricing info before running")
     ap.add_argument("--preflight-only", action="store_true", help="Print preflight info and exit (no run)")
     ap.add_argument("--estimate-cost", action="store_true", help="Estimate an upper bound USD cost (heuristic)")
@@ -71,6 +81,8 @@ def main() -> int:
     maxlen = parse_int_set_spec(args.maxlen) if args.maxlen else None
     ids = parse_str_set_spec(args.ids) if args.ids else None
     case_limit = int(args.case_limit) if args.case_limit is not None else None
+    rerun_errors = bool(args.rerun_errors)
+    rerun_unclear = bool(args.rerun_unclear)
 
     resume = None
     if args.resume:
@@ -138,6 +150,8 @@ def main() -> int:
         only_maxlen=maxlen,
         only_ids=ids,
         case_limit=case_limit,
+        rerun_errors=rerun_errors,
+        rerun_unclear=rerun_unclear,
     )
     return 0
 
