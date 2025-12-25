@@ -22,6 +22,17 @@ def _iter_jsonl(path: Path):
                 continue
 
 
+def _latest_rows_by_id(path: Path) -> Dict[str, Any]:
+    """Return the latest JSONL row per `id` from an append-only results file."""
+    latest: Dict[str, Any] = {}
+    for row in _iter_jsonl(path):
+        rid = row.get("id")
+        if rid is None:
+            continue
+        latest[str(rid)] = row
+    return latest
+
+
 def aggregate_runs(*, runs_dir: str, run_id: str) -> Dict[str, Any]:
     """Aggregate `_refactor/runs/<suite>/<run_id>/...` results into one JSON blob."""
     runs = Path(runs_dir)
@@ -78,7 +89,9 @@ def aggregate_runs(*, runs_dir: str, run_id: str) -> Dict[str, Any]:
             results_file = summary_file.parent / "results.jsonl"
             breakdown = defaultdict(lambda: {"total": 0, "correct": 0})
             if results_file.exists():
-                for row in _iter_jsonl(results_file):
+                # Results files are append-only and re-runs create additional rows.
+                # For analysis we want the latest attempt per id.
+                for row in _latest_rows_by_id(results_file).values():
                     meta = row.get("meta") or {}
                     maxvars = meta.get("maxvars")
                     maxlen = meta.get("maxlen")
