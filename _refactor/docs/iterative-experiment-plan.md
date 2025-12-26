@@ -264,6 +264,17 @@ python3 scripts/generate_dashboard.py \
   --output reports/horn_ex_only_len5_vars10_50_case10.dashboard.html
 ```
 
+---
+
+### Run management utilities (optional but recommended)
+If you’re juggling many parallel runs, these helpers can keep everything consistent and easy to browse:
+
+- `scripts/manage_runs.py active`: list active `scripts/run.py` processes
+- `scripts/manage_runs.py stop --yes`: stop active runs (SIGINT → SIGTERM → SIGKILL)
+- `scripts/manage_runs.py index`: create a **non-destructive** by-run view under `runs_by_run_view/<run_id>/<suite_name>` (symlinks)
+- `scripts/manage_runs.py migrate --yes`: **move** `runs/<suite>/<run_id>` into `runs_by_run/<run_id>/<suite>` and leave a symlink behind so legacy paths keep working
+- `scripts/manage_runs.py queue ... --max-parallel 3`: run a list of suite×len jobs with a global concurrency cap until each is complete
+
 Where the reasoning trace is stored:
 - For each leaf run:
   - `runs/<suite>/<run>/<provider>/<model>/<thinking_mode>/results.provenance.jsonl`
