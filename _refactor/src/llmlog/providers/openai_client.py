@@ -19,6 +19,7 @@ def chat_completion(
     temperature: float = 0.0,
     seed: Optional[int] = None,
     thinking: Optional[Dict[str, Any]] = None,
+    poll: bool = True,
 ) -> Tuple[str, Dict[str, Any], Optional[str]]:
     secrets = load_secrets()
     key = get_provider_key(secrets, "openai")
@@ -251,7 +252,7 @@ def chat_completion(
 
         # If the response is running in background, poll until completion.
         resp_top = data.get("response") or data
-        if use_background and isinstance(resp_top, dict):
+        if use_background and isinstance(resp_top, dict) and poll:
             status = str(resp_top.get("status") or "").lower()
             resp_id = resp_top.get("id") or data.get("id")
             if status and status not in ("completed", "failed", "cancelled") and resp_id:

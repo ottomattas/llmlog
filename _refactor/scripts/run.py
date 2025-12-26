@@ -27,6 +27,11 @@ def main() -> int:
     ap.add_argument("--out-root", default=None, help="Override output root directory (defaults to _refactor/)")
     ap.add_argument("--limit", type=int, default=None, help="Limit number of processed problems")
     ap.add_argument("--dry-run", action="store_true", help="Render prompts but do not call providers")
+    ap.add_argument(
+        "--submit-only",
+        action="store_true",
+        help="Submit background OpenAI Responses and record resp_id, without polling for completion (collect later).",
+    )
     ap.add_argument("--resume", action="store_true", help="Resume if results files already exist")
     ap.add_argument("--no-resume", action="store_true", help="Disable resume even if suite enables it")
     ap.add_argument("--lockstep", action="store_true", help="Run targets in lockstep per-problem")
@@ -152,6 +157,7 @@ def main() -> int:
         output_root=args.out_root,
         limit=args.limit,
         dry_run=args.dry_run,
+        submit_only=bool(args.submit_only),
         only_providers=only,
         resume=resume,
         lockstep=lockstep,

@@ -275,6 +275,27 @@ If you’re juggling many parallel runs, these helpers can keep everything consi
 - `scripts/manage_runs.py migrate --yes`: **move** `runs/<suite>/<run_id>` into `runs_by_run/<run_id>/<suite>` and leave a symlink behind so legacy paths keep working
 - `scripts/manage_runs.py queue ... --max-parallel 3`: run a list of suite×len jobs with a global concurrency cap until each is complete
 
+---
+
+### Async mode (submit now, collect later) — OpenAI Responses
+For long-running reasoning calls where you don’t need the answer immediately, you can decouple *submission* from *collection*:
+
+- Submit background Responses without polling:
+```
+python3 scripts/run.py --suite <suite.yaml> --run <run_id> \
+  --maxvars 10,20,30,40,50 --maxlen 3 --case-limit 10 \
+  --resume --lockstep --submit-only
+```
+This writes rows with `openai_response_id` into `results.jsonl` (parsed answer is left empty/pending).
+
+- Collect completed Responses later (batch or watch mode):
+```
+python3 scripts/collect_openai_submissions.py --runs-dir runs
+python3 scripts/collect_openai_submissions.py --runs-dir runs --watch-seconds 60
+```
+Collection fetches `GET /v1/responses/{resp_id}` and appends final rows into `results.jsonl` /
+`results.provenance.jsonl`, updating `results.summary.json` when present.
+
 Where the reasoning trace is stored:
 - For each leaf run:
   - `runs/<suite>/<run>/<provider>/<model>/<thinking_mode>/results.provenance.jsonl`

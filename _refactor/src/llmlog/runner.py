@@ -130,6 +130,7 @@ def _compute_unique_stats_from_latest(latest_by_id: Dict[str, Dict[str, Any]]) -
         "answered": 0,
         "correct": 0,
         "unclear": 0,
+        "pending": 0,
         "errors": 0,
         # Usage/cost fields are filled from provenance (attempt spend) when available.
         "input_tokens": 0,
@@ -144,6 +145,11 @@ def _compute_unique_stats_from_latest(latest_by_id: Dict[str, Dict[str, Any]]) -
         "attempts_total": 0,
     }
     for row in latest_by_id.values():
+        # Async submit-only mode: treat rows with an OpenAI response id but no parsed answer
+        # as pending (not unclear).
+        if row.get("openai_response_id") and row.get("parsed_answer") is None and not row.get("error"):
+            stats["pending"] += 1
+            continue
         try:
             parsed = row.get("parsed_answer")
             parsed_i = int(parsed) if parsed is not None else None
@@ -279,6 +285,7 @@ def run_suite(
     output_root: Optional[str] = None,
     limit: Optional[int] = None,
     dry_run: bool = False,
+    submit_only: bool = False,
     only_providers: Optional[List[str]] = None,
     resume: Optional[bool] = None,
     lockstep: Optional[bool] = None,
@@ -293,6 +300,9 @@ def run_suite(
     root = _find_refactor_root(suite_file)
     out_root = Path(output_root).resolve() if output_root else root
     cfg = resolve_suite(str(suite_file))
+
+    if submit_only and dry_run:
+        raise ValueError("--submit-only cannot be combined with --dry-run")
 
     if limit is not None:
         cfg.dataset.limit_rows = int(limit)
@@ -403,6 +413,27 @@ def run_suite(
     yes_tokens = cfg.parse.yes_tokens
     no_tokens = cfg.parse.no_tokens
 
+    def _extract_openai_response_id(raw: Any) -> Optional[str]:
+        try:
+            if isinstance(raw, dict):
+                if isinstance(raw.get("response"), dict) and raw["response"].get("id"):
+                    return str(raw["response"]["id"])
+                if raw.get("id"):
+                    return str(raw["id"])
+        except Exception:
+            pass
+        return None
+
+    def _extract_openai_status(raw: Any) -> Optional[str]:
+        try:
+            if isinstance(raw, dict):
+                obj = raw.get("response") if isinstance(raw.get("response"), dict) else raw
+                st = obj.get("status") if isinstance(obj, dict) else None
+                return str(st) if st else None
+        except Exception:
+            pass
+        return None
+
     def call_one(target: Dict[str, Any], prompt: str, sysprompt: Optional[str]) -> Dict[str, Any]:
         attempts = 0
         err_msg: Optional[str] = None
@@ -422,6 +453,7 @@ def run_suite(
                     temperature=float(target.get("temperature") or 0.0),
                     seed=target.get("seed"),
                     thinking=target.get("thinking"),
+                    poll=(not submit_only),
                 )
                 dur_ms = int((time.time() - start) * 1000)
                 text = res.get("text") or ""
@@ -529,13 +561,25 @@ def run_suite(
                 dur_ms = resp["timing_ms"]
                 attempts = resp["attempts"]
 
-            parsed = _parse_answer(ans_fmt, text, yes_tokens=yes_tokens, no_tokens=no_tokens)
+            # In submit-only mode we only enqueue background work and store the provider response id.
+            # Parsing happens later in a collector step.
+            if submit_only and not err:
+                parsed = None
+            else:
+                parsed = _parse_answer(ans_fmt, text, yes_tokens=yes_tokens, no_tokens=no_tokens)
             correct = None
-            if exp is not None and parsed in (0, 1):
-                correct = parsed == exp
+            if exp is not None:
+                try:
+                    if parsed in (0, 1):
+                        correct = parsed == exp
+                except Exception:
+                    pass
 
             # Provider-resolved model id (best-effort). Useful when using aliases.
             model_resolved = meta.get("model") if isinstance(meta, dict) else None
+            raw_resp = meta.get("raw_response") if isinstance(meta, dict) else None
+            openai_response_id = _extract_openai_response_id(raw_resp) if (t.get("provider") == "openai") else None
+            openai_response_status = _extract_openai_status(raw_resp) if (t.get("provider") == "openai") else None
 
             # Minimal results row
             result_row: Dict[str, Any] = {
@@ -552,6 +596,8 @@ def run_suite(
                 "parsed_answer": parsed,
                 "correct": correct,
                 "error": err,
+                "openai_response_id": openai_response_id,
+                "openai_response_status": openai_response_status,
             }
 
             # Provenance row (optional)

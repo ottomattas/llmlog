@@ -18,6 +18,7 @@ def run_chat(
     temperature: float = 0.0,
     seed: Optional[int] = None,
     thinking: Optional[Dict[str, Any]] = None,
+    poll: bool = True,
 ) -> Dict[str, Any]:
     """Run a single prompt against a provider/model and return normalized metadata.
 
@@ -65,6 +66,7 @@ def run_chat(
             temperature=temperature,
             seed=seed,
             thinking=thinking,
+            poll=poll,
         )
         norm = normalize_meta("openai", model, meta)
         return {"text": text, "thinking_text": thinking_text, **norm}
