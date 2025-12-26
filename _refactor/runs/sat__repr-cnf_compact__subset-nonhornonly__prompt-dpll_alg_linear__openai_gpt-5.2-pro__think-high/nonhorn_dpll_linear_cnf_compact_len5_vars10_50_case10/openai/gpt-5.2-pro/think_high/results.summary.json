@@ -1,0 +1,45 @@
+{
+  "suite": "sat__repr-cnf_compact__subset-nonhornonly__prompt-dpll_alg_linear__openai_gpt-5.2-pro__think-high",
+  "run": "nonhorn_dpll_linear_cnf_compact_len5_vars10_50_case10",
+  "provider": "openai",
+  "model": "gpt-5.2-pro",
+  "thinking_mode": "think_high",
+  "dataset_selection": {
+    "only_maxvars": [
+      10,
+      20,
+      30,
+      40,
+      50
+    ],
+    "only_maxlen": [
+      5
+    ],
+    "only_ids": null,
+    "case_limit": 10
+  },
+  "pricing_table": "configs/pricing/openai_2025-12-18.yaml",
+  "pricing_rate": {
+    "provider": "openai",
+    "model_prefix": "gpt-5.2",
+    "input_per_million_usd": 1.75,
+    "output_per_million_usd": 14.0
+  },
+  "stats": {
+    "total": 50,
+    "answered": 0,
+    "correct": 0,
+    "unclear": 50,
+    "errors": 50,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "reasoning_tokens": 0,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "cost_total_usd": 0.0,
+    "cost_input_usd": 0.0,
+    "cost_output_usd": 0.0,
+    "attempts_total": 50
+  },
+  "accuracy": 0.0
+}
