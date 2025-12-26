@@ -300,6 +300,10 @@ def chat_completion(
             "finish_reason": finish_reason,
             "usage": usage,
         }
+        # In submit-only mode (poll=False), we intentionally return no visible text.
+        # The caller should record `raw_response.id` (resp_id) and collect later.
+        if use_background and not poll:
+            return "", meta, thinking_text
         return (text_out or str(data)), meta, thinking_text
 
     # Some Responses API deployments reject seed; try it only for non-GPT-5 by default.

@@ -607,7 +607,7 @@ def run_suite(
                 "representation": rep.value,
                 "answer_format": ans_fmt.value,
                 "prompt": prompt_text if cfg.outputs.provenance.include_prompt else None,
-                "completion_text": text,
+                "completion_text": (None if (submit_only and not err) else text),
                 "thinking_text": thinking_text if cfg.outputs.provenance.include_thinking_text else None,
                 "finish_reason": meta.get("finish_reason"),
                 "usage": meta.get("usage") if cfg.outputs.provenance.include_usage else None,
