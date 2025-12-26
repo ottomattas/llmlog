@@ -12,6 +12,13 @@ rates:
     input_per_million_usd: 1.75
     output_per_million_usd: 14.0
 
+  # NOTE: gpt-5.2-pro is priced differently than gpt-5.2 (do not rely on prefix match).
+  # Keep this as an exact match so it always overrides the gpt-5.2 prefix row below.
+  - provider: openai
+    model: gpt-5.2-pro
+    input_per_million_usd: 21.0
+    output_per_million_usd: 168.0
+
   # Prefix match to cover closely related variants (e.g., gpt-5.2-pro) when priced the same.
   # If OpenAI splits pricing by variant, add an explicit `model:` row for the variant.
   - provider: openai

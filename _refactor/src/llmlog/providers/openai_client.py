@@ -37,7 +37,8 @@ def chat_completion(
     http_timeout_s = _env_int("LLMLOG_OPENAI_HTTP_TIMEOUT_S", 300)
     # Background responses are polled; some GPT-5 tasks can legitimately take >5 minutes,
     # so allow a separate (typically larger) polling deadline.
-    poll_timeout_s = _env_int("LLMLOG_OPENAI_POLL_TIMEOUT_S", 900)
+    # Default to 1 hour so we don't drop results on long-running reasoning calls.
+    poll_timeout_s = _env_int("LLMLOG_OPENAI_POLL_TIMEOUT_S", 3600)
 
     def _request_json(method: str, path: str, payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Make a JSON request to the OpenAI API with best-effort retries.
@@ -161,6 +162,9 @@ def chat_completion(
         "model": model,
         "input": input_blocks,
     }
+    # Ensure the response can be retrieved later by `resp_id` (useful for recovery after timeouts).
+    # See: https://platform.openai.com/docs/api-reference/responses
+    payload["store"] = True
     if max_tokens is not None:
         payload["max_output_tokens"] = int(max_tokens)
 
@@ -263,6 +267,11 @@ def chat_completion(
                     snap_obj = snap.get("response") or snap
                     st = str((snap_obj or {}).get("status") or "").lower()
                     if st == "completed":
+                        data = snap
+                        break
+                    if st == "incomplete":
+                        # Terminal but truncated (commonly max_output_tokens). Still return the response
+                        # so callers can log partial output + usage instead of timing out.
                         data = snap
                         break
                     if st in ("failed", "cancelled"):
