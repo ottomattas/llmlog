@@ -24,6 +24,23 @@ runs/<suite>/<run>/<provider>/<model>/<thinking_mode>/
 - `results.summary.json`: per-target aggregate stats (accuracy, token totals, etc).
 - `run.manifest.json`: reproducibility snapshot (suite inputs + target config + matched pricing rate row).
 
+### Async submission fields (OpenAI)
+When running with `scripts/run.py --submit-only`, rows may include:
+- `openai_response_id`: the `resp_...` id returned by the Responses API (used for later collection)
+- `openai_response_status`: last observed server status (best-effort)
+- `parsed_answer`: empty/pending until collection
+
+To collect pending responses later:
+```
+python scripts/collect_openai_submissions.py --runs-dir runs
+python scripts/collect_openai_submissions.py --runs-dir runs --watch-seconds 60
+```
+
+To recover previously timed-out responses (when an id is present):
+```
+python scripts/recover_openai_timeouts.py
+```
+
 ### Export for inspection
 To export a provenance file into prompt/response text files:
 ```

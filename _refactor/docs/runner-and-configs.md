@@ -22,6 +22,23 @@ From `_refactor/`:
 python scripts/run.py --suite configs/suites/sat__repr-cnf_compact__subset-mixed.yaml --run demo-001 --limit 10 --resume --lockstep
 ```
 
+### Async mode (submit now, collect later) for OpenAI Responses
+For long-running reasoning calls where you don't need results immediately, you can submit work in background
+and collect later (useful to avoid client-side timeouts and keep better accounting of `resp_id`s).
+
+Submit without polling (writes `openai_response_id` and leaves `parsed_answer` empty/pending):
+```
+python scripts/run.py --suite <suite.yaml> --run <run_id> \
+  --maxvars 10,20,30,40,50 --maxlen 3 --case-limit 10 \
+  --resume --lockstep --submit-only
+```
+
+Collect completed Responses later (batch or watch):
+```
+python scripts/collect_openai_submissions.py --runs-dir runs
+python scripts/collect_openai_submissions.py --runs-dir runs --watch-seconds 60
+```
+
 You can also do a preflight (targets + pricing + rough cost upper bound) without running:
 ```
 python scripts/run.py --suite configs/suites/sat__repr-cnf_compact__subset-mixed.yaml --preflight-only --estimate-cost
@@ -79,6 +96,8 @@ The runner parses model output into `parsed_answer`:
 - `0`: YES / CONTRADICTION / UNSAT
 - `1`: NO / SATISFIABLE / SAT
 - `2`: unclear
+
+In `--submit-only` mode, `parsed_answer` is left empty/pending until collection.
 
 Correctness is computed against the dataset `issatisfiable` flag (`0` unsat, `1` sat) when available.
 
