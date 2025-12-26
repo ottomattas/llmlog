@@ -119,15 +119,24 @@ def main() -> int:
 
         if args.estimate_cost or args.max_estimated_total_usd is not None:
             est = estimate_cost_upper_bound_usd(preflight=pf)
-            print(f"[preflight] estimated_total_usd_upper_bound~{est['estimated_total_usd']:.6f}")
             missing = [x for x in est["per_target"] if x.get("estimated_total_usd") is None]
+            if est.get("estimated_total_usd") is None:
+                print("[preflight] estimated_total_usd_upper_bound~(unknown; incomplete estimate)")
+                print(
+                    f"[preflight] estimated_total_usd_partial_known~{float(est.get('estimated_total_usd_partial') or 0.0):.6f}"
+                )
+            else:
+                print(f"[preflight] estimated_total_usd_upper_bound~{float(est['estimated_total_usd']):.6f}")
             if missing:
-                print("[preflight] WARNING: missing pricing rates for some targets; estimate is incomplete.")
+                print("[preflight] WARNING: estimate is incomplete for some targets:")
+                for x in missing:
+                    note = x.get("note") or "missing estimate"
+                    print(f"[preflight] - {x.get('provider')}/{x.get('model')}/{x.get('thinking_mode')}: {note}")
 
             if args.max_estimated_total_usd is not None:
-                if missing:
+                if missing or est.get("estimated_total_usd") is None:
                     raise SystemExit(
-                        "Cannot enforce --max-estimated-total-usd because pricing is missing for some targets."
+                        "Cannot enforce --max-estimated-total-usd because the estimate is incomplete (missing pricing and/or max_tokens)."
                     )
                 if float(est["estimated_total_usd"]) > float(args.max_estimated_total_usd):
                     raise SystemExit(

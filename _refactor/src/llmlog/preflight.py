@@ -192,11 +192,13 @@ def estimate_cost_upper_bound_usd(
     - per-target max_tokens as worst-case output tokens
     - pricing_rate (must include per-million input/output USD rates)
     """
-    total = 0.0
+    total_known = 0.0
+    complete = True
     per_target: List[Dict[str, Any]] = []
     for t in preflight.targets:
         rate = t.pricing_rate
         if not rate:
+            complete = False
             per_target.append(
                 {
                     "provider": t.provider,
@@ -207,12 +209,24 @@ def estimate_cost_upper_bound_usd(
                 }
             )
             continue
+        if t.max_tokens is None:
+            complete = False
+            per_target.append(
+                {
+                    "provider": t.provider,
+                    "model": t.model,
+                    "thinking_mode": t.thinking_mode,
+                    "estimated_total_usd": None,
+                    "note": "missing max_tokens (max_output_tokens); cannot upper-bound output cost",
+                }
+            )
+            continue
         in_rate = float(rate.get("input_per_million_usd") or 0.0)
         out_rate = float(rate.get("output_per_million_usd") or 0.0)
         in_tokens = preflight.avg_prompt_tokens_est * preflight.run_rows
-        out_tokens = (int(t.max_tokens) if t.max_tokens is not None else 0) * preflight.run_rows
+        out_tokens = int(t.max_tokens) * preflight.run_rows
         est = (in_tokens / 1_000_000.0) * in_rate + (out_tokens / 1_000_000.0) * out_rate
-        total += est
+        total_known += est
         per_target.append(
             {
                 "provider": t.provider,
@@ -223,6 +237,12 @@ def estimate_cost_upper_bound_usd(
                 "estimated_total_usd": est,
             }
         )
-    return {"estimated_total_usd": total, "per_target": per_target}
+    return {
+        # If any target can't be estimated, avoid returning a misleading low number.
+        "estimated_total_usd": (total_known if complete else None),
+        "estimated_total_usd_partial": total_known,
+        "is_complete": complete,
+        "per_target": per_target,
+    }
 
 

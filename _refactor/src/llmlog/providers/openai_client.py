@@ -3,6 +3,7 @@ from __future__ import annotations
 import http.client
 import hashlib
 import json
+import os
 import random
 import time
 from typing import Any, Dict, List, Optional, Tuple
@@ -27,7 +28,16 @@ def chat_completion(
     host = "api.openai.com"
     # Avoid indefinite hangs on connect/read. This is intentionally generous to allow
     # long-running reasoning responses while still guaranteeing eventual progress.
-    timeout_s = 300
+    def _env_int(name: str, default: int) -> int:
+        try:
+            return int(os.getenv(name, str(default)))
+        except Exception:
+            return int(default)
+
+    http_timeout_s = _env_int("LLMLOG_OPENAI_HTTP_TIMEOUT_S", 300)
+    # Background responses are polled; some GPT-5 tasks can legitimately take >5 minutes,
+    # so allow a separate (typically larger) polling deadline.
+    poll_timeout_s = _env_int("LLMLOG_OPENAI_POLL_TIMEOUT_S", 900)
 
     def _request_json(method: str, path: str, payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Make a JSON request to the OpenAI API with best-effort retries.
@@ -62,11 +72,14 @@ def chat_completion(
             headers["Idempotency-Key"] = idem_key
 
         retryable_status = {429, 500, 502, 503, 504}
+        # Some Responses polling edge-cases can transiently return 404 right after creation.
+        if method_u == "GET":
+            retryable_status.add(404)
         max_attempts = 4
 
         last_exc: Optional[BaseException] = None
         for attempt in range(1, max_attempts + 1):
-            conn = http.client.HTTPSConnection(host, timeout=timeout_s)
+            conn = http.client.HTTPSConnection(host, timeout=http_timeout_s)
             try:
                 conn.request(method_u, path, body=body if method_u == "POST" else None, headers=headers)
                 response = conn.getresponse()
@@ -76,9 +89,22 @@ def chat_completion(
                     # Extract message when possible
                     try:
                         data = json.loads(raw)
-                        message = data.get("error", {}).get("message", "")
+                        err_obj = data.get("error", {}) if isinstance(data, dict) else {}
+                        message = err_obj.get("message", "") if isinstance(err_obj, dict) else ""
+                        err_code = err_obj.get("code") if isinstance(err_obj, dict) else None
                     except Exception:
                         message = raw.decode("utf-8", errors="ignore")
+                        err_code = None
+
+                    # If quota is exhausted, retries are pointless and just waste time.
+                    msg_l = (message or "").lower()
+                    if response.status == 429 and (
+                        (isinstance(err_code, str) and err_code == "insufficient_quota")
+                        or ("exceeded your current quota" in msg_l)
+                        or ("check your plan and billing details" in msg_l)
+                    ):
+                        code_s = f" [{err_code}]" if err_code else ""
+                        raise RuntimeError(f"OpenAI error {response.status} {response.reason}{code_s}: {message}")
 
                     # Retry transient server-side failures and rate limits.
                     if response.status in retryable_status and attempt < max_attempts:
@@ -94,7 +120,8 @@ def chat_completion(
                         time.sleep(sleep_s)
                         continue
 
-                    raise RuntimeError(f"OpenAI error {response.status} {response.reason}: {message}")
+                    code_s = f" [{err_code}]" if err_code else ""
+                    raise RuntimeError(f"OpenAI error {response.status} {response.reason}{code_s}: {message}")
 
                 try:
                     return json.loads(raw)
@@ -224,11 +251,14 @@ def chat_completion(
             status = str(resp_top.get("status") or "").lower()
             resp_id = resp_top.get("id") or data.get("id")
             if status and status not in ("completed", "failed", "cancelled") and resp_id:
-                deadline = time.time() + float(timeout_s)
+                deadline = time.time() + float(poll_timeout_s)
                 poll_s = 1.0
                 while True:
                     if time.time() >= deadline:
-                        raise TimeoutError(f"OpenAI response {resp_id} did not complete within {timeout_s}s")
+                        raise TimeoutError(
+                            f"OpenAI response {resp_id} did not complete within {poll_timeout_s}s "
+                            f"(set LLMLOG_OPENAI_POLL_TIMEOUT_S to increase)"
+                        )
                     snap = _request_json("GET", f"/v1/responses/{resp_id}")
                     snap_obj = snap.get("response") or snap
                     st = str((snap_obj or {}).get("status") or "").lower()
