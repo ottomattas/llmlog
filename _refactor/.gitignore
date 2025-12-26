@@ -2,6 +2,10 @@
 runs/
 reports/
 
+# Canonical run organization helpers (optional)
+runs_by_run/
+runs_by_run_view/
+
 # Local secrets (recommended: use env vars instead)
 secrets.json
 
