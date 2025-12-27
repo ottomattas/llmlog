@@ -97,19 +97,31 @@ def find_active_queue_procs() -> List[ActiveProc]:
     return sorted(procs, key=lambda p: p.pid)
 
 
-def cmd_active(_: argparse.Namespace) -> int:
-    procs = find_active_run_procs()
-    if not procs:
+def cmd_active(args: argparse.Namespace) -> int:
+    run_procs = find_active_run_procs()
+    queue_procs = find_active_queue_procs()
+
+    if not run_procs and not queue_procs:
         print("No active `scripts/run.py` processes found.")
         return 0
-    for p in procs:
-        extra = []
-        if p.suite:
-            extra.append(f"suite={p.suite}")
-        if p.run:
-            extra.append(f"run={p.run}")
-        extra_s = (" " + " ".join(extra)) if extra else ""
-        print(f"{p.pid}{extra_s}\n  {p.command}")
+
+    if queue_procs:
+        print(f"Active queue processes: {len(queue_procs)}")
+        for p in queue_procs:
+            print(f"{p.pid}\n  {p.command}")
+        if run_procs:
+            print("")
+
+    if run_procs:
+        for p in run_procs:
+            extra = []
+            if p.suite:
+                extra.append(f"suite={p.suite}")
+            if p.run:
+                extra.append(f"run={p.run}")
+            extra_s = (" " + " ".join(extra)) if extra else ""
+            print(f"{p.pid}{extra_s}\n  {p.command}")
+
     return 0
 
 
@@ -124,9 +136,17 @@ def _pid_exists(pid: int) -> bool:
 def cmd_stop(args: argparse.Namespace) -> int:
     if not args.yes:
         raise SystemExit("Refusing to stop processes without --yes")
-    queue_procs = find_active_queue_procs() if bool(getattr(args, "include_queue", False)) else []
+    include_queue = bool(getattr(args, "include_queue", False))
+    queue_procs_all = find_active_queue_procs()
+    queue_procs = queue_procs_all if include_queue else []
     run_procs = find_active_run_procs()
     if not queue_procs and not run_procs:
+        if queue_procs_all and not include_queue:
+            print(
+                f"Active queue processes detected ({[p.pid for p in queue_procs_all]}). "
+                "Re-run with `--include-queue` to stop them."
+            )
+            return 0
         print("No active `scripts/run.py` processes found.")
         return 0
 
