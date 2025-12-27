@@ -318,6 +318,23 @@ python3 scripts/collect_openai_submissions.py --runs-dir runs --watch-seconds 60
 Collection fetches `GET /v1/responses/{resp_id}` and appends final rows into `results.jsonl` /
 `results.provenance.jsonl`, updating `results.summary.json` when present.
 
+#### Batch size / spend control (recommended)
+If a single model call is expensive (e.g. ~€1–€2/request), submit in **small batches**.
+One simple pattern is “10 at a time”:
+
+```
+python3 scripts/run.py --suite <suite.yaml> --run <run_id> \
+  --maxvars 10,20,30,40,50 --maxlen 3 --case-limit 10 \
+  --resume --lockstep --rerun-errors --submit-only --limit 10
+```
+
+Then keep a collector running:
+```
+python3 scripts/collect_openai_submissions.py --runs-dir runs --watch-seconds 60
+```
+
+Repeat until you reach your desired coverage/spend.
+
 Where the reasoning trace is stored:
 - For each leaf run:
   - `runs/<suite>/<run>/<provider>/<model>/<thinking_mode>/results.provenance.jsonl`

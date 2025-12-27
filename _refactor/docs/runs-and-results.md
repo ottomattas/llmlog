@@ -40,6 +40,11 @@ python scripts/collect_openai_submissions.py --runs-dir runs
 python scripts/collect_openai_submissions.py --runs-dir runs --watch-seconds 60
 ```
 
+#### Recommended collector settings (practical)
+- **Default**: use watch mode (`--watch-seconds 60`) so you don't hammer the API.
+- **Large batches**: consider increasing the interval (e.g. 120s) and using `--limit` to cap how many pending ids are collected per run file per pass.
+- **Small batches / “wait until done”**: use `--poll` only when you explicitly want the collector to block until each id is terminal.
+
 To recover previously timed-out responses (when an id is present):
 ```
 python scripts/recover_openai_timeouts.py

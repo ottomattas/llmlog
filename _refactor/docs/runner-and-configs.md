@@ -32,6 +32,44 @@ Notes:
 - This is **not** “streaming mode”: we currently do not stream tokens in the runner CLI. (Streaming is mainly useful for interactive chat UX.)
 - For OpenAI `gpt-5*`, requests are submitted with server-side `background=true`; “live mode” simply means we poll until terminal.
 
+#### Choosing live vs async (practical guidance)
+- **Prefer live mode** when:
+  - you want the answer immediately (interactive debugging)
+  - you expect most calls to finish quickly
+  - you want parsing/correctness computed in the same step
+- **Prefer async mode** when:
+  - calls can take minutes (hard problems / high reasoning)
+  - you want “submit fast, come back later”
+  - you want to reduce client-side timeouts / terminal babysitting
+
+#### Budget-aware batching (recommended for expensive requests)
+If a single request costs ~€1–€2, avoid submitting hundreds at once.
+A simple pattern is to submit **small batches** and collect between batches.
+
+Use `--limit N` to cap how many new problems are processed per invocation.
+With `--resume`, already-submitted ids (pending or completed) will not be resubmitted.
+
+Example “batch of 10” submit-only pass:
+```
+python scripts/run.py --suite <suite.yaml> --run <run_id> \
+  --maxvars 10,20,30,40,50 --maxlen 3 --case-limit 10 \
+  --resume --lockstep --rerun-errors --submit-only --limit 10
+```
+
+Then run the collector in watch mode:
+```
+python scripts/collect_openai_submissions.py --runs-dir runs --watch-seconds 60
+```
+
+Repeat the submit-only command until you no longer have remaining errors (or until you hit your spend cap).
+
+#### Collector polling strategy (how aggressively to fetch)
+The collector supports two approaches:
+- **Watch (recommended)**: `--watch-seconds 30/60/120` repeatedly checks and appends results when they become terminal.
+  - This avoids long blocking on a single response id and keeps API traffic predictable.
+- **Per-id poll (`--poll`)**: waits for each response id to become terminal (can block a long time per item).
+  - Use only for small numbers of ids when you explicitly want to wait until completion.
+
 ### Async mode (submit now, collect later) for OpenAI Responses
 For long-running reasoning calls where you don't need results immediately, you can submit work in background
 and collect later (useful to avoid client-side timeouts and keep better accounting of `resp_id`s).
