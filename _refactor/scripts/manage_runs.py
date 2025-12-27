@@ -342,9 +342,10 @@ def cmd_queue(args: argparse.Namespace) -> int:
             pass
 
     # Read latest-per-id status for a results file
-    def latest_status(path: Path) -> Tuple[int, int, int]:
+    def latest_status(path: Path) -> Tuple[int, int, int, int]:
+        """Return (n_latest, errors_total, errors_quota, unclear_total)."""
         if not path.exists():
-            return (0, 0, 0)
+            return (0, 0, 0, 0)
         latest: Dict[str, Dict[str, object]] = {}
         for line in path.read_text().splitlines():
             if not line.strip():
@@ -357,9 +358,18 @@ def cmd_queue(args: argparse.Namespace) -> int:
             if rid is None:
                 continue
             latest[str(rid)] = row
-        errors = sum(1 for r in latest.values() if r.get("error"))
+        errors = 0
+        quota_errors = 0
+        for r in latest.values():
+            err = r.get("error")
+            if not err:
+                continue
+            errors += 1
+            e = str(err).lower()
+            if "insufficient_quota" in e or "exceeded your current quota" in e:
+                quota_errors += 1
         unclear = sum(1 for r in latest.values() if (r.get("parsed_answer") == 2 and not r.get("error")))
-        return (len(latest), errors, unclear)
+        return (len(latest), errors, quota_errors, unclear)
 
     def is_done(job: Dict[str, object]) -> bool:
         suite_name = str(job["suite_name"])
@@ -371,15 +381,41 @@ def cmd_queue(args: argparse.Namespace) -> int:
             model = getattr(t, "model")
             thinking_mode = getattr(t, "thinking_mode")
             res_path = refactor_root / "runs" / suite_name / run_id / provider / model / thinking_mode / "results.jsonl"
-            n, e, u = latest_status(res_path)
+            n, e, _qe, u = latest_status(res_path)
             if not (n >= expected and e == 0 and u == 0):
                 ok = False
         return ok
+
+    def is_quota_blocked(job: Dict[str, object]) -> bool:
+        """True when the job can't make progress because remaining errors are only insufficient_quota."""
+        suite_name = str(job["suite_name"])
+        run_id = str(job["run_id"])
+        expected = int(job["expected_rows"])
+        any_errors = False
+        all_errors_are_quota = True
+        any_unclear = False
+        all_attempted = True
+        for t in job["targets"]:  # type: ignore[assignment]
+            provider = getattr(t, "provider")
+            model = getattr(t, "model")
+            thinking_mode = getattr(t, "thinking_mode")
+            res_path = refactor_root / "runs" / suite_name / run_id / provider / model / thinking_mode / "results.jsonl"
+            n, e, qe, u = latest_status(res_path)
+            if n < expected:
+                all_attempted = False
+            if u > 0:
+                any_unclear = True
+            if e > 0:
+                any_errors = True
+                if qe != e:
+                    all_errors_are_quota = False
+        return bool(all_attempted and any_errors and all_errors_are_quota and (not any_unclear))
 
     # Round-robin scheduler: keep at most N processes running at once.
     max_par = int(args.max_parallel)
     pending = jobs[:]
     active: List[Tuple[subprocess.Popen[bytes], Dict[str, object]]] = []
+    blocked_quota: List[Dict[str, object]] = []
 
     def start_job(job: Dict[str, object]) -> subprocess.Popen[bytes]:
         suite_path = str(job["suite_path"])
@@ -448,6 +484,12 @@ def cmd_queue(args: argparse.Namespace) -> int:
             if is_done(job):
                 print(f"[done] run={job['run_id']} suite={job['suite_name']}")
             else:
+                if bool(getattr(args, "stop_on_quota", True)) and is_quota_blocked(job):
+                    print(
+                        f"[blocked] run={job['run_id']} suite={job['suite_name']} (insufficient_quota; not retrying)"
+                    )
+                    blocked_quota.append(job)
+                    continue
                 print(f"[retry] run={job['run_id']} suite={job['suite_name']} (not complete yet)")
                 time.sleep(float(args.backoff_seconds))
                 pending.append(job)
@@ -461,6 +503,12 @@ def cmd_queue(args: argparse.Namespace) -> int:
         # safety valve
         if args.max_passes is not None and passes >= int(args.max_passes):
             raise SystemExit(f"Reached --max-passes={args.max_passes} without finishing all jobs.")
+
+    if blocked_quota:
+        print(f"Queue finished with {len(blocked_quota)} job(s) blocked by insufficient_quota.")
+        for j in blocked_quota:
+            print(f"- run={j['run_id']} suite={j['suite_name']}")
+        return 2
 
     print("All queued runs complete.")
     return 0
@@ -559,9 +607,25 @@ def main() -> int:
     sp.add_argument("--maxvars", default="10,20,30,40,50", help="Maxvars spec for filters (same syntax as scripts/run.py)")
     sp.add_argument("--case-limit", type=int, default=10, help="Rows per case")
     sp.add_argument("--max-parallel", type=int, default=3, help="Max concurrent runs")
-    sp.add_argument("--rerun-errors", action="store_true", default=True, help="Pass --rerun-errors (default on)")
-    sp.add_argument("--rerun-unclear", action="store_true", default=True, help="Pass --rerun-unclear (default on)")
+    sp.add_argument(
+        "--rerun-errors",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Whether to re-run rows whose latest result has error != null (default: on).",
+    )
+    sp.add_argument(
+        "--rerun-unclear",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Whether to re-run rows whose latest parsed_answer == 2 (default: on).",
+    )
     sp.add_argument("--backoff-seconds", type=float, default=2.0, help="Sleep between retry passes for a job")
+    sp.add_argument(
+        "--stop-on-quota",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="If a job is blocked only by insufficient_quota errors, do not retry it (default: on).",
+    )
     sp.add_argument("--max-passes", type=int, default=None, help="Safety cap: max completed process passes before aborting")
     sp.add_argument("--stop-active", action="store_true", help="Stop active runs before starting the queue (requires --yes)")
     sp.add_argument("--stop-grace-seconds", type=float, default=2.0, help="Grace period for --stop-active")
