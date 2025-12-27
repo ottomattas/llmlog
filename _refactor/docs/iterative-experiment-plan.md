@@ -269,11 +269,33 @@ python3 scripts/generate_dashboard.py \
 ### Run management utilities (optional but recommended)
 If you’re juggling many parallel runs, these helpers can keep everything consistent and easy to browse:
 
-- `scripts/manage_runs.py active`: list active `scripts/run.py` processes
-- `scripts/manage_runs.py stop --yes`: stop active runs (SIGINT → SIGTERM → SIGKILL)
+- `scripts/manage_runs.py active`: list active `scripts/run.py` processes (**and** any active `manage_runs.py queue` schedulers)
+- `scripts/manage_runs.py stop --yes`: stop active `scripts/run.py` processes (SIGINT → SIGTERM → SIGKILL)
+- `scripts/manage_runs.py stop --yes --include-queue`: stop both **queue schedulers** and their spawned `scripts/run.py` workers
 - `scripts/manage_runs.py index`: create a **non-destructive** by-run view under `runs_by_run_view/<run_id>/<suite_name>` (symlinks)
 - `scripts/manage_runs.py migrate --yes`: **move** `runs/<suite>/<run_id>` into `runs_by_run/<run_id>/<suite>` and leave a symlink behind so legacy paths keep working
 - `scripts/manage_runs.py queue ... --max-parallel 3`: run a list of suite×len jobs with a global concurrency cap until each is complete
+
+#### Important note: why “new processes keep popping up”
+If you run `scripts/manage_runs.py queue`, it acts as a **scheduler**:
+- it spawns `scripts/run.py ...`
+- if you stop only the `scripts/run.py` workers, the scheduler may immediately respawn them
+
+To stop cleanly:
+- stop the terminal running `queue` (Ctrl+C), **or**
+- from another terminal run:
+```
+python3 scripts/manage_runs.py stop --yes --include-queue
+```
+
+#### Quota thrash safety (queue)
+When OpenAI returns `insufficient_quota`, `queue` can’t make progress. Newer `queue` behavior:
+- it will mark such jobs as `[blocked] ... insufficient_quota; not retrying` (instead of looping forever)
+- you can disable this with `--no-stop-on-quota`
+
+Also note `queue` supports boolean toggles:
+- `--rerun-errors / --no-rerun-errors`
+- `--rerun-unclear / --no-rerun-unclear`
 
 ---
 

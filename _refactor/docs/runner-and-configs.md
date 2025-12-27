@@ -22,6 +22,16 @@ From `_refactor/`:
 python scripts/run.py --suite configs/suites/sat__repr-cnf_compact__subset-mixed.yaml --run demo-001 --limit 10 --resume --lockstep
 ```
 
+### Two execution modes (recommended naming)
+In this repo it helps to think of two modes:
+
+- **Live mode (blocking / poll-until-done)**: `scripts/run.py` waits for the model response and parses it immediately.
+- **Async mode (submit now, collect later)**: `scripts/run.py --submit-only` submits work and records response ids, then a separate collector fetches results later.
+
+Notes:
+- This is **not** “streaming mode”: we currently do not stream tokens in the runner CLI. (Streaming is mainly useful for interactive chat UX.)
+- For OpenAI `gpt-5*`, requests are submitted with server-side `background=true`; “live mode” simply means we poll until terminal.
+
 ### Async mode (submit now, collect later) for OpenAI Responses
 For long-running reasoning calls where you don't need results immediately, you can submit work in background
 and collect later (useful to avoid client-side timeouts and keep better accounting of `resp_id`s).

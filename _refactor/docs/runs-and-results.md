@@ -30,6 +30,10 @@ When running with `scripts/run.py --submit-only`, rows may include:
 - `openai_response_status`: last observed server status (best-effort)
 - `parsed_answer`: empty/pending until collection
 
+Suggested terminology used in this repo:
+- **Live mode**: blocking/polling run (default `scripts/run.py` behavior)
+- **Async mode**: submit-only + collector (`--submit-only` + `scripts/collect_openai_submissions.py`)
+
 To collect pending responses later:
 ```
 python scripts/collect_openai_submissions.py --runs-dir runs
