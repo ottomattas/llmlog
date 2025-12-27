@@ -71,6 +71,32 @@ def find_active_run_procs() -> List[ActiveProc]:
     return sorted(procs, key=lambda p: p.pid)
 
 
+def find_active_queue_procs() -> List[ActiveProc]:
+    """Find active `scripts/manage_runs.py queue ...` processes."""
+    procs: List[ActiveProc] = []
+    for ln in _ps_lines():
+        parts = ln.strip().split(maxsplit=1)
+        if not parts:
+            continue
+        try:
+            pid = int(parts[0])
+        except Exception:
+            continue
+        cmd = parts[1] if len(parts) > 1 else ""
+        # Match common invocations:
+        # - python scripts/manage_runs.py queue ...
+        # - python /abs/path/manage_runs.py queue ...
+        if "manage_runs.py" not in cmd:
+            continue
+        if " queue" not in cmd:
+            continue
+        if "manage_runs.py queue" not in cmd:
+            # Keep matching conservative to avoid false positives (e.g. other subcommands).
+            continue
+        procs.append(ActiveProc(pid=pid, command=cmd, suite=None, run=None))
+    return sorted(procs, key=lambda p: p.pid)
+
+
 def cmd_active(_: argparse.Namespace) -> int:
     procs = find_active_run_procs()
     if not procs:
@@ -98,13 +124,21 @@ def _pid_exists(pid: int) -> bool:
 def cmd_stop(args: argparse.Namespace) -> int:
     if not args.yes:
         raise SystemExit("Refusing to stop processes without --yes")
-    procs = find_active_run_procs()
-    if not procs:
+    queue_procs = find_active_queue_procs() if bool(getattr(args, "include_queue", False)) else []
+    run_procs = find_active_run_procs()
+    if not queue_procs and not run_procs:
         print("No active `scripts/run.py` processes found.")
         return 0
 
-    pids = [p.pid for p in procs]
-    print(f"Stopping {len(pids)} run process(es): {pids}")
+    # Stop queues first to prevent them from respawning run processes while we stop.
+    queue_pids = [p.pid for p in queue_procs]
+    run_pids = [p.pid for p in run_procs]
+    pids = queue_pids + run_pids
+
+    if queue_pids:
+        print(f"Stopping {len(queue_pids)} queue process(es): {queue_pids}")
+    if run_pids:
+        print(f"Stopping {len(run_pids)} run process(es): {run_pids}")
 
     # Try SIGINT first (graceful, like Ctrl+C)
     for pid in pids:
@@ -577,6 +611,11 @@ def main() -> int:
 
     sp = sub.add_parser("stop", help="Stop active `scripts/run.py` processes (SIGINT -> SIGTERM -> SIGKILL).")
     sp.add_argument("--yes", action="store_true", help="Required to actually stop processes.")
+    sp.add_argument(
+        "--include-queue",
+        action="store_true",
+        help="Also stop active `scripts/manage_runs.py queue ...` processes (prevents respawning).",
+    )
     sp.add_argument("--grace-seconds", type=float, default=2.0, help="Seconds to wait after SIGINT.")
     sp.set_defaults(func=cmd_stop)
 
