@@ -347,15 +347,10 @@ def run_suite(
         rows_iter = filter_only_maxlen(rows_iter, only_maxlen)
     if case_limit is not None:
         rows_iter = limit_per_case(rows_iter, int(case_limit))
-    if effective_limit_rows is not None:
-        n = int(effective_limit_rows)
-        rows: List[Any] = []
-        for i, r in enumerate(rows_iter):
-            if i >= n:
-                break
-            rows.append(r)
-    else:
-        rows = list(rows_iter)
+    # Note: we intentionally do NOT apply `effective_limit_rows` here.
+    # `--limit` is defined as "max processed problems" and should be applied AFTER skipping done ids,
+    # so repeated `--resume --limit N` invocations can progress through the dataset in batches.
+    rows = list(rows_iter)
     if not rows:
         raise ValueError("No dataset rows selected after applying filters")
 
@@ -484,8 +479,16 @@ def run_suite(
         }
 
     # Execution
+    processed_rows = 0
     for row in rows:
         rid_row = str(getattr(row, "id", ""))
+        # Skip rows that are already done for all targets (common when resuming).
+        if all(rid_row in oi["done_ids"] for oi in out_info):
+            continue
+        # Apply `--limit` as a cap on *processed problems* (after skipping done ids).
+        if effective_limit_rows is not None and processed_rows >= int(effective_limit_rows):
+            break
+        processed_rows += 1
         exp = _expected_answer(row)
 
         # Render prompt once per row based on suite policy
@@ -718,7 +721,7 @@ def run_suite(
                 "submit_only": bool(submit_only),
                 "poll": (not submit_only),
                 "limit": (int(limit) if limit is not None else None),
-                "effective_dataset_limit_rows": (int(effective_limit_rows) if effective_limit_rows is not None else None),
+                "effective_limit_rows": (int(effective_limit_rows) if effective_limit_rows is not None else None),
                 "resume": bool(cfg.resume),
                 "lockstep": bool(cfg.concurrency.lockstep),
                 "rerun_errors": bool(rerun_errors),

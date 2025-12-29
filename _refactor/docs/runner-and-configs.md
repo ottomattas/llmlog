@@ -51,6 +51,7 @@ With `--resume`, already-submitted ids (pending or completed) will not be resubm
 
 Notes:
 - `--limit` is an **execution cap** (batch size), not a dataset definition change. It should not change the canonical run metadata.
+- With `--resume`, you can repeat the same `--limit N` command to continue processing the next batch (already-done ids are skipped).
 - For traceability, each runner invocation is appended to `run.invocations.jsonl` inside the per-target run folder.
 
 Example “batch of 10” submit-only pass:
