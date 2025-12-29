@@ -21,25 +21,26 @@
   "pricing_table": "configs/pricing/openai_2025-12-18.yaml",
   "pricing_rate": {
     "provider": "openai",
-    "model_prefix": "gpt-5.2",
-    "input_per_million_usd": 1.75,
-    "output_per_million_usd": 14.0
+    "model": "gpt-5.2-pro",
+    "input_per_million_usd": 21.0,
+    "output_per_million_usd": 168.0
   },
   "stats": {
     "total": 50,
-    "answered": 0,
-    "correct": 0,
-    "unclear": 50,
-    "errors": 50,
-    "input_tokens": 0,
-    "output_tokens": 0,
-    "reasoning_tokens": 0,
+    "answered": 8,
+    "correct": 8,
+    "unclear": 30,
+    "pending": 12,
+    "errors": 30,
+    "input_tokens": 11015,
+    "output_tokens": 96115,
+    "reasoning_tokens": 90506,
     "cache_creation_input_tokens": 0,
     "cache_read_input_tokens": 0,
-    "cost_total_usd": 0.0,
-    "cost_input_usd": 0.0,
-    "cost_output_usd": 0.0,
-    "attempts_total": 50
+    "cost_total_usd": 16.378635,
+    "cost_input_usd": 0.231315,
+    "cost_output_usd": 16.14732,
+    "attempts_total": 82
   },
-  "accuracy": 0.0
+  "accuracy": 0.16
 }
