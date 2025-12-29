@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import json
+import os
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterable, Iterator, List, Optional, Set, Tuple
 
@@ -304,8 +306,7 @@ def run_suite(
     if submit_only and dry_run:
         raise ValueError("--submit-only cannot be combined with --dry-run")
 
-    if limit is not None:
-        cfg.dataset.limit_rows = int(limit)
+    effective_limit_rows: Optional[int] = int(limit) if limit is not None else cfg.dataset.limit_rows
     if resume is not None:
         cfg.resume = bool(resume)
     if lockstep is not None:
@@ -346,8 +347,8 @@ def run_suite(
         rows_iter = filter_only_maxlen(rows_iter, only_maxlen)
     if case_limit is not None:
         rows_iter = limit_per_case(rows_iter, int(case_limit))
-    if cfg.dataset.limit_rows is not None:
-        n = int(cfg.dataset.limit_rows)
+    if effective_limit_rows is not None:
+        n = int(effective_limit_rows)
         rows: List[Any] = []
         for i, r in enumerate(rows_iter):
             if i >= n:
@@ -700,6 +701,36 @@ def run_suite(
                 "pricing_rate": oi.get("pricing_rate"),
             }
             manifest_path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n")
+        except Exception:
+            pass
+
+        # Operational trace: append a per-invocation record (helps when terminal history is lost).
+        try:
+            inv_path = summary_path.parent / "run.invocations.jsonl"
+            inv = {
+                "ts": datetime.now(timezone.utc).isoformat(),
+                "suite_path": str(suite_file),
+                "suite": cfg.name,
+                "run": rid,
+                "provider": oi["target"].get("provider"),
+                "model": oi["target"].get("model"),
+                "thinking_mode": _thinking_mode_label(oi["target"]),
+                "submit_only": bool(submit_only),
+                "poll": (not submit_only),
+                "limit": (int(limit) if limit is not None else None),
+                "effective_dataset_limit_rows": (int(effective_limit_rows) if effective_limit_rows is not None else None),
+                "resume": bool(cfg.resume),
+                "lockstep": bool(cfg.concurrency.lockstep),
+                "rerun_errors": bool(rerun_errors),
+                "rerun_unclear": bool(rerun_unclear),
+                "dataset_selection": dataset_selection,
+                "env": {
+                    "LLMLOG_OPENAI_HTTP_TIMEOUT_S": os.environ.get("LLMLOG_OPENAI_HTTP_TIMEOUT_S"),
+                    "LLMLOG_OPENAI_POLL_TIMEOUT_S": os.environ.get("LLMLOG_OPENAI_POLL_TIMEOUT_S"),
+                },
+            }
+            with inv_path.open("a", encoding="utf-8") as f:
+                f.write(json.dumps(inv, ensure_ascii=False) + "\n")
         except Exception:
             pass
 

@@ -17,3 +17,6 @@ build/
 .ipynb_checkpoints/
 .vscode/
 .idea/
+
+# Local scratch notes (keep working tree clean)
+notes.txt

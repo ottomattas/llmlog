@@ -49,6 +49,10 @@ A simple pattern is to submit **small batches** and collect between batches.
 Use `--limit N` to cap how many new problems are processed per invocation.
 With `--resume`, already-submitted ids (pending or completed) will not be resubmitted.
 
+Notes:
+- `--limit` is an **execution cap** (batch size), not a dataset definition change. It should not change the canonical run metadata.
+- For traceability, each runner invocation is appended to `run.invocations.jsonl` inside the per-target run folder.
+
 Example “batch of 10” submit-only pass:
 ```
 python scripts/run.py --suite <suite.yaml> --run <run_id> \

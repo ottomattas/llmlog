@@ -1,6 +1,7 @@
 ## Runs and results (artifacts policy)
 
-Run artifacts are written under `_refactor/runs/` and are **not meant to be committed**.
+Run artifacts are written under `_refactor/runs/` and are **gitignored by default** (to keep the repo light).
+For traceability (e.g. paper snapshots / reproducible audits), you can optionally force-add selected run folders and commit them.
 
 ### Git ignore policy
 `_refactor/.gitignore` ignores:
@@ -16,6 +17,7 @@ runs/<suite>/<run>/<provider>/<model>/<thinking_mode>/
   results.provenance.jsonl
   results.summary.json
   run.manifest.json
+  run.invocations.jsonl
 ```
 
 ### File semantics
@@ -23,6 +25,7 @@ runs/<suite>/<run>/<provider>/<model>/<thinking_mode>/
 - `results.provenance.jsonl`: optional full provenance (prompt, raw response, usage, timing, thinking text when available).
 - `results.summary.json`: per-target aggregate stats (accuracy, token totals, etc).
 - `run.manifest.json`: reproducibility snapshot (suite inputs + target config + matched pricing rate row).
+- `run.invocations.jsonl`: append-only operational log of each `scripts/run.py` invocation that wrote into this folder (timestamp, submit-only vs live, `--limit`, etc). Useful when terminal history is lost.
 
 ### Async submission fields (OpenAI)
 When running with `scripts/run.py --submit-only`, rows may include:

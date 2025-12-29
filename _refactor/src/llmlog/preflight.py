@@ -102,8 +102,7 @@ def preflight_suite(
     suite_file = Path(suite_path).resolve()
     root = _find_refactor_root(suite_file)
     cfg = resolve_suite(str(suite_file))
-    if limit is not None:
-        cfg.dataset.limit_rows = int(limit)
+    effective_limit_rows: Optional[int] = int(limit) if limit is not None else cfg.dataset.limit_rows
 
     targets = [t.model_dump(mode="json", exclude_none=True) for t in (cfg.targets or [])]
     if only_providers:
@@ -148,7 +147,7 @@ def preflight_suite(
             sample_prompts.append(
                 render_prompt(problem=row, template_path=str(tmpl_path), representation=rep.value, variables=vars_)
             )
-        if cfg.dataset.limit_rows is not None and run_rows >= int(cfg.dataset.limit_rows):
+        if effective_limit_rows is not None and run_rows >= int(effective_limit_rows):
             break
 
     avg_prompt_tokens_est = 0
