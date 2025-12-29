@@ -6,6 +6,7 @@ import http.client
 import json
 import random
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterator, Optional, Tuple
 
@@ -309,7 +310,16 @@ def collect_for_results_file(
             err = f"OpenAI response {resp_id} status={st} error={err_obj}"
 
         model_resolved = norm.get("model")
+        submit_ts = row.get("ts")
+        invocation_id = row.get("invocation_id")
+        openai_created_at = resp_obj.get("created_at")
+        openai_completed_at = resp_obj.get("completed_at")
         result_row = {
+            "ts": datetime.now(timezone.utc).isoformat(),
+            "submit_ts": submit_ts,
+            "invocation_id": invocation_id,
+            "openai_created_at": openai_created_at,
+            "openai_completed_at": openai_completed_at,
             "id": row.get("id"),
             "meta": row.get("meta"),
             "provider": row.get("provider"),

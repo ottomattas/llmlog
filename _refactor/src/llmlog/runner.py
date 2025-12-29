@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import time
+import uuid
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
@@ -313,6 +314,8 @@ def run_suite(
         cfg.concurrency.lockstep = bool(lockstep)
 
     rid = run_id or time.strftime("%Y%m%d-%H%M%S")
+    invocation_id = uuid.uuid4().hex
+    invocation_ts_start = datetime.now(timezone.utc).isoformat()
 
     targets: List[Dict[str, Any]] = [t.model_dump(mode="json", exclude_none=True) for t in (cfg.targets or [])]
     if only_providers:
@@ -388,6 +391,9 @@ def run_suite(
                 "summary_path": summary_path,
                 "pricing_rate": rate.model_dump(mode="json", exclude_none=True) if rate is not None else None,
                 "done_ids": done_ids,
+                # Per-invocation trace fields populated during execution (useful for cost/timing audits).
+                "written_ids": [],
+                "openai_response_ids": {},
                 "stats": {
                     "total": 0,
                     "answered": 0,
@@ -587,6 +593,8 @@ def run_suite(
 
             # Minimal results row
             result_row: Dict[str, Any] = {
+                "ts": datetime.now(timezone.utc).isoformat(),
+                "invocation_id": invocation_id,
                 "id": getattr(row, "id", None),
                 "meta": {
                     "maxvars": getattr(row, "maxvarnr", None),
@@ -619,6 +627,14 @@ def run_suite(
                 "timing_ms": dur_ms,
                 "attempts": attempts,
             }
+
+            # Record per-invocation mappings for later audits (which ids / resp_ids were submitted).
+            try:
+                oi["written_ids"].append(rid_row)
+                if submit_only and not err and t.get("provider") == "openai" and openai_response_id:
+                    oi["openai_response_ids"][rid_row] = openai_response_id
+            except Exception:
+                pass
 
             with results_path.open("a") as f:
                 f.write(json.dumps(result_row, ensure_ascii=False) + "\n")
@@ -710,8 +726,11 @@ def run_suite(
         # Operational trace: append a per-invocation record (helps when terminal history is lost).
         try:
             inv_path = summary_path.parent / "run.invocations.jsonl"
+            ts_end = datetime.now(timezone.utc).isoformat()
             inv = {
-                "ts": datetime.now(timezone.utc).isoformat(),
+                "ts": ts_end,
+                "invocation_id": invocation_id,
+                "ts_start": invocation_ts_start,
                 "suite_path": str(suite_file),
                 "suite": cfg.name,
                 "run": rid,
@@ -727,6 +746,8 @@ def run_suite(
                 "rerun_errors": bool(rerun_errors),
                 "rerun_unclear": bool(rerun_unclear),
                 "dataset_selection": dataset_selection,
+                "written_ids": oi.get("written_ids") or [],
+                "openai_response_ids": oi.get("openai_response_ids") or {},
                 "env": {
                     "LLMLOG_OPENAI_HTTP_TIMEOUT_S": os.environ.get("LLMLOG_OPENAI_HTTP_TIMEOUT_S"),
                     "LLMLOG_OPENAI_POLL_TIMEOUT_S": os.environ.get("LLMLOG_OPENAI_POLL_TIMEOUT_S"),
