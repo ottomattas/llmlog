@@ -19,4 +19,4 @@ build/
 .idea/
 
 # Local scratch notes (keep working tree clean)
-notes.txt
+/notes.txt
