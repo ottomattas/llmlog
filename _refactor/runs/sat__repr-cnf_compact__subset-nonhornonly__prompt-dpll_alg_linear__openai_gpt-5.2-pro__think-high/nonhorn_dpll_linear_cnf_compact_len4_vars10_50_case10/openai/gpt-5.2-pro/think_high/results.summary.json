@@ -16,9 +16,6 @@
       4
     ],
     "only_ids": [
-      "11254",
-      "11257",
-      "11259",
       "14253"
     ],
     "case_limit": 10
@@ -34,9 +31,9 @@
     "total": 50,
     "answered": 49,
     "correct": 28,
-    "unclear": 1,
-    "pending": 0,
-    "errors": 1,
+    "unclear": 0,
+    "pending": 1,
+    "errors": 0,
     "input_tokens": 241641,
     "output_tokens": 1136054,
     "reasoning_tokens": 1118530,
@@ -45,7 +42,7 @@
     "cost_total_usd": 195.93153300000003,
     "cost_input_usd": 5.0744609999999994,
     "cost_output_usd": 190.85707199999996,
-    "attempts_total": 170
+    "attempts_total": 171
   },
   "accuracy": 0.56
 }

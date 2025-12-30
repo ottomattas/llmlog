@@ -19,9 +19,6 @@
       4
     ],
     "only_ids": [
-      "11254",
-      "11257",
-      "11259",
       "14253"
     ],
     "case_limit": 10
@@ -40,7 +37,7 @@
     "model": "gpt-5.2-pro",
     "temperature": 0.0,
     "seed": 1234,
-    "max_tokens": 30000,
+    "max_tokens": 45000,
     "thinking": {
       "enabled": true,
       "effort": "high"
