@@ -38,9 +38,9 @@
     "total": 50,
     "answered": 42,
     "correct": 33,
-    "unclear": 8,
-    "pending": 0,
-    "errors": 8,
+    "unclear": 0,
+    "pending": 8,
+    "errors": 0,
     "input_tokens": 124986,
     "output_tokens": 1106684,
     "reasoning_tokens": 1091006,
@@ -49,7 +49,7 @@
     "cost_total_usd": 188.54761800000003,
     "cost_input_usd": 2.6247060000000006,
     "cost_output_usd": 185.92291200000003,
-    "attempts_total": 747
+    "attempts_total": 755
   },
   "accuracy": 0.66
 }
