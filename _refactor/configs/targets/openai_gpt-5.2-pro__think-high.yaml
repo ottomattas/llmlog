@@ -11,7 +11,9 @@ targets:
     model: gpt-5.2-pro
     temperature: 0
     seed: 1234
-    max_tokens: 30000
+    # Temporary one-time increase to recover a small set of max_output_tokens incomplete runs.
+    # After the recovery run, revert this back to 30000 for baseline comparability.
+    max_tokens: 45000
     thinking:
       enabled: true
       effort: high
