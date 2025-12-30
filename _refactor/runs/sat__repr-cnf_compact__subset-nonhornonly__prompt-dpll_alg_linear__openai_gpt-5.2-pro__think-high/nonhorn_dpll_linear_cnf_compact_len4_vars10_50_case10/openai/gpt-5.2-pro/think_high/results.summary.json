@@ -15,7 +15,20 @@
     "only_maxlen": [
       4
     ],
-    "only_ids": null,
+    "only_ids": [
+      "11259",
+      "11260",
+      "14251",
+      "14252",
+      "14253",
+      "14254",
+      "14255",
+      "14256",
+      "14257",
+      "14258",
+      "14259",
+      "14260"
+    ],
     "case_limit": 10
   },
   "pricing_table": "configs/pricing/openai_2025-12-18.yaml",
@@ -29,9 +42,9 @@
     "total": 50,
     "answered": 34,
     "correct": 21,
-    "unclear": 14,
-    "pending": 2,
-    "errors": 14,
+    "unclear": 4,
+    "pending": 12,
+    "errors": 4,
     "input_tokens": 130825,
     "output_tokens": 748814,
     "reasoning_tokens": 736699,
@@ -40,7 +53,7 @@
     "cost_total_usd": 128.548077,
     "cost_input_usd": 2.747325,
     "cost_output_usd": 125.80075200000003,
-    "attempts_total": 132
+    "attempts_total": 142
   },
   "accuracy": 0.42
 }
