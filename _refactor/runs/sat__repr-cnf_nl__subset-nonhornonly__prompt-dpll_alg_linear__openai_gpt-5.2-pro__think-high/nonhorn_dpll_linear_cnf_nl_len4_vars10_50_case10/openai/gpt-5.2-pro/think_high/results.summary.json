@@ -16,16 +16,7 @@
       4
     ],
     "only_ids": [
-      "14251",
-      "14252",
-      "14253",
-      "14254",
-      "14255",
-      "14256",
-      "14257",
-      "14258",
-      "14259",
-      "14260"
+      "2255"
     ],
     "case_limit": 10
   },
@@ -40,9 +31,9 @@
     "total": 50,
     "answered": 49,
     "correct": 28,
-    "unclear": 1,
-    "pending": 0,
-    "errors": 1,
+    "unclear": 0,
+    "pending": 1,
+    "errors": 0,
     "input_tokens": 259918,
     "output_tokens": 818231,
     "reasoning_tokens": 804934,
@@ -51,7 +42,7 @@
     "cost_total_usd": 142.92108600000003,
     "cost_input_usd": 5.458278000000001,
     "cost_output_usd": 137.46280800000002,
-    "attempts_total": 154
+    "attempts_total": 155
   },
   "accuracy": 0.56
 }
