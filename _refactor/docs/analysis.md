@@ -24,7 +24,7 @@ python scripts/generate_dashboard.py --input reports/<run_id>.aggregated.json --
 For an interactive, single-file dashboard that:
 - scans `runs/**/results.jsonl` (latest-per-id semantics)
 - uses `run.manifest.json` (when present) to label **representation** and **prompt mechanism**
-- renders a vars→accuracy plot with client-side filters (maxlen, prompt mechanism, horn vs nonhorn, etc.)
+- renders a vars→accuracy plot with client-side filters (maxlen, prompt mechanism, horn vs nonhorn, SAT vs UNSAT, etc.)
 
 Run:
 ```
@@ -38,6 +38,14 @@ The combined dashboard offers multiple accuracy denominators:
 - **nonpending**: `correct / (total - pending)` (includes **errors**)
 
 This lets you track model performance during async collection without pending items dragging accuracy down.
+
+#### Comparing lines on the same graph (multi-series)
+To draw multiple lines for easy comparisons, use **Chart view** in the dashboard:
+- **Aggregate (single line)**: one line for your current filter selection.
+- **Split by …**: draws one line per category (e.g. prompt mechanism, horn/nonhorn, SAT/UNSAT, maxlen, run).
+
+When a split view is selected, a legend appears with checkboxes to toggle which series are shown (plus **All/None**).
+Enable **Show overall baseline** to add an “Overall” line for quick “category vs average” comparisons (e.g. SAT/UNSAT vs overall).
 
 #### Keeping it up to date while runs are ongoing
 Run the OpenAI collector in watch mode:

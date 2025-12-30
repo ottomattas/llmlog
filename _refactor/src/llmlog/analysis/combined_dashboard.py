@@ -216,8 +216,8 @@ def build_combined_dashboard_data(
     include = {s for s in (include_suites or []) if s}
     exclude = {s for s in (exclude_suites or []) if s}
 
-    groups: Dict[Tuple[str, str, str, str, str, str, int, int, int], GroupCounts] = {}
-    # key: (suite, run, provider, model, thinking_mode, prompt_label, representation, maxlen, horn, maxvars)
+    groups: Dict[Tuple[str, str, str, str, str, str, str, int, int, int, int], GroupCounts] = {}
+    # key: (suite, run, provider, model, thinking_mode, prompt_label, representation, maxlen, horn, satflag, maxvars)
 
     files = _scan_results_files(runs)
     for results_path in files:
@@ -235,9 +235,12 @@ def build_combined_dashboard_data(
             maxvars = _safe_int(meta.get("maxvars"))
             maxlen = _safe_int(meta.get("maxlen"))
             horn = _safe_int(meta.get("horn"))
-            if maxvars is None or maxlen is None or horn is None:
+            satflag = _safe_int(meta.get("satflag"))
+            if maxvars is None or maxlen is None or horn is None or satflag is None:
                 continue
             if horn not in (0, 1):
+                continue
+            if satflag not in (0, 1):
                 continue
 
             key = (
@@ -250,6 +253,7 @@ def build_combined_dashboard_data(
                 info.representation,
                 maxlen,
                 horn,
+                satflag,
                 maxvars,
             )
             c = groups.get(key)
@@ -272,9 +276,21 @@ def build_combined_dashboard_data(
                 c.correct += 1
 
     group_rows: List[Dict[str, Any]] = []
-    for (suite, run, provider, model, thinking_mode, prompt_label, representation, maxlen, horn, maxvars), counts in sorted(
+    for (
+        suite,
+        run,
+        provider,
+        model,
+        thinking_mode,
+        prompt_label,
+        representation,
+        maxlen,
+        horn,
+        satflag,
+        maxvars,
+    ), counts in sorted(
         groups.items(),
-        key=lambda kv: (kv[0][0], kv[0][1], kv[0][6], kv[0][5], kv[0][7], kv[0][8], kv[0][9]),
+        key=lambda kv: (kv[0][0], kv[0][1], kv[0][6], kv[0][5], kv[0][7], kv[0][8], kv[0][9], kv[0][10]),
     ):
         group_rows.append(
             {
@@ -287,6 +303,7 @@ def build_combined_dashboard_data(
                 "representation": representation,
                 "maxlen": maxlen,
                 "horn": horn,
+                "satflag": satflag,
                 "maxvars": maxvars,
                 "counts": counts.to_json(),
             }
@@ -308,6 +325,7 @@ def build_combined_dashboard_data(
     reps = uniq([r["representation"] for r in group_rows])
     prompts = uniq([r["prompt_label"] for r in group_rows])
     lens = sorted({int(r["maxlen"]) for r in group_rows})
+    satflags = sorted({int(r["satflag"]) for r in group_rows})
 
     payload: Dict[str, Any] = {
         "metadata": {
@@ -322,6 +340,7 @@ def build_combined_dashboard_data(
             "representations": reps,
             "prompt_labels": prompts,
             "maxlens": lens,
+            "satflags": satflags,
         },
         "groups": group_rows,
     }
@@ -355,8 +374,18 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
     table{{width:100%;border-collapse:collapse;font-size:13px}}
     th,td{{border:1px solid #e2e8f0;padding:8px;text-align:left}}
     th{{background:#f7fafc;position:sticky;top:0}}
+    select:disabled{{background:#edf2f7;color:#718096}}
     .mono{{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}}
     .pill{{display:inline-block;padding:2px 8px;border-radius:999px;background:#edf2f7;color:#2d3748;font-size:12px}}
+    button{{padding:6px 8px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#2d3748;font-size:12px;cursor:pointer}}
+    button:hover{{background:#f7fafc}}
+    .legend-row{{display:flex;gap:12px;flex-wrap:wrap;align-items:center}}
+    .legend{{display:flex;gap:10px;flex-wrap:wrap;align-items:center}}
+    .legend-item{{display:flex;gap:6px;align-items:center;font-size:12px;color:#2d3748;user-select:none}}
+    .swatch{{width:12px;height:12px;border-radius:3px;border:1px solid rgba(0,0,0,.15)}}
+    .legend-actions{{display:flex;gap:8px;align-items:center}}
+    .checkrow{{display:flex;gap:8px;align-items:center;font-size:12px;color:#2d3748}}
+    .checkrow input{{margin:0}}
   </style>
 </head>
 <body>
@@ -393,6 +422,14 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
         </select>
       </div>
       <div>
+        <label>SAT vs UNSAT</label>
+        <select id="fSat">
+          <option value="all">All</option>
+          <option value="1">SAT</option>
+          <option value="0">UNSAT</option>
+        </select>
+      </div>
+      <div>
         <label>Maxlen</label>
         <select id="fLen"></select>
       </div>
@@ -410,6 +447,37 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
 
   <div class="card">
     <h3>Accuracy vs number of vars</h3>
+    <div class="row" style="align-items:flex-end;margin-bottom:10px">
+      <div>
+        <label>Chart view</label>
+        <select id="fView">
+          <option value="aggregate">Aggregate (single line)</option>
+          <option value="prompt">Split by prompt mechanism</option>
+          <option value="representation">Split by representation</option>
+          <option value="horn">Split by horn / nonhorn</option>
+          <option value="sat">Split by SAT / UNSAT</option>
+          <option value="maxlen">Split by maxlen</option>
+          <option value="run">Split by run</option>
+        </select>
+      </div>
+      <div>
+        <label>Baseline</label>
+        <label class="checkrow">
+          <input id="fBaseline" type="checkbox" checked />
+          Show overall baseline
+        </label>
+      </div>
+      <div id="legendPane" style="flex:1;min-width:260px">
+        <label>Series (toggle)</label>
+        <div class="legend-row">
+          <div class="legend" id="legend"></div>
+          <div class="legend-actions">
+            <button id="legendAll" type="button">All</button>
+            <button id="legendNone" type="button">None</button>
+          </div>
+        </div>
+      </div>
+    </div>
     <svg id="chart" viewBox="0 0 980 520" preserveAspectRatio="xMidYMid meet"></svg>
     <div class="muted" style="margin-top:8px">
       Tip: hover points for counts. Accuracy is computed from aggregated counts (not averaging per-run percentages).
@@ -427,6 +495,7 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
             <th>rep</th>
             <th>prompt</th>
             <th>horn</th>
+            <th>sat</th>
             <th>maxlen</th>
             <th>maxvars</th>
             <th>acc</th>
@@ -440,10 +509,47 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
 
   <script>
   const DASH = {data_json};
+  const STATE = {{
+    hiddenSeries: new Set(),
+    lastView: null,
+  }};
+
+  // Tableau-like categorical palette (colorblind-friendly-ish) + stable hashing by series name.
+  const SERIES_COLORS = [
+    "#4e79a7",
+    "#f28e2b",
+    "#e15759",
+    "#76b7b2",
+    "#59a14f",
+    "#edc949",
+    "#af7aa1",
+    "#ff9da7",
+    "#9c755f",
+    "#bab0ab",
+  ];
+
+  function hashString(s) {{
+    let h = 0;
+    for (let i = 0; i < s.length; i++) {{
+      h = ((h * 31) + s.charCodeAt(i)) | 0;
+    }}
+    return Math.abs(h);
+  }}
+
+  function colorForSeries(name) {{
+    if (name === "All") return "#3182ce";
+    const idx = hashString(String(name)) % SERIES_COLORS.length;
+    return SERIES_COLORS[idx];
+  }}
 
   function uniqSorted(arr) {{
     const s = new Set(arr);
-    return Array.from(s).sort();
+    const out = Array.from(s);
+    out.sort((a, b) => {{
+      if (typeof a === "number" && typeof b === "number") return a - b;
+      return String(a).localeCompare(String(b));
+    }});
+    return out;
   }}
 
   function setOptions(selectEl, values, {{allLabel="All", allowAll=true}}={{}}) {{
@@ -469,9 +575,46 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
       rep: document.getElementById("fRep").value,
       prompt: document.getElementById("fPrompt").value,
       horn: document.getElementById("fHorn").value,
+      sat: document.getElementById("fSat").value,
       len: document.getElementById("fLen").value,
       metric: document.getElementById("fMetric").value,
+      view: document.getElementById("fView").value,
+      baseline: document.getElementById("fBaseline").checked,
     }};
+  }}
+
+  function setDisabled(selectId, disabled, forceAll=false) {{
+    const el = document.getElementById(selectId);
+    if (!el) return;
+    el.disabled = !!disabled;
+    if (disabled && forceAll) {{
+      el.value = "all";
+    }}
+  }}
+
+  function applyViewDisables(view) {{
+    // Re-enable everything by default.
+    setDisabled("fRun", false);
+    setDisabled("fRep", false);
+    setDisabled("fPrompt", false);
+    setDisabled("fHorn", false);
+    setDisabled("fSat", false);
+    setDisabled("fLen", false);
+    setDisabled("fBaseline", false);
+
+    // If you want to split by X, the X filter becomes redundant and tends to confuse users
+    // (it collapses the split back to a single series). So we disable it and force "All".
+    if (view === "run") setDisabled("fRun", true, true);
+    if (view === "representation") setDisabled("fRep", true, true);
+    if (view === "prompt") setDisabled("fPrompt", true, true);
+    if (view === "horn") setDisabled("fHorn", true, true);
+    if (view === "sat") setDisabled("fSat", true, true);
+    if (view === "maxlen") setDisabled("fLen", true, true);
+
+    // Baseline is redundant in aggregate view (it would exactly overlap).
+    if (view === "aggregate") {{
+      setDisabled("fBaseline", true, false);
+    }}
   }}
 
   function matches(row, st) {{
@@ -480,31 +623,135 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
     if (st.rep !== "all" && row.representation !== st.rep) return false;
     if (st.prompt !== "all" && row.prompt_label !== st.prompt) return false;
     if (st.horn !== "all" && String(row.horn) !== st.horn) return false;
+    if (st.sat !== "all" && String(row.satflag) !== st.sat) return false;
     if (st.len !== "all" && String(row.maxlen) !== st.len) return false;
     return true;
   }}
 
-  function aggByMaxvars(rows) {{
-    const by = new Map(); // maxvars -> aggregated counts
+  function seriesNameForRow(r, view) {{
+    if (view === "prompt") return String(r.prompt_label || "unknown");
+    if (view === "representation") return String(r.representation || "unknown");
+    if (view === "horn") return (r.horn === 1) ? "horn" : "nonhorn";
+    if (view === "sat") return (r.satflag === 1) ? "SAT" : "UNSAT";
+    if (view === "maxlen") return "len=" + String(r.maxlen);
+    if (view === "run") return String(r.run || "unknown");
+    return "All";
+  }}
+
+  function emptyAgg(maxvars) {{
+    return {{
+      maxvars: maxvars,
+      total: 0, pending: 0, errors: 0, answered: 0, unclear: 0, correct: 0,
+    }};
+  }}
+
+  function addCounts(dst, c) {{
+    dst.total += c.total;
+    dst.pending += c.pending;
+    dst.errors += c.errors;
+    dst.answered += c.answered;
+    dst.unclear += c.unclear;
+    dst.correct += c.correct;
+  }}
+
+  function buildSeries(rows, view, metric) {{
+    // Map(seriesName -> Map(maxvars -> aggCounts))
+    const bySeries = new Map();
     for (const r of rows) {{
+      const s = seriesNameForRow(r, view);
+      if (!bySeries.has(s)) bySeries.set(s, new Map());
+      const byMax = bySeries.get(s);
       const mv = r.maxvars;
-      const c = r.counts;
-      const key = mv;
-      if (!by.has(key)) {{
-        by.set(key, {{
-          maxvars: mv,
-          total: 0, pending: 0, errors: 0, answered: 0, unclear: 0, correct: 0,
-        }});
-      }}
-      const a = by.get(key);
-      a.total += c.total;
-      a.pending += c.pending;
-      a.errors += c.errors;
-      a.answered += c.answered;
-      a.unclear += c.unclear;
-      a.correct += c.correct;
+      if (!byMax.has(mv)) byMax.set(mv, emptyAgg(mv));
+      addCounts(byMax.get(mv), r.counts);
     }}
-    return Array.from(by.values()).sort((a,b) => a.maxvars - b.maxvars);
+
+    const out = [];
+    const seriesNames = Array.from(bySeries.keys()).sort((a,b) => String(a).localeCompare(String(b)));
+    for (const name of seriesNames) {{
+      const byMax = bySeries.get(name);
+      const pts = Array.from(byMax.values())
+        .sort((a,b) => a.maxvars - b.maxvars)
+        .map(a => {{
+          return {{
+            x: a.maxvars,
+            y: accuracyFromAgg(a, metric),
+            ...a,
+          }};
+        }});
+      out.push({{ name: String(name), color: colorForSeries(String(name)), points: pts }});
+    }}
+    return out;
+  }}
+
+  function overallBaselineSeries(rows, metric) {{
+    const s = buildSeries(rows, "aggregate", metric);
+    if (!s || s.length === 0) return null;
+    const b = s[0];
+    return {{
+      name: "Overall",
+      color: "#2d3748",
+      points: b.points || [],
+      dash: true,
+      strokeWidth: 2.5,
+    }};
+  }}
+
+  function renderLegend(seriesNames, view) {{
+    const pane = document.getElementById("legendPane");
+    const legend = document.getElementById("legend");
+    const btnAll = document.getElementById("legendAll");
+    const btnNone = document.getElementById("legendNone");
+
+    // Hide legend for the aggregate view or when there's only one series.
+    if (view === "aggregate" || seriesNames.length <= 1) {{
+      pane.style.display = "none";
+      legend.innerHTML = "";
+      STATE.currentSeriesNames = seriesNames;
+      return;
+    }}
+
+    pane.style.display = "block";
+    legend.innerHTML = "";
+    STATE.currentSeriesNames = seriesNames;
+
+    for (const name of seriesNames) {{
+      const item = document.createElement("label");
+      item.className = "legend-item";
+
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = !STATE.hiddenSeries.has(name);
+      cb.addEventListener("change", () => {{
+        if (cb.checked) {{
+          STATE.hiddenSeries.delete(name);
+        }} else {{
+          STATE.hiddenSeries.add(name);
+        }}
+        refresh();
+      }});
+
+      const sw = document.createElement("span");
+      sw.className = "swatch";
+      sw.style.background = colorForSeries(name);
+
+      const txt = document.createElement("span");
+      txt.textContent = name;
+
+      item.appendChild(cb);
+      item.appendChild(sw);
+      item.appendChild(txt);
+      legend.appendChild(item);
+    }}
+
+    btnAll.onclick = () => {{
+      STATE.hiddenSeries.clear();
+      refresh();
+    }};
+    btnNone.onclick = () => {{
+      for (const n of seriesNames) STATE.hiddenSeries.add(n);
+      refresh();
+    }};
   }}
 
   function accuracyFromAgg(a, metric) {{
@@ -525,7 +772,7 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
     return (x * 100).toFixed(1) + "%";
   }}
 
-  function renderChart(points) {{
+  function renderChart(series) {{
     const svg = document.getElementById("chart");
     svg.innerHTML = "";
 
@@ -534,8 +781,14 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
     const PW = W - M.l - M.r;
     const PH = H - M.t - M.b;
 
-    const xs = points.map(p => p.x);
-    const ys = points.map(p => p.y).filter(y => y !== null);
+    const allPoints = [];
+    for (const s of (series || [])) {{
+      for (const p of (s.points || [])) {{
+        allPoints.push(p);
+      }}
+    }}
+    const xs = allPoints.map(p => p.x);
+    const ys = allPoints.map(p => p.y).filter(y => y !== null);
     if (xs.length === 0 || ys.length === 0) {{
       const t = document.createElementNS("http://www.w3.org/2000/svg","text");
       t.setAttribute("x","20"); t.setAttribute("y","40");
@@ -617,29 +870,50 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
     yl.textContent = "accuracy";
     svg.appendChild(yl);
 
-    // polyline path
-    const pts = points.filter(p => p.y !== null).sort((a,b)=>a.x-b.x);
-    const d = pts.map(p => `${{xScale(p.x)}},${{yScale(p.y)}}`).join(" ");
-    const pl = document.createElementNS("http://www.w3.org/2000/svg","polyline");
-    pl.setAttribute("points", d);
-    pl.setAttribute("fill","none");
-    pl.setAttribute("stroke","#3182ce");
-    pl.setAttribute("stroke-width","2");
-    svg.appendChild(pl);
+    // series lines
+    for (const s of (series || [])) {{
+      const pts = (s.points || []).filter(p => p.y !== null).sort((a,b)=>a.x-b.x);
+      if (pts.length === 0) continue;
 
-    // points + tooltips
-    for (const p of pts) {{
-      const cx = xScale(p.x);
-      const cy = yScale(p.y);
-      const c = document.createElementNS("http://www.w3.org/2000/svg","circle");
-      c.setAttribute("cx", String(cx));
-      c.setAttribute("cy", String(cy));
-      c.setAttribute("r", "5");
-      c.setAttribute("fill", "#2b6cb0");
-      const title = document.createElementNS("http://www.w3.org/2000/svg","title");
-      title.textContent = `maxvars=${{p.x}} acc=${{fmtPct(p.y)}} (correct=${{p.correct}} answered=${{p.answered}} unclear=${{p.unclear}} errors=${{p.errors}} pending=${{p.pending}} total=${{p.total}})`;
-      c.appendChild(title);
-      svg.appendChild(c);
+      const d = pts.map(p => String(xScale(p.x)) + "," + String(yScale(p.y))).join(" ");
+      const pl = document.createElementNS("http://www.w3.org/2000/svg","polyline");
+      pl.setAttribute("points", d);
+      pl.setAttribute("fill","none");
+      pl.setAttribute("stroke", String(s.color || "#3182ce"));
+      pl.setAttribute("stroke-width", String(s.strokeWidth || 2));
+      pl.setAttribute("stroke-linejoin","round");
+      pl.setAttribute("stroke-linecap","round");
+      if (s.dash) {{
+        pl.setAttribute("stroke-dasharray", "7,5");
+      }}
+      svg.appendChild(pl);
+
+      // points + tooltips
+      for (const p of pts) {{
+        const cx = xScale(p.x);
+        const cy = yScale(p.y);
+        const c = document.createElementNS("http://www.w3.org/2000/svg","circle");
+        c.setAttribute("cx", String(cx));
+        c.setAttribute("cy", String(cy));
+        c.setAttribute("r", "4.5");
+        c.setAttribute("fill", String(s.color || "#3182ce"));
+        c.setAttribute("stroke", "#ffffff");
+        c.setAttribute("stroke-width", "1.5");
+        const title = document.createElementNS("http://www.w3.org/2000/svg","title");
+        title.textContent =
+          String(s.name || "series") +
+          " · maxvars=" + String(p.x) +
+          " acc=" + fmtPct(p.y) +
+          " (correct=" + String(p.correct) +
+          " answered=" + String(p.answered) +
+          " unclear=" + String(p.unclear) +
+          " errors=" + String(p.errors) +
+          " pending=" + String(p.pending) +
+          " total=" + String(p.total) +
+          ")";
+        c.appendChild(title);
+        svg.appendChild(c);
+      }}
     }}
   }}
 
@@ -657,6 +931,7 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
         <td><span class="pill">${{r.representation}}</span></td>
         <td><span class="pill">${{r.prompt_label}}</span></td>
         <td>${{r.horn === 1 ? "horn" : "nonhorn"}}</td>
+        <td>${{r.satflag === 1 ? "SAT" : "UNSAT"}}</td>
         <td class="mono">${{r.maxlen}}</td>
         <td class="mono">${{r.maxvars}}</td>
         <td class="mono">${{fmtPct(acc)}}</td>
@@ -667,8 +942,18 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
   }}
 
   function refresh() {{
-    const st = getFilterState();
-    const rows = DASH.groups.filter(r => matches(r, st)).map(r => {{
+    // Apply any view-specific disabling/forcing of redundant filters, then read the final state.
+    let st = getFilterState();
+    applyViewDisables(st.view);
+    st = getFilterState();
+
+    // Reset series toggles when switching chart view.
+    if (STATE.lastView !== st.view) {{
+      STATE.hiddenSeries.clear();
+      STATE.lastView = st.view;
+    }}
+
+    const baseRows = DASH.groups.filter(r => matches(r, st)).map(r => {{
       // flatten counts for easier aggregation
       const c = r.counts;
       return {{
@@ -680,28 +965,48 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
       }};
     }});
 
-    const agg = aggByMaxvars(rows);
-    const pts = agg.map(a => {{
-      return {{
-        x: a.maxvars,
-        y: accuracyFromAgg(a, st.metric),
-        ...a,
-      }};
-    }});
+    let series = buildSeries(baseRows, st.view, st.metric);
+    // Optional baseline overlay (for split views).
+    if (st.view !== "aggregate" && st.baseline) {{
+      const b = overallBaselineSeries(baseRows, st.metric);
+      if (b) series = [b, ...series];
+    }}
 
-    // summary line
-    const tot = agg.reduce((s,a)=>s+a.total,0);
-    const pend = agg.reduce((s,a)=>s+a.pending,0);
-    const err = agg.reduce((s,a)=>s+a.errors,0);
-    const ans = agg.reduce((s,a)=>s+a.answered,0);
-    const unc = agg.reduce((s,a)=>s+a.unclear,0);
-    const cor = agg.reduce((s,a)=>s+a.correct,0);
-    const overall = accuracyFromAgg({{total: tot, pending: pend, errors: err, answered: ans, unclear: unc, correct: cor}}, st.metric);
+    const seriesNames = uniqSorted(series.map(s => s.name));
+    // Prune any stale hidden series names.
+    for (const h of Array.from(STATE.hiddenSeries)) {{
+      if (!seriesNames.includes(h)) STATE.hiddenSeries.delete(h);
+    }}
+    renderLegend(seriesNames, st.view);
+
+    const visibleSeries = series.filter(s => !STATE.hiddenSeries.has(s.name));
+
+    // summary line (computed over filtered rows; legend toggles are display-only)
+    const overallAgg = {{total: 0, pending: 0, errors: 0, answered: 0, unclear: 0, correct: 0}};
+    for (const r of baseRows) {{
+      addCounts(overallAgg, r.counts);
+    }}
+    const overall = accuracyFromAgg(overallAgg, st.metric);
+    const tot = overallAgg.total;
+    const pend = overallAgg.pending;
+    const err = overallAgg.errors;
+    const ans = overallAgg.answered;
+    const unc = overallAgg.unclear;
+    const cor = overallAgg.correct;
+
     document.getElementById("summaryLine").textContent =
-      `overall: ${{fmtPct(overall)}} · correct=${{cor}} answered=${{ans}} unclear=${{unc}} errors=${{err}} pending=${{pend}} total=${{tot}} · rows=${{rows.length}}`;
+      "overall: " + fmtPct(overall) +
+      " · correct=" + String(cor) +
+      " answered=" + String(ans) +
+      " unclear=" + String(unc) +
+      " errors=" + String(err) +
+      " pending=" + String(pend) +
+      " total=" + String(tot) +
+      " · series(shown)=" + String(visibleSeries.length) +
+      " · rows=" + String(baseRows.length);
 
-    renderChart(pts);
-    renderTable(rows, st.metric);
+    renderChart(visibleSeries);
+    renderTable(baseRows, st.metric);
   }}
 
   function init() {{
@@ -714,7 +1019,7 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
     setOptions(document.getElementById("fPrompt"), DASH.filters.prompt_labels);
     setOptions(document.getElementById("fLen"), DASH.filters.maxlens.map(String));
 
-    for (const id of ["fSuite","fRun","fRep","fPrompt","fHorn","fLen","fMetric"]) {{
+    for (const id of ["fSuite","fRun","fRep","fPrompt","fHorn","fSat","fLen","fMetric","fView","fBaseline"]) {{
       document.getElementById(id).addEventListener("change", refresh);
     }}
     refresh();

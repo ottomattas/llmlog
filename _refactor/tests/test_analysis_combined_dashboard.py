@@ -39,9 +39,11 @@ def test_combined_dashboard_data_excludes_pending_from_completed_accuracy(tmp_pa
 
     combined = build_combined_dashboard_data(runs_dir=str(runs))
     assert combined["metadata"]["results_files_scanned"] == 1
+    assert combined["filters"]["satflags"] == [1]
     assert len(combined["groups"]) == 1
 
     g = combined["groups"][0]
+    assert g["satflag"] == 1
     c = g["counts"]
     assert c["total"] == 4
     assert c["pending"] == 1
