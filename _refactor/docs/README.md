@@ -11,4 +11,5 @@ These documents describe llmlog.
 - **Providers + secrets**: [`providers-and-secrets.md`](providers-and-secrets.md)
 - **Runs, results, plots, dashboards (artifacts policy)**: [`runs-and-results.md`](runs-and-results.md)
 - **Analysis workflow**: [`analysis.md`](analysis.md)
+- **Pricing audit (usage+cost exports → pricing YAML)**: [`pricing-audit.md`](pricing-audit.md)
 - **Migration plan**: [`migration-plan.md`](migration-plan.md)

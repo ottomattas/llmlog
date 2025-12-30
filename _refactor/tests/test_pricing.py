@@ -33,3 +33,20 @@ def test_compute_cost_usd() -> None:
     assert abs(cost["total_usd"] - 2.0) < 1e-9
 
 
+def test_openai_pricing_table_matches_pinned_snapshot_id() -> None:
+    from pathlib import Path
+
+    from llmlog.pricing.cost import match_rate
+    from llmlog.pricing.loader import load_pricing_table
+
+    repo = Path(__file__).resolve().parents[1]
+    pricing = (repo / "configs" / "pricing" / "openai_2025-12-18.yaml").resolve()
+    tbl = load_pricing_table(str(pricing))
+
+    # OpenAI dashboard exports often use pinned snapshot ids even if the run config uses a stable alias.
+    r = match_rate(tbl, provider="openai", model="gpt-5.2-pro-2025-12-11")
+    assert r is not None
+    assert abs(r.input_per_million_usd - 21.0) < 1e-12
+    assert abs(r.output_per_million_usd - 168.0) < 1e-12
+
+
