@@ -475,10 +475,16 @@ def _solve_with_pysat_and_kissat(
     pysat_solver: str,
     kissat_cmd: str,
     kissat_timeout: float,
+    *,
+    omit_unsat_proofs: bool,
 ) -> Tuple[bool, List]:
     sat, model = _pysat_solve_model(problem, solver_name=pysat_solver)
     if sat:
         return True, model or []
+    if omit_unsat_proofs:
+        # We only need the SAT/UNSAT label for downstream evaluation. Storing DRAT proofs can
+        # make datasets extremely large at higher n, so allow omitting them.
+        return False, []
     proof = _kissat_unsat_proof(problem, kissat_cmd=kissat_cmd, timeout_s=kissat_timeout)
     return False, proof
 
@@ -492,6 +498,8 @@ def _make_balanced_prop_problem_list(
     pysat_solver: str,
     kissat_cmd: str,
     kissat_timeout: float,
+    *,
+    omit_unsat_proofs: bool,
     max_attempts: Optional[int] = None,
     progress_every: int = 0,
 ) -> List:
@@ -532,6 +540,7 @@ def _make_balanced_prop_problem_list(
                 pysat_solver=pysat_solver,
                 kissat_cmd=kissat_cmd,
                 kissat_timeout=kissat_timeout,
+                omit_unsat_proofs=omit_unsat_proofs,
             )
         except subprocess.TimeoutExpired:
             # Likely a hard UNSAT proof attempt. Skip and sample a new instance.
@@ -615,6 +624,15 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument("--pysat", default="g3", help="PySAT solver name (default: g3).")
     ap.add_argument("--kissat", default="kissat", help="Kissat command (default: kissat).")
     ap.add_argument("--kissat-timeout", type=float, default=30.0, help="Kissat timeout seconds.")
+    ap.add_argument(
+        "--omit-unsat-proofs",
+        action="store_true",
+        help=(
+            "Do not store Kissat DRAT UNSAT proofs in the dataset (write [] instead). "
+            "This keeps large-n datasets smaller and avoids the external kissat dependency. "
+            "SAT models are still stored."
+        ),
+    )
     ap.add_argument("--print-sha256", action="store_true", help="Print SHA-256 of the output file.")
     ap.add_argument("--expect-sha256", default=None, help="Fail if SHA-256(output) != this value.")
     args = ap.parse_args(list(argv) if argv is not None else None)
@@ -815,6 +833,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                         pysat_solver=str(args.pysat),
                         kissat_cmd=str(args.kissat),
                         kissat_timeout=float(args.kissat_timeout),
+                        omit_unsat_proofs=bool(args.omit_unsat_proofs),
                         max_attempts=(int(args.max_attempts) if int(args.max_attempts) > 0 else None),
                         progress_every=int(args.progress_every),
                     )

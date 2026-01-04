@@ -1,0 +1,16 @@
+name: openai_gpt-5.2-pro__think-high__hornonly_extvars60_80_100
+description: >
+  Horn-only extension sweep beyond vars=50 to find where accuracy starts dropping.
+  Uses a small horn-only dataset at vars 60/80/100 with UNSAT proofs omitted.
+
+runs_dir: runs
+
+maxvars: "60,80,100"
+lens: [3, 4, 5]
+case_limit: 10
+
+suites:
+  - path: configs/suites/sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2-pro__think-high__extvars60_80_100.yaml
+  - path: configs/suites/sat__repr-cnf_compact__subset-hornonly__prompt-horn_alg_linear__openai_gpt-5.2-pro__think-high__extvars60_80_100.yaml
+
+

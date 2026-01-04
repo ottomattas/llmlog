@@ -89,3 +89,9 @@ done
   - `--mode pysat_kissat --seed 12345 --vars 3-50 --clens 3-5 --horn mixed --percase 50`
   - Rows: **14400** (plus header)
   - SHA-256: `f9542cb74c344e048ca6e9dbdf619f31a49d0b9065502c7f642a1a29bf8fb945`
+
+- **`datasets/validation/hornonly_vars60_80_100_len3-5_per20_seed12345_noproofs.jsonl`**
+  - `--mode pysat_kissat --seed 12345 --vars 60,80,100 --clens 3-5 --horn only --percase 20 --omit-unsat-proofs`
+  - Rows: **180** (plus header)
+  - UNSAT proof column is `[]` (omitted) to keep the dataset small for large-n Horn-only sweeps.
+  - SHA-256: `1e347e92fc8157794225060f6219f794277f371193b430a0df1cb93688c12160`

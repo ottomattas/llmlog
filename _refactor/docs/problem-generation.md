@@ -77,6 +77,28 @@ python scripts/generate_problems.py \
   --print-sha256
 ```
 
+### Large-n Horn-only datasets (recommended: omit UNSAT proofs)
+At higher variable counts, storing UNSAT DRAT proofs can make datasets extremely large.
+For evaluation runs, we usually only need CNFs + SAT/UNSAT labels.
+
+Use `--omit-unsat-proofs` to write `[]` instead of full DRAT proofs (SAT models are still stored):
+
+```
+python scripts/generate_problems.py \
+  --mode pysat_kissat \
+  --seed 12345 \
+  --vars 60,80,100 \
+  --clens 3-5 \
+  --horn only \
+  --percase 20 \
+  --dataset validation \
+  --name hornonly_vars60_80_100_len3-5_per20_seed12345_noproofs \
+  --omit-unsat-proofs \
+  --max-attempts 200000 \
+  --progress-every 2000 \
+  --print-sha256
+```
+
 - **Output path**: `datasets/validation/full_vars3-50_len3-5_hornmixed_per50_seed12345.jsonl`
 - **Expected rows**: \(48 \times 3 \times 2 \times 50 = 14400\) (not counting the header line)
 - **Tip**: record the printed SHA-256 checksum to make runs reproducible and comparable.
