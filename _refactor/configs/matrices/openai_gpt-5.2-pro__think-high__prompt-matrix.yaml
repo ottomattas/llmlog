@@ -1,0 +1,31 @@
+name: openai_gpt-5.2-pro__think-high__prompt-matrix
+description: >
+  Core prompt-variant matrix for OpenAI gpt-5.2-pro with thinking=high.
+  Intended to track which {subset,representation,prompt} suites have been run
+  for the standard coarse sweep (vars 10/20/30/40/50; len 3/4/5; case_limit=10).
+
+runs_dir: runs
+
+# Standard coarse sweep selection (see docs/iterative-experiment-plan.md)
+maxvars: "10,20,30,40,50"
+lens: [3, 4, 5]
+case_limit: 10
+
+suites:
+  # Horn-only
+  - path: configs/suites/sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2-pro__think-high.yaml
+  - path: configs/suites/sat__repr-cnf_compact__subset-hornonly__prompt-horn_alg_linear__openai_gpt-5.2-pro__think-high.yaml
+  - path: configs/suites/sat__repr-cnf_compact__subset-hornonly__prompt-horn_alg_from__openai_gpt-5.2-pro__think-high.yaml
+  - path: configs/suites/sat__repr-cnf_nl__subset-hornonly__prompt-examples_only__openai_gpt-5.2-pro__think-high.yaml
+  - path: configs/suites/sat__repr-cnf_nl__subset-hornonly__prompt-horn_alg_linear__openai_gpt-5.2-pro__think-high.yaml
+  - path: configs/suites/sat__repr-cnf_nl__subset-hornonly__prompt-horn_alg_from__openai_gpt-5.2-pro__think-high.yaml
+
+  # Non-Horn-only
+  - path: configs/suites/sat__repr-cnf_compact__subset-nonhornonly__prompt-examples_only__openai_gpt-5.2-pro__think-high.yaml
+  - path: configs/suites/sat__repr-cnf_compact__subset-nonhornonly__prompt-dpll_alg_linear__openai_gpt-5.2-pro__think-high.yaml
+  - path: configs/suites/sat__repr-cnf_compact__subset-nonhornonly__prompt-dpll_alg_from__openai_gpt-5.2-pro__think-high.yaml
+  - path: configs/suites/sat__repr-cnf_nl__subset-nonhornonly__prompt-examples_only__openai_gpt-5.2-pro__think-high.yaml
+  - path: configs/suites/sat__repr-cnf_nl__subset-nonhornonly__prompt-dpll_alg_linear__openai_gpt-5.2-pro__think-high.yaml
+  - path: configs/suites/sat__repr-cnf_nl__subset-nonhornonly__prompt-dpll_alg_from__openai_gpt-5.2-pro__think-high.yaml
+
+
