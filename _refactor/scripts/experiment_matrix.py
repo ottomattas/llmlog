@@ -317,6 +317,7 @@ def main() -> int:
     # Load suite metadata (for row labels) + infer targets (from preflight).
     suite_rows: List[SuiteRow] = []
     all_targets: Dict[TargetKey, None] = {}
+    suite_targets: Dict[str, set[TargetKey]] = {}
     expected_rows: Dict[Tuple[str, int], int] = {}
 
     for p in suite_paths:
@@ -344,6 +345,7 @@ def main() -> int:
         )
 
         # Preflight once per len to get expected rows, and collect targets.
+        suite_target_keys: set[TargetKey] = set()
         for ln in lens:
             pf = preflight_suite(
                 suite_path=str(suite_path),
@@ -355,6 +357,8 @@ def main() -> int:
             for t in pf.targets:
                 tk = TargetKey(provider=t.provider, model=t.model, thinking_mode=t.thinking_mode)
                 all_targets[tk] = None
+                suite_target_keys.add(tk)
+        suite_targets[cfg.name] = suite_target_keys
 
     targets = sorted(all_targets.keys(), key=lambda t: (t.provider, t.model, t.thinking_mode))
 
@@ -417,6 +421,9 @@ def main() -> int:
         out_lines.append("| " + " | ".join(["---"] * len(header)) + " |")
 
         for s in sorted(suite_rows, key=lambda r: (r.subset, r.representation, r.prompt_label, r.suite_name)):
+            # Only show suite rows that actually include this target.
+            if t not in suite_targets.get(s.suite_name, set()):
+                continue
             horn_vals = horn_values_for_subset(s.subset)
 
             cells: List[str] = []

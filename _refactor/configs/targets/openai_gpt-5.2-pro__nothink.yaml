@@ -1,0 +1,14 @@
+name: openai_gpt-5.2-pro__nothink
+
+# Single-target set: same model as the current thinking runs, but with thinking disabled.
+# This is the closest "non-thinking" baseline for compute ablations (RQ3 / cost-efficiency).
+targets:
+  - provider: openai
+    model: gpt-5.2-pro
+    temperature: 0
+    seed: 1234
+    max_tokens: 30000
+    thinking:
+      enabled: false
+
+
