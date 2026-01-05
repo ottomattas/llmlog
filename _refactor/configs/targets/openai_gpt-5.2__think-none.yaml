@@ -1,0 +1,17 @@
+name: openai_gpt-5.2__think-none
+
+# Single-target set for "non-thinking" baseline runs on the GPT-5.2 family.
+#
+# Per OpenAI's GPT-5.2 guidance, reasoning effort "none" is the lowest setting and is the default for gpt-5.2.
+# We set it explicitly for clarity and to ensure consistent behavior across API changes.
+targets:
+  - provider: openai
+    model: gpt-5.2
+    temperature: 0
+    seed: 1234
+    max_tokens: 30000
+    thinking:
+      enabled: true
+      effort: none
+
+

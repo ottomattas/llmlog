@@ -1,0 +1,25 @@
+name: openai_gpt-5.2__compute_baseline
+description: >
+  Minimal compute ablation set for the paper using the GPT-5.2 family.
+  Since gpt-5.2-pro is a higher-compute variant, the closest "low/no thinking" baseline is gpt-5.2
+  with reasoning effort set to "none" (default for gpt-5.2).
+  This matrix highlights what needs to be run to support RQ3 (test-time compute + cost).
+
+runs_dir: runs
+
+maxvars: "10,20,30,40,50"
+lens: [3, 4, 5]
+case_limit: 10
+
+suites:
+  # Higher-compute (already run)
+  - path: configs/suites/sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2-pro__think-high.yaml
+  - path: configs/suites/sat__repr-cnf_compact__subset-hornonly__prompt-horn_alg_linear__openai_gpt-5.2-pro__think-high.yaml
+  - path: configs/suites/sat__repr-cnf_compact__subset-nonhornonly__prompt-dpll_alg_linear__openai_gpt-5.2-pro__think-high.yaml
+
+  # Lower reasoning effort baseline (missing)
+  - path: configs/suites/sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2__think-none.yaml
+  - path: configs/suites/sat__repr-cnf_compact__subset-hornonly__prompt-horn_alg_linear__openai_gpt-5.2__think-none.yaml
+  - path: configs/suites/sat__repr-cnf_compact__subset-nonhornonly__prompt-dpll_alg_linear__openai_gpt-5.2__think-none.yaml
+
+
