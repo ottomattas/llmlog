@@ -1,0 +1,50 @@
+{
+  "suite_path": "/Users/ottomattas/Downloads/repos/llmlog/_refactor/configs/suites/sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2-pro__think-high__extvars60_80_100.yaml",
+  "suite": "sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2-pro__think-high__extvars60_80_100",
+  "run": "horn_ex_only_len4_vars60_80_100_case10",
+  "dataset": {
+    "path": "datasets/validation/hornonly_vars60_80_100_len3-5_per20_seed12345_noproofs.jsonl",
+    "skip_rows": 1,
+    "limit_rows": null
+  },
+  "dataset_selection": {
+    "only_maxvars": [
+      60,
+      80,
+      100
+    ],
+    "only_maxlen": [
+      4
+    ],
+    "only_ids": null,
+    "case_limit": 10
+  },
+  "prompting": {
+    "render_policy": "fixed",
+    "representation": "cnf_compact",
+    "template": "prompts/sat_decision__cnf_compact__examples_only.j2",
+    "prompt_profile": "direct",
+    "response_style": "answer_only",
+    "answer_format": "contradiction_satisfiable",
+    "variables": {}
+  },
+  "target": {
+    "provider": "openai",
+    "model": "gpt-5.2-pro",
+    "temperature": 0.0,
+    "seed": 1234,
+    "max_tokens": 45000,
+    "thinking": {
+      "enabled": true,
+      "effort": "high"
+    }
+  },
+  "thinking_mode": "think_high",
+  "pricing_table": "configs/pricing/openai_2025-12-18.yaml",
+  "pricing_rate": {
+    "provider": "openai",
+    "model": "gpt-5.2-pro",
+    "input_per_million_usd": 21.0,
+    "output_per_million_usd": 168.0
+  }
+}

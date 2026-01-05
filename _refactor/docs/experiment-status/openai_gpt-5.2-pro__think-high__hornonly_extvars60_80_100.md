@@ -14,6 +14,6 @@ Notes:
 
 | subset | repr | prompt | suite | len=3 | len=4 | len=5 |
 | --- | --- | --- | --- | --- | --- | --- |
-| hornonly | cnf_compact | examples_only | `sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2-pro__think-high__extvars60_80_100` | MISSING | MISSING | MISSING |
-| hornonly | cnf_compact | horn_alg_linear | `sat__repr-cnf_compact__subset-hornonly__prompt-horn_alg_linear__openai_gpt-5.2-pro__think-high__extvars60_80_100` | MISSING | MISSING | MISSING |
+| hornonly | cnf_compact | examples_only | `sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2-pro__think-high__extvars60_80_100` | DONE horn_ex_only_len3_vars60_80_100_case10 30/30 acc=1.00 | DONE horn_ex_only_len4_vars60_80_100_case10 30/30 acc=1.00 | DONE horn_ex_only_len5_vars60_80_100_case10 30/30 acc=1.00 |
+| hornonly | cnf_compact | horn_alg_linear | `sat__repr-cnf_compact__subset-hornonly__prompt-horn_alg_linear__openai_gpt-5.2-pro__think-high__extvars60_80_100` | DONE horn_alg_linear_cnf_compact_len3_vars60_80_100_case10 30/30 acc=1.00 | DONE horn_alg_linear_cnf_compact_len4_vars60_80_100_case10 30/30 acc=1.00 | DONE horn_alg_linear_cnf_compact_len5_vars60_80_100_case10 30/30 acc=1.00 |
 
