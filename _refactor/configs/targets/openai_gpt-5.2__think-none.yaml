@@ -6,7 +6,8 @@ name: openai_gpt-5.2__think-none
 # We set it explicitly for clarity and to ensure consistent behavior across API changes.
 targets:
   - provider: openai
-    model: gpt-5.2
+    # Use a pinned snapshot id for archival/reproducibility.
+    model: gpt-5.2-2025-12-11
     temperature: 0
     seed: 1234
     max_tokens: 30000
