@@ -27,6 +27,24 @@ python scripts/experiment_matrix.py \
   --output docs/experiment-status/openai_gpt-5.2-pro__think-high__prompt-matrix.md
 ```
 
+Compute-baseline tracking (gpt-5.2-2025-12-11 think-none vs gpt-5.2-pro think-high):
+
+```
+cd _refactor
+python scripts/experiment_matrix.py \
+  --matrix configs/matrices/openai_gpt-5.2__compute_baseline.yaml \
+  --output docs/experiment-status/openai_gpt-5.2__compute_baseline.md
+```
+
+Full think-none prompt matrix (mirrors the pro think-high prompt matrix):
+
+```
+cd _refactor
+python scripts/experiment_matrix.py \
+  --matrix configs/matrices/openai_gpt-5.2__think-none__prompt-matrix.yaml \
+  --output docs/experiment-status/openai_gpt-5.2__think-none__prompt-matrix.md
+```
+
 This produces a Markdown table with one row per suite and one column per `maxlen` value, marking each cell as:
 
 - `DONE`: enough rows exist for that slice and there are no remaining errors/unclear (latest-per-id)
@@ -44,5 +62,7 @@ Matrix specs live under `configs/matrices/`. They define:
 
 Start with the OpenAI-focused one:
 - `configs/matrices/openai_gpt-5.2-pro__think-high__prompt-matrix.yaml`
+- `configs/matrices/openai_gpt-5.2__compute_baseline.yaml`
+- `configs/matrices/openai_gpt-5.2__think-none__prompt-matrix.yaml`
 
 
