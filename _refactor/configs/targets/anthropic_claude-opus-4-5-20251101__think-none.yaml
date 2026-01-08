@@ -1,0 +1,16 @@
+name: anthropic_claude-opus-4-5-20251101__think-none
+
+# Single-target set for "no-extended-thinking" baseline runs on Anthropic.
+#
+# "Extended thinking" is opt-in on the Messages API; when `thinking.enabled: false`
+# we do not send the extended-thinking config and the model responds normally.
+# See: https://platform.claude.com/docs/en/api/messages
+targets:
+  - provider: anthropic
+    model: claude-opus-4-5-20251101
+    temperature: 0
+    seed: 1234
+    max_tokens: 30000
+    thinking:
+      enabled: false
+

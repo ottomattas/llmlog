@@ -74,6 +74,12 @@ class RunInfo:
     render_policy: str
 
 
+def _normalize_thinking_mode(thinking_mode: str) -> str:
+    # Back-compat: older runs used "nothink" for disabled thinking.
+    tm = str(thinking_mode or "")
+    return "think_none" if tm == "nothink" else tm
+
+
 def _infer_run_info(*, results_path: Path) -> RunInfo:
     """Infer run metadata from run.manifest.json when available, else from the path."""
     run_dir = results_path.parent
@@ -85,7 +91,7 @@ def _infer_run_info(*, results_path: Path) -> RunInfo:
         run = str(m.get("run") or "")
         provider = str(((m.get("target") or {}) if isinstance(m.get("target"), dict) else {}).get("provider") or "")
         model = str(((m.get("target") or {}) if isinstance(m.get("target"), dict) else {}).get("model") or "")
-        thinking_mode = str(m.get("thinking_mode") or "")
+        thinking_mode = _normalize_thinking_mode(str(m.get("thinking_mode") or ""))
         representation = str(prompting.get("representation") or "unknown")
         prompt_template = str(prompting.get("template") or "unknown")
         prompt_label = _prompt_label_from_template(prompt_template)
@@ -100,7 +106,7 @@ def _infer_run_info(*, results_path: Path) -> RunInfo:
         if not model:
             model = results_path.parts[-3]
         if not thinking_mode:
-            thinking_mode = results_path.parts[-2]
+            thinking_mode = _normalize_thinking_mode(results_path.parts[-2])
         return RunInfo(
             suite=suite,
             run=run,
@@ -119,7 +125,7 @@ def _infer_run_info(*, results_path: Path) -> RunInfo:
         run=results_path.parts[-5],
         provider=results_path.parts[-4],
         model=results_path.parts[-3],
-        thinking_mode=results_path.parts[-2],
+        thinking_mode=_normalize_thinking_mode(results_path.parts[-2]),
         representation="unknown",
         prompt_template="unknown",
         prompt_label="unknown",

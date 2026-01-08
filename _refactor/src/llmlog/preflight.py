@@ -29,7 +29,9 @@ def _find_refactor_root(suite_path: Path) -> Path:
 def _thinking_mode_label(target: Dict[str, Any]) -> str:
     thinking = target.get("thinking") or {}
     if not bool(thinking.get("enabled")):
-        return "nothink"
+        # Keep the directory label consistent across providers and with OpenAI's
+        # "effort: none" baseline runs.
+        return "think_none"
     eff = thinking.get("effort")
     if isinstance(eff, str) and eff:
         return f"think_{eff.lower()}"

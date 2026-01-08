@@ -10,6 +10,9 @@ sources:
   - source_url: https://platform.claude.com/docs/en/about-claude/models/overview
     retrieved_at: "2025-12-19"
     notes: "Anthropic model overview includes headline per-MTok input/output pricing for current + legacy models."
+  - source_url: https://ai.google.dev/gemini-api/docs/pricing
+    retrieved_at: "2026-01-08"
+    notes: "Google Gemini API pricing page; rates below are standard (non-batch) for typical prompts (<=200k input tokens)."
 
 rates:
   # OpenAI (copied from openai_2025-12-18.yaml)
@@ -56,5 +59,12 @@ rates:
     model_prefix: claude-opus-4-5
     input_per_million_usd: 5.0
     output_per_million_usd: 25.0
+
+  # Google (Gemini API / AI Studio) — standard tier.
+  # Note: Google pricing lists output as "including thinking tokens".
+  - provider: google
+    model: gemini-3-pro-preview
+    input_per_million_usd: 2.0
+    output_per_million_usd: 12.0
 
 

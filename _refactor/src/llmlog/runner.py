@@ -48,7 +48,9 @@ def _thinking_mode_label(target: Dict[str, Any]) -> str:
     except Exception:
         enabled = False
     if not enabled:
-        return "nothink"
+        # Keep the directory label consistent across providers and with OpenAI's
+        # "effort: none" baseline runs.
+        return "think_none"
     eff = thinking.get("effort")
     if isinstance(eff, str) and eff:
         return f"think_{eff.lower()}"

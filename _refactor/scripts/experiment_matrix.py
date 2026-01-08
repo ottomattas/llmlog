@@ -436,7 +436,15 @@ def main() -> int:
                 for run_dir in suite_run_dirs.get(s.suite_name, []):
                     results_path = run_dir / t.provider / t.model / t.thinking_mode / "results.jsonl"
                     if not results_path.exists():
-                        continue
+                        # Back-compat: older runs used "nothink" for disabled thinking.
+                        if t.thinking_mode == "think_none":
+                            alt = run_dir / t.provider / t.model / "nothink" / "results.jsonl"
+                            if alt.exists():
+                                results_path = alt
+                            else:
+                                continue
+                        else:
+                            continue
                     buckets = buckets_for_results(results_path)
                     c = _sum_buckets(buckets, maxlen=int(ln), horn_values=horn_vals, maxvars_set=maxvars_set)
                     # Score: prefer more coverage; fewer pending/errors/unclear.

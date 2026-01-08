@@ -1,0 +1,14 @@
+name: google_gemini-3-pro-preview__think-none
+
+# Single-target set for "no-thinking-budget" baseline runs on Google Gemini (AI Studio / Gemini API).
+#
+# For a strict baseline, we do not enable any thinking budget configuration.
+targets:
+  - provider: google
+    model: gemini-3-pro-preview
+    temperature: 0
+    seed: 1234
+    max_tokens: 30000
+    thinking:
+      enabled: false
+

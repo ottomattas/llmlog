@@ -7,7 +7,7 @@ def test_aggregate_runs_smoke(tmp_path) -> None:
     from llmlog.analysis.aggregate import aggregate_runs
 
     runs = tmp_path / "runs"
-    suite = runs / "suiteA" / "run1" / "openai" / "gpt-x" / "nothink"
+    suite = runs / "suiteA" / "run1" / "openai" / "gpt-x" / "think_none"
     suite.mkdir(parents=True)
 
     # Write minimal results + summary
@@ -27,7 +27,7 @@ def test_aggregate_runs_smoke(tmp_path) -> None:
                 "run": "run1",
                 "provider": "openai",
                 "model": "gpt-x",
-                "thinking_mode": "nothink",
+                "thinking_mode": "think_none",
                 "stats": {"total": 2, "correct": 1, "unclear": 0, "input_tokens": 3, "output_tokens": 4, "reasoning_tokens": 0},
                 "accuracy": 0.5,
             }

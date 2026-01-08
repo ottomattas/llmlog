@@ -33,6 +33,12 @@ def _latest_rows_by_id(path: Path) -> Dict[str, Any]:
     return latest
 
 
+def _normalize_thinking_mode(thinking_mode: str) -> str:
+    # Back-compat: older runs used "nothink" for disabled thinking.
+    tm = str(thinking_mode or "")
+    return "think_none" if tm == "nothink" else tm
+
+
 def aggregate_runs(*, runs_dir: str, run_id: str) -> Dict[str, Any]:
     """Aggregate `_refactor/runs/<suite>/<run_id>/...` results into one JSON blob."""
     runs = Path(runs_dir)
@@ -81,7 +87,7 @@ def aggregate_runs(*, runs_dir: str, run_id: str) -> Dict[str, Any]:
 
             provider = summary.get("provider") or summary_file.parts[-4]
             model = summary.get("model") or summary_file.parts[-3]
-            thinking_mode = summary.get("thinking_mode") or summary_file.parts[-2]
+            thinking_mode = _normalize_thinking_mode(summary.get("thinking_mode") or summary_file.parts[-2])
 
             model_key = f"{provider}/{model}/{thinking_mode}"
 
