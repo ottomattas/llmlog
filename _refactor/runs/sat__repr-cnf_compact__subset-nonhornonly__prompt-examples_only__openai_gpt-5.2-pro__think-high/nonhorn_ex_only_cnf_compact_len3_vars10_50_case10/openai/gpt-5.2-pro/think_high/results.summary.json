@@ -15,7 +15,19 @@
     "only_maxlen": [
       3
     ],
-    "only_ids": null,
+    "only_ids": [
+      "11152",
+      "11156",
+      "11158",
+      "14151",
+      "14152",
+      "14154",
+      "14158",
+      "14160",
+      "8156",
+      "8158",
+      "8160"
+    ],
     "case_limit": 10
   },
   "pricing_table": "configs/pricing/openai_2025-12-18.yaml",
@@ -27,20 +39,20 @@
   },
   "stats": {
     "total": 50,
-    "answered": 39,
-    "correct": 36,
-    "unclear": 11,
+    "answered": 46,
+    "correct": 37,
+    "unclear": 4,
     "pending": 0,
-    "errors": 11,
-    "input_tokens": 80895,
-    "output_tokens": 1192715,
-    "reasoning_tokens": 1181239,
+    "errors": 4,
+    "input_tokens": 104828,
+    "output_tokens": 1587306,
+    "reasoning_tokens": 1573954,
     "cache_creation_input_tokens": 0,
     "cache_read_input_tokens": 0,
-    "cost_total_usd": 202.07491499999995,
-    "cost_input_usd": 1.6987950000000005,
-    "cost_output_usd": 200.37612000000004,
-    "attempts_total": 100
+    "cost_total_usd": 268.868796,
+    "cost_input_usd": 2.201388,
+    "cost_output_usd": 266.667408,
+    "attempts_total": 122
   },
-  "accuracy": 0.72
+  "accuracy": 0.74
 }

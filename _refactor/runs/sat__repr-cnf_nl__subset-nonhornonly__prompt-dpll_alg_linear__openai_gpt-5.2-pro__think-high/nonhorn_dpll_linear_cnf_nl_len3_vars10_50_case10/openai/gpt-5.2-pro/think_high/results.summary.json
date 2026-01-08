@@ -16,14 +16,9 @@
       3
     ],
     "only_ids": [
-      "11154",
-      "11156",
-      "11157",
       "11158",
       "11160",
-      "14152",
-      "14157",
-      "14158"
+      "14152"
     ],
     "case_limit": 10
   },
@@ -36,20 +31,20 @@
   },
   "stats": {
     "total": 50,
-    "answered": 44,
-    "correct": 35,
-    "unclear": 6,
+    "answered": 48,
+    "correct": 36,
+    "unclear": 2,
     "pending": 0,
-    "errors": 6,
-    "input_tokens": 147917,
-    "output_tokens": 1435475,
-    "reasoning_tokens": 1418286,
+    "errors": 2,
+    "input_tokens": 173495,
+    "output_tokens": 1774183,
+    "reasoning_tokens": 1755972,
     "cache_creation_input_tokens": 0,
     "cache_read_input_tokens": 0,
-    "cost_total_usd": 244.266057,
-    "cost_input_usd": 3.1062570000000007,
-    "cost_output_usd": 241.15980000000005,
-    "attempts_total": 763
+    "cost_total_usd": 301.70613899999995,
+    "cost_input_usd": 3.643395000000001,
+    "cost_output_usd": 298.062744,
+    "attempts_total": 781
   },
-  "accuracy": 0.7
+  "accuracy": 0.72
 }
