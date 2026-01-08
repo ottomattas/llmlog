@@ -1,0 +1,42 @@
+{
+  "suite": "sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__anthropic_claude-opus-4-5-20251101__think-none",
+  "run": "smoke_case2_len3_vars10",
+  "provider": "anthropic",
+  "model": "claude-opus-4-5-20251101",
+  "thinking_mode": "think_none",
+  "dataset_selection": {
+    "only_maxvars": [
+      10
+    ],
+    "only_maxlen": [
+      3
+    ],
+    "only_ids": null,
+    "case_limit": 2
+  },
+  "pricing_table": "configs/pricing/multivendor_2025-12-19.yaml",
+  "pricing_rate": {
+    "provider": "anthropic",
+    "model_prefix": "claude-opus-4-5",
+    "input_per_million_usd": 5.0,
+    "output_per_million_usd": 25.0
+  },
+  "stats": {
+    "total": 2,
+    "answered": 2,
+    "correct": 2,
+    "unclear": 0,
+    "pending": 0,
+    "errors": 0,
+    "input_tokens": 1008,
+    "output_tokens": 1891,
+    "reasoning_tokens": 0,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "cost_total_usd": 0.052315,
+    "cost_input_usd": 0.00504,
+    "cost_output_usd": 0.047275,
+    "attempts_total": 2
+  },
+  "accuracy": 1.0
+}
