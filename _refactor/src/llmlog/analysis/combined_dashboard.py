@@ -141,6 +141,19 @@ class GroupCounts:
     answered: int = 0  # parsed_answer in {0,1} and no error
     unclear: int = 0  # parsed_answer==2 and no error (or missing parsed_answer w/o pending)
     correct: int = 0  # correct==True
+    # Attempt-level totals (from provenance; represent spend/latency across retries)
+    attempts_total: int = 0
+    input_tokens: int = 0
+    output_tokens: int = 0
+    reasoning_tokens: int = 0
+    cache_creation_input_tokens: int = 0
+    cache_read_input_tokens: int = 0
+    cost_total_usd: float = 0.0
+    cost_input_usd: float = 0.0
+    cost_output_usd: float = 0.0
+    reasoning_usd_estimate: float = 0.0
+    latency_ms_sum: float = 0.0
+    latency_n: int = 0
 
     def to_json(self) -> Dict[str, Any]:
         total_nonpending = self.total - self.pending
@@ -148,6 +161,9 @@ class GroupCounts:
         acc_nonpending = (self.correct / total_nonpending) if total_nonpending > 0 else None
         acc_completed = (self.correct / completed) if completed > 0 else None
         acc_answered = (self.correct / self.answered) if self.answered > 0 else None
+        cost_per_correct = (self.cost_total_usd / self.correct) if self.correct > 0 else None
+        reasoning_cost_per_correct = (self.reasoning_usd_estimate / self.correct) if self.correct > 0 else None
+        latency_ms_mean = (self.latency_ms_sum / self.latency_n) if self.latency_n > 0 else None
         return {
             "total": self.total,
             "pending": self.pending,
@@ -155,6 +171,21 @@ class GroupCounts:
             "answered": self.answered,
             "unclear": self.unclear,
             "correct": self.correct,
+            "attempts_total": self.attempts_total,
+            "input_tokens": self.input_tokens,
+            "output_tokens": self.output_tokens,
+            "reasoning_tokens": self.reasoning_tokens,
+            "cache_creation_input_tokens": self.cache_creation_input_tokens,
+            "cache_read_input_tokens": self.cache_read_input_tokens,
+            "cost_total_usd": self.cost_total_usd,
+            "cost_input_usd": self.cost_input_usd,
+            "cost_output_usd": self.cost_output_usd,
+            "reasoning_usd_estimate": self.reasoning_usd_estimate,
+            "latency_ms_sum": self.latency_ms_sum,
+            "latency_n": self.latency_n,
+            "latency_ms_mean": latency_ms_mean,
+            "cost_per_correct_usd": cost_per_correct,
+            "reasoning_cost_per_correct_usd": reasoning_cost_per_correct,
             "denoms": {
                 "nonpending": total_nonpending,
                 "completed": completed,
@@ -226,6 +257,70 @@ def build_combined_dashboard_data(
     include = {s for s in (include_suites or []) if s}
     exclude = {s for s in (exclude_suites or []) if s}
 
+    def _i(v: Any) -> int:
+        try:
+            return int(v) if v is not None else 0
+        except Exception:
+            return 0
+
+    def _f(v: Any) -> float:
+        try:
+            return float(v) if v is not None else 0.0
+        except Exception:
+            return 0.0
+
+    def _compute_cost_from_usage(rate_obj: Dict[str, Any], usage: Dict[str, Any]) -> Dict[str, float]:
+        """Compute best-effort USD costs from normalized usage fields and a manifest `pricing_rate` dict.
+
+        We intentionally avoid importing the pricing module here so the dashboard generator stays usable
+        even in minimal environments.
+        """
+        try:
+            input_per_m = float(rate_obj.get("input_per_million_usd") or 0.0)
+            output_per_m = float(rate_obj.get("output_per_million_usd") or 0.0)
+        except Exception:
+            input_per_m = 0.0
+            output_per_m = 0.0
+
+        cache_read_per_m = rate_obj.get("cache_read_input_per_million_usd")
+        cache_creation_per_m = rate_obj.get("cache_creation_input_per_million_usd")
+        try:
+            cache_read_per_m = float(cache_read_per_m) if cache_read_per_m is not None else None
+        except Exception:
+            cache_read_per_m = None
+        try:
+            cache_creation_per_m = float(cache_creation_per_m) if cache_creation_per_m is not None else None
+        except Exception:
+            cache_creation_per_m = None
+
+        input_tokens = _i(usage.get("input_tokens"))
+        output_tokens = _i(usage.get("output_tokens"))
+        reasoning_tokens = _i(usage.get("reasoning_tokens"))
+        cache_read_input_tokens = _i(usage.get("cache_read_input_tokens"))
+        cache_creation_input_tokens = _i(usage.get("cache_creation_input_tokens"))
+
+        input_usd = (input_tokens / 1_000_000.0) * input_per_m
+        output_usd = (output_tokens / 1_000_000.0) * output_per_m
+
+        cache_read_usd = (
+            (cache_read_input_tokens / 1_000_000.0) * float(cache_read_per_m) if cache_read_per_m is not None else 0.0
+        )
+        cache_creation_usd = (
+            (cache_creation_input_tokens / 1_000_000.0) * float(cache_creation_per_m)
+            if cache_creation_per_m is not None
+            else 0.0
+        )
+
+        reasoning_usd_est = (reasoning_tokens / 1_000_000.0) * output_per_m if reasoning_tokens else 0.0
+        total_usd = input_usd + output_usd + cache_read_usd + cache_creation_usd
+
+        return {
+            "total_usd": float(total_usd),
+            "input_usd": float(input_usd),
+            "output_usd": float(output_usd),
+            "reasoning_usd_estimate": float(reasoning_usd_est),
+        }
+
     groups: Dict[Tuple[str, str, str, str, str, str, str, int, int, int, int], GroupCounts] = {}
     # key: (suite, run, provider, model, thinking_mode, prompt_label, representation, maxlen, horn, satflag, maxvars)
 
@@ -284,6 +379,80 @@ def build_combined_dashboard_data(
                 c.answered += 1
             if row.get("correct") is True:
                 c.correct += 1
+
+        # Attempt-level totals from provenance (spend + latency). These are summed across all attempts,
+        # matching `runner.py`'s "stable spend across resume" approach.
+        prov_path = results_path.parent / "results.provenance.jsonl"
+        manifest_path = results_path.parent / "run.manifest.json"
+        rate_obj: Optional[Dict[str, Any]] = None
+        if manifest_path.exists():
+            try:
+                manifest = _read_json(manifest_path)
+                ro = manifest.get("pricing_rate") if isinstance(manifest, dict) else None
+                if isinstance(ro, dict):
+                    rate_obj = ro
+            except Exception:
+                rate_obj = None
+
+        if prov_path.exists():
+            for prow in _iter_jsonl(prov_path):
+                meta = prow.get("meta") or {}
+                if not isinstance(meta, dict):
+                    meta = {}
+                maxvars = _safe_int(meta.get("maxvars"))
+                maxlen = _safe_int(meta.get("maxlen"))
+                horn = _safe_int(meta.get("horn"))
+                satflag = _safe_int(meta.get("satflag"))
+                if maxvars is None or maxlen is None or horn is None or satflag is None:
+                    continue
+                if horn not in (0, 1) or satflag not in (0, 1):
+                    continue
+
+                key = (
+                    info.suite,
+                    info.run,
+                    info.provider,
+                    info.model,
+                    info.thinking_mode,
+                    info.prompt_label,
+                    info.representation,
+                    maxlen,
+                    horn,
+                    satflag,
+                    maxvars,
+                )
+                c = groups.get(key)
+                if c is None:
+                    c = GroupCounts()
+                    groups[key] = c
+
+                c.attempts_total += 1
+                usage = prow.get("usage") or {}
+                if not isinstance(usage, dict):
+                    usage = {}
+                c.input_tokens += _i(usage.get("input_tokens"))
+                c.output_tokens += _i(usage.get("output_tokens"))
+                c.reasoning_tokens += _i(usage.get("reasoning_tokens"))
+                c.cache_creation_input_tokens += _i(usage.get("cache_creation_input_tokens"))
+                c.cache_read_input_tokens += _i(usage.get("cache_read_input_tokens"))
+
+                tm = prow.get("timing_ms")
+                if tm is not None:
+                    try:
+                        c.latency_ms_sum += float(tm)
+                        c.latency_n += 1
+                    except Exception:
+                        pass
+
+                if rate_obj is not None:
+                    try:
+                        cost = _compute_cost_from_usage(rate_obj, usage)
+                        c.cost_total_usd += _f(cost.get("total_usd"))
+                        c.cost_input_usd += _f(cost.get("input_usd"))
+                        c.cost_output_usd += _f(cost.get("output_usd"))
+                        c.reasoning_usd_estimate += _f(cost.get("reasoning_usd_estimate"))
+                    except Exception:
+                        pass
 
     group_rows: List[Dict[str, Any]] = []
     for (
@@ -495,6 +664,15 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
         </select>
       </div>
       <div>
+        <label>Y metric</label>
+        <select id="fYMetric">
+          <option value="accuracy">Accuracy</option>
+          <option value="cost_per_correct">Cost / correct (USD)</option>
+          <option value="reasoning_cost_per_correct">Reasoning cost / correct (USD, est.)</option>
+          <option value="latency_s">Latency (seconds, mean)</option>
+        </select>
+      </div>
+      <div>
         <label>Baseline</label>
         <label class="checkrow">
           <input id="fBaseline" type="checkbox" checked />
@@ -619,6 +797,7 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
       len: document.getElementById("fLen").value,
       metric: document.getElementById("fMetric").value,
       view: document.getElementById("fView").value,
+      yMetric: document.getElementById("fYMetric").value,
       baseline: document.getElementById("fBaseline").checked,
     }};
   }}
@@ -695,6 +874,18 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
     return {{
       maxvars: maxvars,
       total: 0, pending: 0, errors: 0, answered: 0, unclear: 0, correct: 0,
+      attempts_total: 0,
+      input_tokens: 0,
+      output_tokens: 0,
+      reasoning_tokens: 0,
+      cache_creation_input_tokens: 0,
+      cache_read_input_tokens: 0,
+      cost_total_usd: 0.0,
+      cost_input_usd: 0.0,
+      cost_output_usd: 0.0,
+      reasoning_usd_estimate: 0.0,
+      latency_ms_sum: 0.0,
+      latency_n: 0,
     }};
   }}
 
@@ -705,9 +896,37 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
     dst.answered += c.answered;
     dst.unclear += c.unclear;
     dst.correct += c.correct;
+    dst.attempts_total += (c.attempts_total || 0);
+    dst.input_tokens += (c.input_tokens || 0);
+    dst.output_tokens += (c.output_tokens || 0);
+    dst.reasoning_tokens += (c.reasoning_tokens || 0);
+    dst.cache_creation_input_tokens += (c.cache_creation_input_tokens || 0);
+    dst.cache_read_input_tokens += (c.cache_read_input_tokens || 0);
+    dst.cost_total_usd += (c.cost_total_usd || 0);
+    dst.cost_input_usd += (c.cost_input_usd || 0);
+    dst.cost_output_usd += (c.cost_output_usd || 0);
+    dst.reasoning_usd_estimate += (c.reasoning_usd_estimate || 0);
+    dst.latency_ms_sum += (c.latency_ms_sum || 0);
+    dst.latency_n += (c.latency_n || 0);
   }}
 
-  function buildSeries(rows, view, metric) {{
+  function yFromAgg(a, yMetric, accMetric) {{
+    if (yMetric === "accuracy") {{
+      return accuracyFromAgg(a, accMetric);
+    }}
+    if (yMetric === "cost_per_correct") {{
+      return (a.correct > 0) ? (a.cost_total_usd / a.correct) : null;
+    }}
+    if (yMetric === "reasoning_cost_per_correct") {{
+      return (a.correct > 0) ? (a.reasoning_usd_estimate / a.correct) : null;
+    }}
+    if (yMetric === "latency_s") {{
+      return (a.latency_n > 0) ? ((a.latency_ms_sum / a.latency_n) / 1000.0) : null;
+    }}
+    return null;
+  }}
+
+  function buildSeries(rows, view, yMetric, accMetric) {{
     // Map(seriesName -> Map(maxvars -> aggCounts))
     const bySeries = new Map();
     for (const r of rows) {{
@@ -728,7 +947,7 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
         .map(a => {{
           return {{
             x: a.maxvars,
-            y: accuracyFromAgg(a, metric),
+            y: yFromAgg(a, yMetric, accMetric),
             ...a,
           }};
         }});
@@ -737,8 +956,8 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
     return out;
   }}
 
-  function overallBaselineSeries(rows, metric) {{
-    const s = buildSeries(rows, "aggregate", metric);
+  function overallBaselineSeries(rows, yMetric, accMetric) {{
+    const s = buildSeries(rows, "aggregate", yMetric, accMetric);
     if (!s || s.length === 0) return null;
     const b = s[0];
     return {{
@@ -825,7 +1044,41 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
     return (x * 100).toFixed(1) + "%";
   }}
 
-  function renderChart(series) {{
+  function fmtUsd(x) {{
+    if (x === null || x === undefined) return "";
+    return "$" + Number(x).toFixed(2);
+  }}
+
+  function fmtY(y, yMetric) {{
+    if (y === null || y === undefined) return "";
+    if (yMetric === "accuracy") return fmtPct(y);
+    if (yMetric === "cost_per_correct") return fmtUsd(y);
+    if (yMetric === "reasoning_cost_per_correct") return fmtUsd(y);
+    if (yMetric === "latency_s") return Number(y).toFixed(1) + "s";
+    return String(y);
+  }}
+
+  function yAxisLabel(yMetric) {{
+    if (yMetric === "accuracy") return "accuracy";
+    if (yMetric === "cost_per_correct") return "USD / correct";
+    if (yMetric === "reasoning_cost_per_correct") return "USD / correct (reasoning est.)";
+    if (yMetric === "latency_s") return "latency (seconds)";
+    return "metric";
+  }}
+
+  function niceStep(rawStep) {{
+    if (!isFinite(rawStep) || rawStep <= 0) return 1;
+    const exp = Math.floor(Math.log10(rawStep));
+    const frac = rawStep / Math.pow(10, exp);
+    let niceFrac = 1;
+    if (frac <= 1) niceFrac = 1;
+    else if (frac <= 2) niceFrac = 2;
+    else if (frac <= 5) niceFrac = 5;
+    else niceFrac = 10;
+    return niceFrac * Math.pow(10, exp);
+  }}
+
+  function renderChart(series, yMetric) {{
     const svg = document.getElementById("chart");
     svg.innerHTML = "";
 
@@ -853,7 +1106,14 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
 
     let xmin = Math.min(...xs), xmax = Math.max(...xs);
     if (xmin === xmax) {{ xmin -= 1; xmax += 1; }}
-    const ymin = 0.0, ymax = 1.0;
+    const ymin = 0.0;
+    let ymax = 1.0;
+    if (yMetric === "accuracy") {{
+      ymax = 1.0;
+    }} else {{
+      const maxY = Math.max(...ys.map(v => Number(v)));
+      ymax = (isFinite(maxY) && maxY > 0) ? (maxY * 1.1) : 1.0;
+    }}
 
     const xScale = (x) => M.l + (x - xmin) / (xmax - xmin) * PW;
     const yScale = (y) => M.t + (1 - (y - ymin) / (ymax - ymin)) * PH;
@@ -872,8 +1132,16 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
     line(M.l, H - M.b, W - M.r, H - M.b, "#2d3748", 1.5);
 
     // y ticks
-    for (let i=0;i<=10;i++) {{
-      const y = i/10;
+    let yTicks = [];
+    if (yMetric === "accuracy") {{
+      for (let i=0;i<=10;i++) yTicks.push(i/10);
+    }} else {{
+      const step = niceStep(ymax / 5.0);
+      for (let y=0; y <= ymax + 1e-9; y += step) {{
+        yTicks.push(y);
+      }}
+    }}
+    for (const y of yTicks) {{
       const py = yScale(y);
       line(M.l-4, py, M.l, py, "#2d3748", 1);
       const txt = document.createElementNS("http://www.w3.org/2000/svg","text");
@@ -882,7 +1150,7 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
       txt.setAttribute("text-anchor","end");
       txt.setAttribute("font-size","12");
       txt.setAttribute("fill","#2d3748");
-      txt.textContent = (y*100).toFixed(0) + "%";
+      txt.textContent = fmtY(y, yMetric);
       svg.appendChild(txt);
       // gridline
       line(M.l, py, W - M.r, py, "#e2e8f0", 1);
@@ -920,7 +1188,7 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
     yl.setAttribute("text-anchor","middle");
     yl.setAttribute("font-size","13");
     yl.setAttribute("fill","#2d3748");
-    yl.textContent = "accuracy";
+    yl.textContent = yAxisLabel(yMetric);
     svg.appendChild(yl);
 
     // series lines
@@ -956,7 +1224,7 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
         title.textContent =
           String(s.name || "series") +
           " · maxvars=" + String(p.x) +
-          " acc=" + fmtPct(p.y) +
+          " y=" + fmtY(p.y, yMetric) +
           " (correct=" + String(p.correct) +
           " answered=" + String(p.answered) +
           " unclear=" + String(p.unclear) +
@@ -1002,6 +1270,8 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
     let st = getFilterState();
     applyViewDisables(st.view);
     st = getFilterState();
+    // Accuracy-denominator selector only applies to accuracy plots.
+    setDisabled("fMetric", st.yMetric !== "accuracy", false);
 
     // Reset series toggles when switching chart view.
     if (STATE.lastView !== st.view) {{
@@ -1016,15 +1286,27 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
         ...r,
         counts: {{
           total: c.total, pending: c.pending, errors: c.errors, answered: c.answered, unclear: c.unclear, correct: c.correct,
+          attempts_total: c.attempts_total || 0,
+          input_tokens: c.input_tokens || 0,
+          output_tokens: c.output_tokens || 0,
+          reasoning_tokens: c.reasoning_tokens || 0,
+          cache_creation_input_tokens: c.cache_creation_input_tokens || 0,
+          cache_read_input_tokens: c.cache_read_input_tokens || 0,
+          cost_total_usd: c.cost_total_usd || 0,
+          cost_input_usd: c.cost_input_usd || 0,
+          cost_output_usd: c.cost_output_usd || 0,
+          reasoning_usd_estimate: c.reasoning_usd_estimate || 0,
+          latency_ms_sum: c.latency_ms_sum || 0,
+          latency_n: c.latency_n || 0,
           accuracy: c.accuracy,
         }}
       }};
     }});
 
-    let series = buildSeries(baseRows, st.view, st.metric);
+    let series = buildSeries(baseRows, st.view, st.yMetric, st.metric);
     // Optional baseline overlay (for split views).
     if (st.view !== "aggregate" && st.baseline) {{
-      const b = overallBaselineSeries(baseRows, st.metric);
+      const b = overallBaselineSeries(baseRows, st.yMetric, st.metric);
       if (b) series = [b, ...series];
     }}
 
@@ -1038,7 +1320,21 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
     const visibleSeries = series.filter(s => !STATE.hiddenSeries.has(s.name));
 
     // summary line (computed over filtered rows; legend toggles are display-only)
-    const overallAgg = {{total: 0, pending: 0, errors: 0, answered: 0, unclear: 0, correct: 0}};
+    const overallAgg = {{
+      total: 0, pending: 0, errors: 0, answered: 0, unclear: 0, correct: 0,
+      attempts_total: 0,
+      input_tokens: 0,
+      output_tokens: 0,
+      reasoning_tokens: 0,
+      cache_creation_input_tokens: 0,
+      cache_read_input_tokens: 0,
+      cost_total_usd: 0.0,
+      cost_input_usd: 0.0,
+      cost_output_usd: 0.0,
+      reasoning_usd_estimate: 0.0,
+      latency_ms_sum: 0.0,
+      latency_n: 0,
+    }};
     for (const r of baseRows) {{
       addCounts(overallAgg, r.counts);
     }}
@@ -1049,6 +1345,10 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
     const ans = overallAgg.answered;
     const unc = overallAgg.unclear;
     const cor = overallAgg.correct;
+    const costTotal = overallAgg.cost_total_usd || 0;
+    const costPerCorrect = (cor > 0) ? (costTotal / cor) : null;
+    const reasoningPerCorrect = (cor > 0) ? ((overallAgg.reasoning_usd_estimate || 0) / cor) : null;
+    const latencyS = (overallAgg.latency_n > 0) ? ((overallAgg.latency_ms_sum / overallAgg.latency_n) / 1000.0) : null;
 
     document.getElementById("summaryLine").textContent =
       "overall: " + fmtPct(overall) +
@@ -1058,10 +1358,13 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
       " errors=" + String(err) +
       " pending=" + String(pend) +
       " total=" + String(tot) +
+      (costPerCorrect !== null ? (" · cost/correct=" + fmtUsd(costPerCorrect)) : "") +
+      (reasoningPerCorrect !== null && reasoningPerCorrect > 0 ? (" · reasoning/correct=" + fmtUsd(reasoningPerCorrect)) : "") +
+      (latencyS !== null ? (" · latency=" + Number(latencyS).toFixed(1) + "s") : "") +
       " · series(shown)=" + String(visibleSeries.length) +
       " · rows=" + String(baseRows.length);
 
-    renderChart(visibleSeries);
+    renderChart(visibleSeries, st.yMetric);
     renderTable(baseRows, st.metric);
   }}
 
@@ -1092,7 +1395,7 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
       if (viewEl) viewEl.value = "target";
     }} catch (e) {{}}
 
-    for (const id of ["fSuite","fRun","fProvider","fModel","fThinking","fRep","fPrompt","fHorn","fSat","fLen","fMetric","fView","fBaseline"]) {{
+    for (const id of ["fSuite","fRun","fProvider","fModel","fThinking","fRep","fPrompt","fHorn","fSat","fLen","fMetric","fView","fYMetric","fBaseline"]) {{
       document.getElementById(id).addEventListener("change", refresh);
     }}
     refresh();
