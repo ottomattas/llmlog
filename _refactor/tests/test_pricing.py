@@ -33,6 +33,19 @@ def test_compute_cost_usd() -> None:
     assert abs(cost["total_usd"] - 2.0) < 1e-9
 
 
+def test_compute_cost_usd_google_includes_reasoning_tokens_in_output() -> None:
+    from llmlog.pricing.schema import ModelRate
+    from llmlog.pricing.cost import compute_cost_usd
+
+    rate = ModelRate(provider="google", model="gemini-3-pro-preview", input_per_million_usd=2.0, output_per_million_usd=10.0)
+    usage = {"input_tokens": 100_000, "output_tokens": 10_000, "reasoning_tokens": 40_000}
+    cost = compute_cost_usd(rate, usage)
+    # billed output = output + reasoning for Google
+    assert abs(cost["input_usd"] - 0.2) < 1e-9
+    assert abs(cost["output_usd"] - 0.5) < 1e-9
+    assert abs(cost["total_usd"] - 0.7) < 1e-9
+
+
 def test_openai_pricing_table_matches_pinned_snapshot_id() -> None:
     from pathlib import Path
 

@@ -30,7 +30,7 @@ def main() -> int:
     ap.add_argument(
         "--submit-only",
         action="store_true",
-        help="Submit background OpenAI Responses and record resp_id, without polling for completion (collect later).",
+        help="Submit-only mode: OpenAI submits background Responses (collect later); other providers enqueue locally (collect later).",
     )
     ap.add_argument("--resume", action="store_true", help="Resume if results files already exist")
     ap.add_argument("--no-resume", action="store_true", help="Disable resume even if suite enables it")

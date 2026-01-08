@@ -172,10 +172,14 @@ class GroupCounts:
 
 
 def _is_pending(row: Dict[str, Any]) -> bool:
-    """Pending = submit-only row that has an OpenAI response id but no parsed answer yet."""
+    """Pending = submit-only row that has a submission id but no parsed answer yet.
+
+    - OpenAI submit-only rows carry `openai_response_id`.
+    - Non-OpenAI submit-only rows carry a local `submission_id` (collector executes later).
+    """
     if row.get("error"):
         return False
-    return bool(row.get("openai_response_id") and row.get("parsed_answer") is None)
+    return bool((row.get("openai_response_id") or row.get("submission_id")) and row.get("parsed_answer") is None)
 
 
 def _is_error(row: Dict[str, Any]) -> bool:
@@ -332,6 +336,10 @@ def build_combined_dashboard_data(
     prompts = uniq([r["prompt_label"] for r in group_rows])
     lens = sorted({int(r["maxlen"]) for r in group_rows})
     satflags = sorted({int(r["satflag"]) for r in group_rows})
+    providers = uniq([r["provider"] for r in group_rows])
+    models = uniq([r["model"] for r in group_rows])
+    thinking_modes = uniq([r["thinking_mode"] for r in group_rows])
+    targets = uniq([f"{r['provider']}/{r['model']}/{r['thinking_mode']}" for r in group_rows])
 
     payload: Dict[str, Any] = {
         "metadata": {
@@ -347,6 +355,10 @@ def build_combined_dashboard_data(
             "prompt_labels": prompts,
             "maxlens": lens,
             "satflags": satflags,
+            "providers": providers,
+            "models": models,
+            "thinking_modes": thinking_modes,
+            "targets": targets,
         },
         "groups": group_rows,
     }
@@ -412,6 +424,18 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
         <select id="fRun"></select>
       </div>
       <div>
+        <label>Provider</label>
+        <select id="fProvider"></select>
+      </div>
+      <div>
+        <label>Model</label>
+        <select id="fModel"></select>
+      </div>
+      <div>
+        <label>Thinking mode</label>
+        <select id="fThinking"></select>
+      </div>
+      <div>
         <label>Representation</label>
         <select id="fRep"></select>
       </div>
@@ -458,6 +482,10 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
         <label>Chart view</label>
         <select id="fView">
           <option value="aggregate">Aggregate (single line)</option>
+          <option value="target">Split by target (provider/model/thinking)</option>
+          <option value="provider">Split by provider</option>
+          <option value="model">Split by model</option>
+          <option value="thinking">Split by thinking mode</option>
           <option value="prompt">Split by prompt mechanism</option>
           <option value="representation">Split by representation</option>
           <option value="horn">Split by horn / nonhorn</option>
@@ -498,6 +526,9 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
           <tr>
             <th>suite</th>
             <th>run</th>
+            <th>provider</th>
+            <th>model</th>
+            <th>thinking</th>
             <th>rep</th>
             <th>prompt</th>
             <th>horn</th>
@@ -578,6 +609,9 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
     return {{
       suite: document.getElementById("fSuite").value,
       run: document.getElementById("fRun").value,
+      provider: document.getElementById("fProvider").value,
+      model: document.getElementById("fModel").value,
+      thinking: document.getElementById("fThinking").value,
       rep: document.getElementById("fRep").value,
       prompt: document.getElementById("fPrompt").value,
       horn: document.getElementById("fHorn").value,
@@ -601,6 +635,9 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
   function applyViewDisables(view) {{
     // Re-enable everything by default.
     setDisabled("fRun", false);
+    setDisabled("fProvider", false);
+    setDisabled("fModel", false);
+    setDisabled("fThinking", false);
     setDisabled("fRep", false);
     setDisabled("fPrompt", false);
     setDisabled("fHorn", false);
@@ -611,6 +648,9 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
     // If you want to split by X, the X filter becomes redundant and tends to confuse users
     // (it collapses the split back to a single series). So we disable it and force "All".
     if (view === "run") setDisabled("fRun", true, true);
+    if (view === "provider") setDisabled("fProvider", true, true);
+    if (view === "model") setDisabled("fModel", true, true);
+    if (view === "thinking") setDisabled("fThinking", true, true);
     if (view === "representation") setDisabled("fRep", true, true);
     if (view === "prompt") setDisabled("fPrompt", true, true);
     if (view === "horn") setDisabled("fHorn", true, true);
@@ -626,6 +666,9 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
   function matches(row, st) {{
     if (st.suite !== "all" && row.suite !== st.suite) return false;
     if (st.run !== "all" && row.run !== st.run) return false;
+    if (st.provider !== "all" && row.provider !== st.provider) return false;
+    if (st.model !== "all" && row.model !== st.model) return false;
+    if (st.thinking !== "all" && row.thinking_mode !== st.thinking) return false;
     if (st.rep !== "all" && row.representation !== st.rep) return false;
     if (st.prompt !== "all" && row.prompt_label !== st.prompt) return false;
     if (st.horn !== "all" && String(row.horn) !== st.horn) return false;
@@ -635,6 +678,10 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
   }}
 
   function seriesNameForRow(r, view) {{
+    if (view === "target") return String(r.provider) + "/" + String(r.model) + "/" + String(r.thinking_mode);
+    if (view === "provider") return String(r.provider || "unknown");
+    if (view === "model") return String(r.model || "unknown");
+    if (view === "thinking") return String(r.thinking_mode || "unknown");
     if (view === "prompt") return String(r.prompt_label || "unknown");
     if (view === "representation") return String(r.representation || "unknown");
     if (view === "horn") return (r.horn === 1) ? "horn" : "nonhorn";
@@ -934,6 +981,9 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
       tr.innerHTML = `
         <td class="mono">${{r.suite}}</td>
         <td class="mono">${{r.run}}</td>
+        <td class="mono">${{r.provider}}</td>
+        <td class="mono">${{r.model}}</td>
+        <td class="mono">${{r.thinking_mode}}</td>
         <td><span class="pill">${{r.representation}}</span></td>
         <td><span class="pill">${{r.prompt_label}}</span></td>
         <td>${{r.horn === 1 ? "horn" : "nonhorn"}}</td>
@@ -1021,11 +1071,28 @@ def generate_combined_dashboard_html(*, combined: Dict[str, Any], output_path: s
 
     setOptions(document.getElementById("fSuite"), DASH.filters.suites);
     setOptions(document.getElementById("fRun"), DASH.filters.runs);
+    setOptions(document.getElementById("fProvider"), DASH.filters.providers || []);
+    setOptions(document.getElementById("fModel"), DASH.filters.models || []);
+    setOptions(document.getElementById("fThinking"), DASH.filters.thinking_modes || []);
     setOptions(document.getElementById("fRep"), DASH.filters.representations);
     setOptions(document.getElementById("fPrompt"), DASH.filters.prompt_labels);
     setOptions(document.getElementById("fLen"), DASH.filters.maxlens.map(String));
 
-    for (const id of ["fSuite","fRun","fRep","fPrompt","fHorn","fSat","fLen","fMetric","fView","fBaseline"]) {{
+    // Defaults for model-focused exploration:
+    // - Focus on non-thinking runs
+    // - Show multiple lines by target (provider/model/thinking)
+    try {{
+      const thinkingEl = document.getElementById("fThinking");
+      if (thinkingEl && Array.from(thinkingEl.options).some(o => o.value === "think_none")) {{
+        thinkingEl.value = "think_none";
+      }}
+    }} catch (e) {{}}
+    try {{
+      const viewEl = document.getElementById("fView");
+      if (viewEl) viewEl.value = "target";
+    }} catch (e) {{}}
+
+    for (const id of ["fSuite","fRun","fProvider","fModel","fThinking","fRep","fPrompt","fHorn","fSat","fLen","fMetric","fView","fBaseline"]) {{
       document.getElementById(id).addEventListener("change", refresh);
     }}
     refresh();

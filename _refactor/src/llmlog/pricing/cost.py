@@ -47,7 +47,19 @@ def compute_cost_usd(rate: ModelRate, usage: Dict[str, Any]) -> Dict[str, Any]:
     cache_creation_input_tokens = _i("cache_creation_input_tokens")
 
     input_usd = (input_tokens / 1_000_000.0) * float(rate.input_per_million_usd)
-    output_usd = (output_tokens / 1_000_000.0) * float(rate.output_per_million_usd)
+
+    # Provider nuance:
+    # - Google Gemini pricing is listed as "output tokens including thinking tokens".
+    #   The API often reports thinking separately (thoughtsTokenCount). For Google runs, include
+    #   `reasoning_tokens` in billed output.
+    # - OpenAI and Anthropic output token counts already reflect billed output semantics.
+    billed_output_tokens = output_tokens
+    try:
+        if (rate.provider or "").lower() == "google" and reasoning_tokens:
+            billed_output_tokens = output_tokens + reasoning_tokens
+    except Exception:
+        pass
+    output_usd = (billed_output_tokens / 1_000_000.0) * float(rate.output_per_million_usd)
 
     cache_read_usd = 0.0
     if rate.cache_read_input_per_million_usd is not None:

@@ -150,9 +150,10 @@ def _compute_unique_stats_from_latest(latest_by_id: Dict[str, Dict[str, Any]]) -
         "attempts_total": 0,
     }
     for row in latest_by_id.values():
-        # Async submit-only mode: treat rows with an OpenAI response id but no parsed answer
-        # as pending (not unclear).
-        if row.get("openai_response_id") and row.get("parsed_answer") is None and not row.get("error"):
+        # Async submit-only mode:
+        # - OpenAI: rows have openai_response_id but no parsed answer yet (collected later).
+        # - Non-OpenAI: rows have a local submission_id but no parsed answer yet (collected later).
+        if (row.get("openai_response_id") or row.get("submission_id")) and row.get("parsed_answer") is None and not row.get("error"):
             stats["pending"] += 1
             continue
         try:
@@ -522,6 +523,19 @@ def run_suite(
                         continue
                     t = oi["target"]
                     key = f"{t.get('provider')}:{t.get('model')}:{_thinking_mode_label(t)}"
+                    prov_l = str(t.get("provider") or "").lower()
+                    # OpenAI submit-only uses provider-side async jobs; for other providers we enqueue locally
+                    # (collector step performs the actual calls).
+                    if submit_only and prov_l != "openai":
+                        lockstep_responses[key] = {
+                            "text": "",
+                            "thinking_text": None,
+                            "meta": {},
+                            "error": None,
+                            "timing_ms": None,
+                            "attempts": 0,
+                        }
+                        continue
                     future_map[ex.submit(call_one, t, prompt_text, sysprompt)] = key
                 for fut in as_completed(future_map):
                     key = future_map[fut]
@@ -565,7 +579,18 @@ def run_suite(
                         "attempts": 0,
                     }
                 else:
-                    resp = call_one(t, prompt_text, sysprompt)
+                    prov_l = str(t.get("provider") or "").lower()
+                    if submit_only and prov_l != "openai":
+                        resp = {
+                            "text": "",
+                            "thinking_text": None,
+                            "meta": {},
+                            "error": None,
+                            "timing_ms": None,
+                            "attempts": 0,
+                        }
+                    else:
+                        resp = call_one(t, prompt_text, sysprompt)
                 text = resp["text"]
                 thinking_text = resp["thinking_text"]
                 meta = resp["meta"]
@@ -573,8 +598,9 @@ def run_suite(
                 dur_ms = resp["timing_ms"]
                 attempts = resp["attempts"]
 
-            # In submit-only mode we only enqueue background work and store the provider response id.
-            # Parsing happens later in a collector step.
+            # In submit-only mode:
+            # - OpenAI: enqueue provider-side background work and store response id (collector polls later).
+            # - Non-OpenAI: enqueue locally (collector performs the actual provider calls later).
             if submit_only and not err:
                 parsed = None
             else:
@@ -592,6 +618,19 @@ def run_suite(
             raw_resp = meta.get("raw_response") if isinstance(meta, dict) else None
             openai_response_id = _extract_openai_response_id(raw_resp) if (t.get("provider") == "openai") else None
             openai_response_status = _extract_openai_status(raw_resp) if (t.get("provider") == "openai") else None
+            submission_id = None
+            submission_status = None
+            try:
+                prov_l = str(t.get("provider") or "").lower()
+            except Exception:
+                prov_l = ""
+            if prov_l == "openai":
+                submission_id = openai_response_id
+                submission_status = openai_response_status
+            elif submit_only and not err:
+                # Local queue identifier (collector will execute).
+                submission_id = f"local_{uuid.uuid4().hex}"
+                submission_status = "queued"
 
             # Minimal results row
             result_row: Dict[str, Any] = {
@@ -610,6 +649,8 @@ def run_suite(
                 "parsed_answer": parsed,
                 "correct": correct,
                 "error": err,
+                "submission_id": submission_id,
+                "submission_status": submission_status,
                 "openai_response_id": openai_response_id,
                 "openai_response_status": openai_response_status,
             }

@@ -58,10 +58,14 @@ def _latest_rows_by_id(path: Path) -> Dict[str, Dict[str, Any]]:
 
 
 def _is_pending(row: Dict[str, Any]) -> bool:
-    """Pending = submit-only row that has an OpenAI response id but no parsed answer yet."""
+    """Pending = submit-only row that has a submission id but no parsed answer yet.
+
+    - OpenAI submit-only rows carry `openai_response_id`.
+    - Non-OpenAI submit-only rows carry a local `submission_id` (collector executes later).
+    """
     if row.get("error"):
         return False
-    return bool(row.get("openai_response_id") and row.get("parsed_answer") is None)
+    return bool((row.get("openai_response_id") or row.get("submission_id")) and row.get("parsed_answer") is None)
 
 
 def _prompt_label_from_template(template_path: str) -> str:
