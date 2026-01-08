@@ -1,0 +1,26 @@
+name: sat__repr-cnf_compact__subset-nonhornonly__prompt-dpll_alg_from__anthropic_claude-opus-4-5-20251101__think-none
+description: "Non-Horn-only subset. Compact CNF representation. DPLL-style algorithm with forcing-clause provenance ('from'). Anthropic claude-opus-4-5-20251101 with think_none baseline (no extended thinking)."
+
+task: sat_decision
+subset: nonhornonly
+
+dataset:
+  path: datasets/validation/full_vars3-50_len3-5_hornmixed_per50_seed12345.jsonl
+  skip_rows: 1
+
+prompting:
+  render_policy: fixed
+  representation: cnf_compact
+  template: prompts/sat_decision__cnf_compact__dpll_alg_from.j2
+  prompt_profile: direct
+  response_style: answer_only
+  answer_format: contradiction_satisfiable
+
+targets_ref:
+  - ../targets/anthropic_claude-opus-4-5-20251101__think-none.yaml
+
+pricing_table: configs/pricing/multivendor_2025-12-19.yaml
+
+output_pattern: runs/${name}/${run}/${provider}/${model}/${thinking_mode}/results.jsonl
+resume: true
+

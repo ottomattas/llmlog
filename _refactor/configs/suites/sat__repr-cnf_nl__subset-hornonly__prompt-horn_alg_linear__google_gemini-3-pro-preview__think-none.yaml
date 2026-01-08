@@ -1,0 +1,26 @@
+name: sat__repr-cnf_nl__subset-hornonly__prompt-horn_alg_linear__google_gemini-3-pro-preview__think-none
+description: "Horn-only subset. Natural-language CNF representation. Horn forward-chaining algorithm (linear trace). Google gemini-3-pro-preview with think_none baseline (no thinking budget)."
+
+task: sat_decision
+subset: hornonly
+
+dataset:
+  path: datasets/validation/full_vars3-50_len3-5_hornmixed_per50_seed12345.jsonl
+  skip_rows: 1
+
+prompting:
+  render_policy: fixed
+  representation: cnf_nl
+  template: prompts/sat_decision__cnf_nl__horn_alg_linear.j2
+  prompt_profile: direct
+  response_style: answer_only
+  answer_format: contradiction_satisfiable
+
+targets_ref:
+  - ../targets/google_gemini-3-pro-preview__think-none.yaml
+
+pricing_table: configs/pricing/multivendor_2025-12-19.yaml
+
+output_pattern: runs/${name}/${run}/${provider}/${model}/${thinking_mode}/results.jsonl
+resume: true
+

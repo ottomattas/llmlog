@@ -1,0 +1,29 @@
+name: anthropic_claude-opus-4-5-20251101__think-none__prompt-matrix
+description: >
+  Full prompt-variant matrix for Anthropic claude-opus-4-5-20251101 with thinking_mode=think_none.
+  Mirrors the OpenAI gpt-5.2 think-none prompt matrix.
+
+runs_dir: runs
+
+# Standard coarse sweep selection (vars 10/20/30/40/50; len 3/4/5; case_limit=10).
+maxvars: "10,20,30,40,50"
+lens: [3, 4, 5]
+case_limit: 10
+
+suites:
+  # Horn-only
+  - path: configs/suites/sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__anthropic_claude-opus-4-5-20251101__think-none.yaml
+  - path: configs/suites/sat__repr-cnf_compact__subset-hornonly__prompt-horn_alg_linear__anthropic_claude-opus-4-5-20251101__think-none.yaml
+  - path: configs/suites/sat__repr-cnf_compact__subset-hornonly__prompt-horn_alg_from__anthropic_claude-opus-4-5-20251101__think-none.yaml
+  - path: configs/suites/sat__repr-cnf_nl__subset-hornonly__prompt-examples_only__anthropic_claude-opus-4-5-20251101__think-none.yaml
+  - path: configs/suites/sat__repr-cnf_nl__subset-hornonly__prompt-horn_alg_linear__anthropic_claude-opus-4-5-20251101__think-none.yaml
+  - path: configs/suites/sat__repr-cnf_nl__subset-hornonly__prompt-horn_alg_from__anthropic_claude-opus-4-5-20251101__think-none.yaml
+
+  # Non-Horn-only
+  - path: configs/suites/sat__repr-cnf_compact__subset-nonhornonly__prompt-examples_only__anthropic_claude-opus-4-5-20251101__think-none.yaml
+  - path: configs/suites/sat__repr-cnf_compact__subset-nonhornonly__prompt-dpll_alg_linear__anthropic_claude-opus-4-5-20251101__think-none.yaml
+  - path: configs/suites/sat__repr-cnf_compact__subset-nonhornonly__prompt-dpll_alg_from__anthropic_claude-opus-4-5-20251101__think-none.yaml
+  - path: configs/suites/sat__repr-cnf_nl__subset-nonhornonly__prompt-examples_only__anthropic_claude-opus-4-5-20251101__think-none.yaml
+  - path: configs/suites/sat__repr-cnf_nl__subset-nonhornonly__prompt-dpll_alg_linear__anthropic_claude-opus-4-5-20251101__think-none.yaml
+  - path: configs/suites/sat__repr-cnf_nl__subset-nonhornonly__prompt-dpll_alg_from__anthropic_claude-opus-4-5-20251101__think-none.yaml
+
