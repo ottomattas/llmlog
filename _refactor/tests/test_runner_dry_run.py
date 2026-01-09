@@ -7,7 +7,12 @@ def test_run_suite_dry_run_writes_outputs(tmp_path) -> None:
     from llmlog.runner import run_suite
 
     repo = Path(__file__).resolve().parents[1]
-    suite = repo / "configs" / "suites" / "sat__repr-cnf_compact__subset-mixed.yaml"
+    suite = (
+        repo
+        / "configs"
+        / "suites"
+        / "sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2__think-none.yaml"
+    )
 
     run_suite(
         suite_path=str(suite),

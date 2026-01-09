@@ -17,8 +17,9 @@ def test_convert_experiments_config_dict_maps_style_and_parse() -> None:
     suite, target_set = convert_experiments_config_dict(old)
     assert suite.subset == Subset.hornonly
     assert suite.dataset.path == "datasets/validation/vars10_len3-5_hornmixed_per20_seed12345.jsonl"
-    assert suite.prompting.representation == Representation.horn_rules  # type: ignore[attr-defined]
+    assert suite.prompting.representation == Representation.horn_if_then  # type: ignore[attr-defined]
     assert suite.prompting.answer_format == AnswerFormat.yes_no  # type: ignore[attr-defined]
+    assert suite.prompting.template.endswith("prompts/sat_decision__horn_if_then__horn_alg_linear.j2")  # type: ignore[attr-defined]
     assert target_set.targets[0].provider == "openai"
 
 

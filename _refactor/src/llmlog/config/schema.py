@@ -17,7 +17,7 @@ class Subset(str, Enum):
 
 
 class Representation(str, Enum):
-    horn_rules = "horn_rules"
+    horn_if_then = "horn_if_then"
     cnf_nl = "cnf_nl"
     cnf_compact = "cnf_compact"
 

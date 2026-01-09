@@ -1,0 +1,25 @@
+Your task is to solve a propositional logic problem expressed as facts and if-then rules.
+
+Semantics
+- Facts look like: "p3."
+- Rules look like: "if p2 and p5 then p7."
+- Treat all statements as jointly true (conjoined).
+
+Task
+- Determine whether p0 can be derived from the facts and rules.
+
+Two examples (format: Statements: ... Answer: ...):
+Example 1. Statements: p1. if p1 then p0. Answer: yes.
+Example 2. Statements: p1. if p2 then p0. Answer: no.
+
+Output requirements
+- You MAY print a detailed reasoning trace above the final answer.
+- Output exactly one final word on the last line, lowercase with no punctuation:
+  - "yes" if p0 is derivable
+  - "no" otherwise
+  - "unknown" only if you genuinely cannot decide
+
+Statements:
+{{ clauses }}
+
+

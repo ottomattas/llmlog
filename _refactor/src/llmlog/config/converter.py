@@ -21,11 +21,10 @@ from .schema import (
 
 
 STYLE_TO_REPRESENTATION: Dict[str, Representation] = {
-    "horn_if_then": Representation.horn_rules,
+    "horn_if_then": Representation.horn_if_then,
     "cnf_v1": Representation.cnf_nl,
     "cnf_v2": Representation.cnf_compact,
     # aliases seen in prose/docs
-    "horn_rules": Representation.horn_rules,
     "cnf_nl": Representation.cnf_nl,
     "cnf_compact": Representation.cnf_compact,
 }
@@ -60,14 +59,18 @@ def _convert_thinking(thinking: Optional[Dict[str, Any]]) -> Optional[ThinkingOp
 
 
 def _template_for(representation: Representation, answer_format: AnswerFormat) -> str:
-    if representation == Representation.horn_rules and answer_format == AnswerFormat.yes_no:
-        return "prompts/sat_decision__horn_rules__answer_only.j2"
+    if representation == Representation.horn_if_then and answer_format == AnswerFormat.yes_no:
+        # Prefer the linear Horn forward-chaining prompt as the default for yes/no Horn rules
+        # (i.e., the `horn_if_then` suite representation).
+        # The older answer-only template has been removed in favor of standardized prompt
+        # variant naming (examples_only / horn_alg_*).
+        return "prompts/sat_decision__horn_if_then__horn_alg_linear.j2"
     if representation == Representation.cnf_compact and answer_format == AnswerFormat.contradiction_satisfiable:
-        return "prompts/sat_decision__cnf_compact__answer_only.j2"
+        return "prompts/sat_decision__cnf_compact__examples_only.j2"
     if representation == Representation.cnf_nl and answer_format == AnswerFormat.contradiction_satisfiable:
-        return "prompts/sat_decision__cnf_nl__answer_only.j2"
+        return "prompts/sat_decision__cnf_nl__examples_only.j2"
     # Fallback to mixed prompt (rare/legacy configs); caller can override explicitly.
-    return "prompts/sat_decision__mixed_interpretation__answer_only.j2"
+    return "prompts/sat_decision__cnf_compact__examples_only.j2"
 
 
 def convert_experiments_config_dict(

@@ -1,0 +1,28 @@
+Your task is to solve a propositional logic problem expressed as facts and if-then rules.
+
+Semantics
+- Facts look like: "p3."
+- Rules look like: "if p2 and p5 then p7."
+- Treat all statements as jointly true (conjoined).
+
+Algorithm (Horn forward chaining)
+- Let T be the set of variables known to be true, initially containing every variable pK that appears as a fact "pK.".
+- Repeat:
+  - For each rule of the form "if pA and pB and ... then pX.":
+    - If every antecedent variable pA, pB, ... is in T, then add pX to T (if not already present).
+- Stop when either:
+  - p0 is derived, or
+  - no new variables can be added to T.
+
+Output requirements
+- You MAY print a detailed reasoning trace above the final answer.
+- If you print derived variables, prefer printing one derived variable per line (e.g., "p7").
+- Output exactly one final word on the last line, lowercase with no punctuation:
+  - "yes" if p0 is derivable
+  - "no" otherwise
+  - "unknown" only if you genuinely cannot decide
+
+Statements:
+{{ clauses }}
+
+

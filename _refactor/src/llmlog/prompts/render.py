@@ -12,12 +12,12 @@ def render_clauses(problem: CNF, representation: str) -> str:
     """Render CNF clauses into a text block for the given representation.
 
     Representation mapping (compat with experiments.runner.render_prompt):
-    - horn_rules    -> horn_if_then
-    - cnf_nl        -> cnf_v1
-    - cnf_compact   -> cnf_v2
+    - horn_if_then
+    - cnf_nl (alias: cnf_v1)
+    - cnf_compact (alias: cnf_v2)
     """
     rep = (representation or "").strip().lower()
-    if rep in ("horn_rules", "horn_if_then", ""):
+    if rep in ("horn_if_then", ""):
         lines: List[str] = []
         for clause in problem:
             pos: List[int] = []

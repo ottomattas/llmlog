@@ -7,7 +7,7 @@ This document describes how to configure and run experiments inside `_refactor/`
 - **Target set**: a YAML file in `configs/targets/` listing provider/model combinations (plus thinking/max_tokens/etc).
 
 We include two example target sets:
-- `configs/targets/twelve_models.yaml`: stable 12-model matrix used in earlier experiments
+- `configs/targets/twelve_models.yaml`: stable 12-model matrix used in earlier experiments (legacy; not used by the current model-specific suite set)
 - `configs/targets/latest_models.yaml`: curated pinned “latest models” set (see provider docs)
 - `configs/targets/rolling_latest.yaml`: uses provider aliases where supported (fast adoption; less reproducible)
 
@@ -19,7 +19,7 @@ python scripts/sync_targets.py --out configs/targets/generated_latest_models.yam
 ### Running a suite
 From `_refactor/`:
 ```
-python scripts/run.py --suite configs/suites/sat__repr-cnf_compact__subset-mixed.yaml --run demo-001 --limit 10 --resume --lockstep
+python scripts/run.py --suite configs/suites/sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2__think-none.yaml --run demo-001 --limit 10 --resume --lockstep
 ```
 
 ### Two execution modes (recommended naming)
@@ -94,7 +94,7 @@ python scripts/collect_openai_submissions.py --runs-dir runs --watch-seconds 60
 
 You can also do a preflight (targets + pricing + rough cost upper bound) without running:
 ```
-python scripts/run.py --suite configs/suites/sat__repr-cnf_compact__subset-mixed.yaml --preflight-only --estimate-cost
+python scripts/run.py --suite configs/suites/sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2__think-none.yaml --preflight-only --estimate-cost
 ```
 
 ### Dataset drilldown (vars/len/id filters)
@@ -139,10 +139,19 @@ Templates live under `prompts/` and are rendered with Jinja2. The runner injects
 - `clauses`: the rendered formula (depends on `representation`)
 
 Current templates:
-- `prompts/sat_decision__horn_rules__answer_only.j2`
-- `prompts/sat_decision__cnf_compact__answer_only.j2`
-- `prompts/sat_decision__cnf_nl__answer_only.j2`
-- `prompts/sat_decision__mixed_interpretation__answer_only.j2`
+- `prompts/sat_decision__horn_if_then__examples_only.j2`
+- `prompts/sat_decision__horn_if_then__horn_alg_from.j2`
+- `prompts/sat_decision__horn_if_then__horn_alg_linear.j2`
+- `prompts/sat_decision__cnf_compact__examples_only.j2`
+- `prompts/sat_decision__cnf_compact__horn_alg_from.j2`
+- `prompts/sat_decision__cnf_compact__horn_alg_linear.j2`
+- `prompts/sat_decision__cnf_compact__dpll_alg_from.j2`
+- `prompts/sat_decision__cnf_compact__dpll_alg_linear.j2`
+- `prompts/sat_decision__cnf_nl__examples_only.j2`
+- `prompts/sat_decision__cnf_nl__horn_alg_from.j2`
+- `prompts/sat_decision__cnf_nl__horn_alg_linear.j2`
+- `prompts/sat_decision__cnf_nl__dpll_alg_from.j2`
+- `prompts/sat_decision__cnf_nl__dpll_alg_linear.j2`
 
 ### Parsing + correctness
 The runner parses model output into `parsed_answer`:

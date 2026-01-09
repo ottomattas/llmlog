@@ -32,7 +32,7 @@ def test_runner_writes_cost_totals_when_pricing_enabled(tmp_path, monkeypatch) -
 
     # Use an existing prompt template from the repo (absolute path)
     repo = Path(__file__).resolve().parents[1]
-    tmpl = (repo / "prompts" / "sat_decision__cnf_compact__answer_only.j2").resolve()
+    tmpl = (repo / "prompts" / "sat_decision__cnf_compact__examples_only.j2").resolve()
     pricing = (repo / "configs" / "pricing" / "openai_2025-12-18.yaml").resolve()
 
     suite_yaml = tmp_path / "suite.yaml"

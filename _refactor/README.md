@@ -39,7 +39,7 @@ python scripts/generate_problems.py --seed 12345 --dataset validation --name pro
 
 4) Run a small test suite (limit 10):
 ```
-python scripts/run.py --suite configs/suites/sat__repr-cnf_compact__subset-mixed.yaml --run validation_001 --resume --limit 10
+python scripts/run.py --suite configs/suites/sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2__think-none.yaml --run validation_001 --resume --limit 10
 ```
 
 5) Analyze results:

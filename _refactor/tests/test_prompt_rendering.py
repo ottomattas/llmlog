@@ -21,11 +21,11 @@ def _fixture_problem_row():
     )
 
 
-def test_render_clauses_horn_rules_matches_legacy_style() -> None:
+def test_render_clauses_horn_if_then_matches_legacy_style() -> None:
     from llmlog.prompts.render import render_clauses
 
     pr = _fixture_problem_row()
-    txt = render_clauses(pr.problem or [], representation="horn_rules")
+    txt = render_clauses(pr.problem or [], representation="horn_if_then")
     # Facts/rules
     assert "p1." in txt
     assert "if p2 then p1." in txt
@@ -49,7 +49,7 @@ def test_render_prompt_uses_template_and_injects_clauses() -> None:
 
     pr = _fixture_problem_row()
     repo = Path(__file__).resolve().parents[1]
-    template = repo / "prompts" / "sat_decision__cnf_compact__answer_only.j2"
+    template = repo / "prompts" / "sat_decision__cnf_compact__examples_only.j2"
     text = render_prompt(problem=pr, template_path=str(template), representation="cnf_compact")
     assert "Statements:" in text
     assert "not(p2) or p1." in text

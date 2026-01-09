@@ -18,6 +18,9 @@ suites:
   - path: configs/suites/sat__repr-cnf_nl__subset-hornonly__prompt-examples_only__openai_gpt-5.2__think-none.yaml
   - path: configs/suites/sat__repr-cnf_nl__subset-hornonly__prompt-horn_alg_linear__openai_gpt-5.2__think-none.yaml
   - path: configs/suites/sat__repr-cnf_nl__subset-hornonly__prompt-horn_alg_from__openai_gpt-5.2__think-none.yaml
+  - path: configs/suites/sat__repr-horn_if_then__subset-hornonly__prompt-examples_only__openai_gpt-5.2__think-none.yaml
+  - path: configs/suites/sat__repr-horn_if_then__subset-hornonly__prompt-horn_alg_linear__openai_gpt-5.2__think-none.yaml
+  - path: configs/suites/sat__repr-horn_if_then__subset-hornonly__prompt-horn_alg_from__openai_gpt-5.2__think-none.yaml
 
   # Non-Horn-only
   - path: configs/suites/sat__repr-cnf_compact__subset-nonhornonly__prompt-examples_only__openai_gpt-5.2__think-none.yaml
@@ -26,5 +29,8 @@ suites:
   - path: configs/suites/sat__repr-cnf_nl__subset-nonhornonly__prompt-examples_only__openai_gpt-5.2__think-none.yaml
   - path: configs/suites/sat__repr-cnf_nl__subset-nonhornonly__prompt-dpll_alg_linear__openai_gpt-5.2__think-none.yaml
   - path: configs/suites/sat__repr-cnf_nl__subset-nonhornonly__prompt-dpll_alg_from__openai_gpt-5.2__think-none.yaml
+  - path: configs/suites/sat__repr-horn_if_then__subset-nonhornonly__prompt-examples_only__openai_gpt-5.2__think-none.yaml
+  - path: configs/suites/sat__repr-horn_if_then__subset-nonhornonly__prompt-horn_alg_linear__openai_gpt-5.2__think-none.yaml
+  - path: configs/suites/sat__repr-horn_if_then__subset-nonhornonly__prompt-horn_alg_from__openai_gpt-5.2__think-none.yaml
 
 
