@@ -269,47 +269,58 @@ def collect_for_results_file(
                 collected += 1
             continue
 
-        batch = _batch_from_operation(op)
-        if not batch:
-            continue
-        output = batch.get("output") if isinstance(batch.get("output"), dict) else {}
-
-        # Prefer inlined responses when available.
-        inlined = None
-        try:
-            ir = output.get("inlinedResponses")
-            if isinstance(ir, dict) and isinstance(ir.get("inlinedResponses"), list):
-                inlined = ir.get("inlinedResponses") or []
-        except Exception:
-            inlined = None
-
+        # The Gemini Batch API may return results in multiple shapes:
+        # 1) Operation-like object with `response.inlinedResponses.inlinedResponses` (AI Studio keys).
+        # 2) Legacy/alternate batch object with `response.batch.output.{inlinedResponses|responsesFile}`.
         responses: Optional[list[Dict[str, Any]]] = None
-        if inlined is not None:
-            # Convert to list of per-request objects with 'response' or 'error'
-            responses = []
-            for item in inlined:
-                if isinstance(item, dict):
-                    responses.append(item)
-                else:
-                    responses.append({})
-        else:
-            file_name = output.get("responsesFile")
-            if isinstance(file_name, str) and file_name:
-                try:
-                    file_obj = _request_json(host=host, key=key, method="GET", path=f"/v1beta/{file_name}?key={key}")
-                    dl = file_obj.get("downloadUri")
-                    if isinstance(dl, str) and dl:
-                        txt = _download_text(dl, timeout_s=60)
-                        responses = []
-                        for line in txt.splitlines():
-                            if not line.strip():
-                                continue
-                            try:
-                                responses.append(json.loads(line))
-                            except Exception:
-                                responses.append({})
-                except Exception:
-                    responses = None
+
+        resp = op.get("response")
+        if isinstance(resp, dict):
+            ir = resp.get("inlinedResponses")
+            if isinstance(ir, dict) and isinstance(ir.get("inlinedResponses"), list):
+                responses = [(item if isinstance(item, dict) else {}) for item in (ir.get("inlinedResponses") or [])]
+
+        if responses is None:
+            batch = _batch_from_operation(op)
+            if not batch:
+                continue
+            output = batch.get("output") if isinstance(batch.get("output"), dict) else {}
+
+            # Prefer inlined responses when available.
+            inlined = None
+            try:
+                ir = output.get("inlinedResponses")
+                if isinstance(ir, dict) and isinstance(ir.get("inlinedResponses"), list):
+                    inlined = ir.get("inlinedResponses") or []
+            except Exception:
+                inlined = None
+
+            if inlined is not None:
+                # Convert to list of per-request objects with 'response' or 'error'
+                responses = []
+                for item in inlined:
+                    if isinstance(item, dict):
+                        responses.append(item)
+                    else:
+                        responses.append({})
+            else:
+                file_name = output.get("responsesFile")
+                if isinstance(file_name, str) and file_name:
+                    try:
+                        file_obj = _request_json(host=host, key=key, method="GET", path=f"/v1beta/{file_name}?key={key}")
+                        dl = file_obj.get("downloadUri")
+                        if isinstance(dl, str) and dl:
+                            txt = _download_text(dl, timeout_s=60)
+                            responses = []
+                            for line in txt.splitlines():
+                                if not line.strip():
+                                    continue
+                                try:
+                                    responses.append(json.loads(line))
+                                except Exception:
+                                    responses.append({})
+                    except Exception:
+                        responses = None
 
         if responses is None:
             continue
