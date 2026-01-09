@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import http.client
 import json
+import random
+import time
 from typing import Any, Dict, Optional, Tuple
 
 from .secrets import get_provider_key, load_secrets
@@ -112,31 +114,52 @@ def chat_completion(
     if max_tokens is not None:
         gen_cfg["maxOutputTokens"] = int(max_tokens)
 
-    conn = http.client.HTTPSConnection(host)
-    conn.request(
-        "POST",
-        path,
-        json.dumps(body),
-        headers={
-            "Content-Type": "application/json",
-            "x-goog-api-key": key,
-        },
-    )
-    resp = conn.getresponse()
-    raw = resp.read()
-    if resp.status != 200:
+    # Transport-level flakiness (e.g. RemoteDisconnected) can happen; keep a small retry loop here.
+    retryable_status = {429, 500, 502, 503, 504}
+    last_err: Optional[BaseException] = None
+    for attempt in range(1, 5):
+        conn = http.client.HTTPSConnection(host, timeout=60)
         try:
-            data = json.loads(raw)
-            message = data.get("error", {}).get("message", "")
-        except Exception:
-            message = raw.decode("utf-8", errors="ignore")
-        raise RuntimeError(f"Gemini error {resp.status} {resp.reason}: {message}")
-    try:
-        data = json.loads(raw)
-    except Exception:
-        raise RuntimeError(f"Gemini response is not JSON: {raw}")
-    finally:
-        conn.close()
+            conn.request(
+                "POST",
+                path,
+                json.dumps(body),
+                headers={
+                    "Content-Type": "application/json",
+                    "x-goog-api-key": key,
+                },
+            )
+            resp = conn.getresponse()
+            raw = resp.read()
+            if resp.status != 200:
+                try:
+                    data = json.loads(raw)
+                    message = data.get("error", {}).get("message", "")
+                except Exception:
+                    message = raw.decode("utf-8", errors="ignore")
+                if resp.status in retryable_status and attempt < 4:
+                    time.sleep(min(30.0, (2.0 ** (attempt - 1)) + random.random()))
+                    continue
+                raise RuntimeError(f"Gemini error {resp.status} {resp.reason}: {message}")
+            try:
+                data = json.loads(raw)
+            except Exception:
+                raise RuntimeError(f"Gemini response is not JSON: {raw}")
+            break
+        except Exception as e:
+            last_err = e
+            if attempt >= 4:
+                raise
+            time.sleep(min(30.0, (2.0 ** (attempt - 1)) + random.random()))
+        finally:
+            try:
+                conn.close()
+            except Exception:
+                pass
+    else:
+        if last_err:
+            raise last_err
+        raise RuntimeError("Gemini request failed without an exception")
 
     text = _extract_text(data)
     thinking_text = _extract_thinking_text(data)

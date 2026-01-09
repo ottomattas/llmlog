@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import random
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -81,6 +82,8 @@ def collect_for_results_file(
     include_providers: Optional[Sequence[str]],
     dry_run: bool,
     limit: Optional[int],
+    max_attempts: int,
+    backoff_seconds: Sequence[int],
 ) -> Dict[str, Any]:
     from llmlog.parsers import parse_contradiction, parse_yes_no
     from llmlog.providers.router import run_chat
@@ -200,25 +203,41 @@ def collect_for_results_file(
         thinking_text = None
         meta: Dict[str, Any] = {}
         dur_ms: Optional[int] = None
-        try:
-            start = time.time()
-            res = run_chat(
-                provider=provider,
-                model=model,
-                prompt=prompt,
-                sysprompt=None,
-                max_tokens=max_tokens,
-                temperature=temperature,
-                seed=seed,
-                thinking=thinking,
-                poll=True,
-            )
-            dur_ms = int((time.time() - start) * 1000)
-            text = res.get("text") or ""
-            thinking_text = res.get("thinking_text")
-            meta = {k: v for k, v in res.items() if k not in ("text", "thinking_text")}
-        except Exception as e:
-            err = str(e)
+
+        # Retry transient transport/server errors (important for Gemini, which can drop connections).
+        attempts = 0
+        while True:
+            try:
+                start = time.time()
+                res = run_chat(
+                    provider=provider,
+                    model=model,
+                    prompt=prompt,
+                    sysprompt=None,
+                    max_tokens=max_tokens,
+                    temperature=temperature,
+                    seed=seed,
+                    thinking=thinking,
+                    poll=True,
+                )
+                dur_ms = int((time.time() - start) * 1000)
+                text = res.get("text") or ""
+                thinking_text = res.get("thinking_text")
+                meta = {k: v for k, v in res.items() if k not in ("text", "thinking_text")}
+                err = None
+                break
+            except Exception as e:
+                attempts += 1
+                err = str(e)
+                if attempts >= max(1, int(max_attempts)):
+                    break
+                try:
+                    b = list(backoff_seconds) or [2, 5, 10]
+                    sleep_s = float(b[min(attempts - 1, len(b) - 1)])
+                except Exception:
+                    sleep_s = 1.0
+                # jitter helps avoid thundering herd if multiple collectors are running
+                time.sleep(max(0.0, sleep_s + random.random()))
 
         prov_seed = latest_prov.get(rid) or {}
         ans_fmt = (prov_seed.get("answer_format") or "contradiction_satisfiable").strip()
@@ -317,6 +336,13 @@ def main() -> int:
     )
     ap.add_argument("--dry-run", action="store_true", help="Do not write files; only report what would be collected")
     ap.add_argument("--limit", type=int, default=None, help="Max pending items to collect per results.jsonl")
+    ap.add_argument("--max-attempts", type=int, default=5, help="Max attempts per item when calling providers (default: 5)")
+    ap.add_argument(
+        "--backoff-seconds",
+        type=str,
+        default="2,5,10,20,30",
+        help="Comma-separated retry backoffs in seconds (default: 2,5,10,20,30)",
+    )
     ap.add_argument(
         "--watch-seconds",
         type=int,
@@ -328,6 +354,10 @@ def main() -> int:
     runs_dir = Path(args.runs_dir).resolve()
     results_files = sorted(runs_dir.glob("**/results.jsonl"))
     providers = [p.strip() for p in str(args.providers or "").split(",") if p.strip()] or None
+    try:
+        backoffs = [int(x.strip()) for x in str(args.backoff_seconds or "").split(",") if x.strip()]
+    except Exception:
+        backoffs = [2, 5, 10, 20, 30]
 
     def one_pass() -> Tuple[int, int]:
         total_pending = 0
@@ -338,6 +368,8 @@ def main() -> int:
                 include_providers=providers,
                 dry_run=bool(args.dry_run),
                 limit=args.limit,
+                max_attempts=int(args.max_attempts),
+                backoff_seconds=backoffs,
             )
             total_pending += int(out.get("pending") or 0)
             total_collected += int(out.get("collected") or 0)
