@@ -94,8 +94,22 @@ def _load_latest_results(results_path: Path) -> Dict[str, Dict[str, Any]]:
     return latest
 
 
-def _should_rerun_latest(latest_row: Dict[str, Any], *, rerun_errors: bool, rerun_unclear: bool) -> bool:
+def _is_pending_local(latest_row: Dict[str, Any]) -> bool:
+    """Return True if the latest row represents a locally queued (not yet executed) submit-only item."""
+    if latest_row.get("error"):
+        return False
+    if latest_row.get("parsed_answer") is not None:
+        return False
+    sub = latest_row.get("submission_id")
+    return isinstance(sub, str) and sub.startswith("local_")
+
+
+def _should_rerun_latest(
+    latest_row: Dict[str, Any], *, rerun_errors: bool, rerun_unclear: bool, rerun_pending: bool
+) -> bool:
     if rerun_errors and latest_row.get("error"):
+        return True
+    if rerun_pending and _is_pending_local(latest_row):
         return True
     if rerun_unclear:
         try:
@@ -106,7 +120,7 @@ def _should_rerun_latest(latest_row: Dict[str, Any], *, rerun_errors: bool, reru
     return False
 
 
-def _load_done_ids(results_path: Path, *, rerun_errors: bool, rerun_unclear: bool) -> Set[str]:
+def _load_done_ids(results_path: Path, *, rerun_errors: bool, rerun_unclear: bool, rerun_pending: bool) -> Set[str]:
     """Return ids considered 'done' for resume, based on the latest row per id.
 
     If rerun flags are enabled, ids whose latest row matches the rerun criteria are excluded
@@ -115,7 +129,7 @@ def _load_done_ids(results_path: Path, *, rerun_errors: bool, rerun_unclear: boo
     latest = _load_latest_results(results_path)
     done: Set[str] = set()
     for rid, row in latest.items():
-        if _should_rerun_latest(row, rerun_errors=rerun_errors, rerun_unclear=rerun_unclear):
+        if _should_rerun_latest(row, rerun_errors=rerun_errors, rerun_unclear=rerun_unclear, rerun_pending=rerun_pending):
             continue
         done.add(rid)
     return done
@@ -301,6 +315,7 @@ def run_suite(
     case_limit: Optional[int] = None,
     rerun_errors: bool = False,
     rerun_unclear: bool = False,
+    rerun_pending: bool = False,
 ) -> None:
     suite_file = Path(suite_path).resolve()
     root = _find_refactor_root(suite_file)
@@ -376,7 +391,7 @@ def run_suite(
         _ensure_dir(prov_path)
         _ensure_dir(summary_path)
         done_ids = (
-            _load_done_ids(results_path, rerun_errors=rerun_errors, rerun_unclear=rerun_unclear)
+            _load_done_ids(results_path, rerun_errors=rerun_errors, rerun_unclear=rerun_unclear, rerun_pending=rerun_pending)
             if cfg.resume
             else set()
         )

@@ -74,6 +74,11 @@ def main() -> int:
         action="store_true",
         help="When resuming, re-run rows whose latest recorded result has parsed_answer==2 (unclear).",
     )
+    ap.add_argument(
+        "--rerun-pending",
+        action="store_true",
+        help="When resuming, re-run rows whose latest recorded result is locally queued submit-only (submission_id starts with 'local_').",
+    )
     ap.add_argument("--preflight", action="store_true", help="Print selected targets + pricing info before running")
     ap.add_argument("--preflight-only", action="store_true", help="Print preflight info and exit (no run)")
     ap.add_argument("--estimate-cost", action="store_true", help="Estimate an upper bound USD cost (heuristic)")
@@ -92,6 +97,7 @@ def main() -> int:
     case_limit = int(args.case_limit) if args.case_limit is not None else None
     rerun_errors = bool(args.rerun_errors)
     rerun_unclear = bool(args.rerun_unclear)
+    rerun_pending = bool(args.rerun_pending)
 
     resume = None
     if args.resume:
@@ -171,6 +177,7 @@ def main() -> int:
         case_limit=case_limit,
         rerun_errors=rerun_errors,
         rerun_unclear=rerun_unclear,
+        rerun_pending=rerun_pending,
     )
     return 0
 
