@@ -128,7 +128,10 @@ def collect_for_results_file(
         if row.get("parsed_answer") is not None:
             continue
         sub_id = row.get("submission_id")
-        if isinstance(sub_id, str) and sub_id:
+        # Local collector only handles locally enqueued items (submission_id starts with "local_").
+        # Provider-side async submissions (e.g. Anthropic batches, Gemini batches) are handled by
+        # dedicated collector scripts.
+        if isinstance(sub_id, str) and sub_id and sub_id.startswith("local_"):
             pending[rid] = sub_id
 
     if limit is not None:

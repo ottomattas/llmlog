@@ -30,7 +30,11 @@ def main() -> int:
     ap.add_argument(
         "--submit-only",
         action="store_true",
-        help="Submit-only mode: OpenAI submits background Responses (collect later); other providers enqueue locally (collect later).",
+        help=(
+            "Submit-only mode: submit work for later collection without waiting. "
+            "OpenAI uses server-side Responses jobs; Anthropic uses Message Batches; "
+            "Google uses Gemini BatchGenerateContent when available; others may enqueue locally."
+        ),
     )
     ap.add_argument("--resume", action="store_true", help="Resume if results files already exist")
     ap.add_argument("--no-resume", action="store_true", help="Disable resume even if suite enables it")

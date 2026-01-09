@@ -397,6 +397,9 @@ def run_suite(
                 # Per-invocation trace fields populated during execution (useful for cost/timing audits).
                 "written_ids": [],
                 "openai_response_ids": {},
+                # For submit-only modes that batch-submit (e.g. Anthropic/Gemini), we stage work here and
+                # submit after prompts are rendered.
+                "batch_pending": [],
                 "stats": {
                     "total": 0,
                     "answered": 0,
@@ -559,6 +562,36 @@ def run_suite(
             results_path: Path = oi["results_path"]
             prov_path: Path = oi["provenance_path"]
             stats = oi["stats"]
+            prov_l = str(t.get("provider") or "").lower()
+
+            # Provider-side submit-only modes:
+            # - Anthropic: Messages Batches API (server-side async)
+            # - Google Gemini: BatchGenerateContent (server-side async)
+            # We stage requests here and submit batches after prompts are rendered.
+            if submit_only and (not dry_run) and prov_l in ("anthropic", "google", "gemini"):
+                try:
+                    oi["batch_pending"].append(
+                        {
+                            "rid_row": rid_row,
+                            "row_id": getattr(row, "id", None),
+                            "meta": {
+                                "maxvars": getattr(row, "maxvarnr", None),
+                                "maxlen": getattr(row, "maxlen", None),
+                                "horn": getattr(row, "mustbehorn", None),
+                                "satflag": getattr(row, "issatisfiable", None),
+                            },
+                            "provider": t.get("provider"),
+                            "model": t.get("model"),
+                            "prompt_text": prompt_text,
+                            "prompt_template": tmpl_rel,
+                            "representation": rep.value,
+                            "answer_format": ans_fmt.value,
+                            "prompt_for_prov": (prompt_text if cfg.outputs.provenance.include_prompt else None),
+                        }
+                    )
+                except Exception:
+                    pass
+                continue
 
             if dry_run:
                 text = ""
@@ -579,7 +612,6 @@ def run_suite(
                         "attempts": 0,
                     }
                 else:
-                    prov_l = str(t.get("provider") or "").lower()
                     if submit_only and prov_l != "openai":
                         resp = {
                             "text": "",
@@ -719,6 +751,318 @@ def run_suite(
                 pass
 
         # End per-row
+
+    # Submit provider-side async work for submit-only runs that staged batch requests.
+    # This lets the experiment be fully server-side (like OpenAI submit-only), and collected later.
+    if submit_only and (not dry_run):
+        # Batch sizes: keep payload sizes reasonable and allow incremental completion.
+        try:
+            anthropic_batch_size = int(os.environ.get("LLMLOG_ANTHROPIC_BATCH_SIZE") or 50)
+        except Exception:
+            anthropic_batch_size = 50
+        try:
+            google_batch_size = int(os.environ.get("LLMLOG_GOOGLE_BATCH_SIZE") or 50)
+        except Exception:
+            google_batch_size = 50
+        anthropic_batch_size = max(1, anthropic_batch_size)
+        google_batch_size = max(1, google_batch_size)
+
+        def _chunked(items: List[Dict[str, Any]], n: int) -> Iterator[List[Dict[str, Any]]]:
+            for i in range(0, len(items), max(1, int(n))):
+                yield items[i : i + max(1, int(n))]
+
+        # Anthropic: Messages Batches API
+        try:
+            import anthropic  # type: ignore
+
+            from .providers.secrets import get_provider_key, load_secrets
+        except Exception:
+            anthropic = None  # type: ignore
+            load_secrets = None  # type: ignore
+            get_provider_key = None  # type: ignore
+
+        # Google: Gemini Batch API (batchGenerateContent -> long-running Operation under `batches/*`)
+        try:
+            import http.client as http_client
+            import random
+
+            from .providers.secrets import get_provider_key as _get_key  # type: ignore
+            from .providers.secrets import load_secrets as _load_secrets  # type: ignore
+        except Exception:
+            http_client = None  # type: ignore
+            random = None  # type: ignore
+            _get_key = None  # type: ignore
+            _load_secrets = None  # type: ignore
+
+        def _google_request_json(*, host: str, method: str, path: str, key: str, payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+            method_u = (method or "GET").upper()
+            body = json.dumps(payload).encode("utf-8") if payload is not None else None
+            headers = {
+                "Content-Type": "application/json",
+                "x-goog-api-key": key,
+            }
+            retryable_status = {429, 500, 502, 503, 504}
+            last_err: Optional[BaseException] = None
+            for attempt in range(1, 5):
+                conn = http_client.HTTPSConnection(host, timeout=60)  # type: ignore[union-attr]
+                try:
+                    conn.request(method_u, path, body=body if method_u != "GET" else None, headers=headers)
+                    resp = conn.getresponse()
+                    raw = resp.read()
+                    if resp.status != 200:
+                        msg = raw.decode("utf-8", errors="ignore")
+                        try:
+                            data = json.loads(raw)
+                            if isinstance(data, dict) and isinstance(data.get("error"), dict):
+                                msg = str(data["error"].get("message") or msg)
+                        except Exception:
+                            pass
+                        if resp.status in retryable_status and attempt < 4:
+                            time.sleep(min(30.0, (2.0 ** (attempt - 1)) + (random.random() if random else 0.0)))
+                            continue
+                        raise RuntimeError(f"Gemini error {resp.status} {resp.reason}: {msg}")
+                    return json.loads(raw)
+                except Exception as e:
+                    last_err = e
+                    if attempt >= 4:
+                        raise
+                    time.sleep(min(30.0, (2.0 ** (attempt - 1)) + (random.random() if random else 0.0)))
+                finally:
+                    try:
+                        conn.close()
+                    except Exception:
+                        pass
+            if last_err:
+                raise last_err
+            raise RuntimeError("Gemini request failed without an exception")
+
+        def _google_generation_config(*, model_name: str, max_tokens: Optional[int], temperature: float, thinking: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+            gen: Dict[str, Any] = {"temperature": float(temperature or 0.0)}
+            if max_tokens is not None:
+                gen["maxOutputTokens"] = int(max_tokens)
+            try:
+                t = thinking or {}
+                enabled = bool(t.get("enabled"))
+                budget = t.get("budget_tokens")
+                model_lower = str(model_name or "").lower()
+                if enabled:
+                    if budget is not None:
+                        b = int(budget)
+                        is_pro = model_lower.startswith("gemini-2.5-pro")
+                        is_flash = model_lower.startswith("gemini-2.5-flash") and not model_lower.startswith("gemini-2.5-flash-lite")
+                        is_flash_lite = model_lower.startswith("gemini-2.5-flash-lite")
+                        if b == 0:
+                            gen["thinkingConfig"] = {"thinkingBudget": -1} if is_pro else {"thinkingBudget": 0}
+                        elif b == -1:
+                            gen["thinkingConfig"] = {"thinkingBudget": -1}
+                        else:
+                            if is_pro:
+                                b = max(128, min(32768, b))
+                            elif is_flash:
+                                b = max(0, min(24576, b))
+                            elif is_flash_lite and b != 0:
+                                b = max(512, min(24576, b))
+                            gen["thinkingConfig"] = {"thinkingBudget": int(b)}
+                    else:
+                        gen["thinkingConfig"] = {"thinkingBudget": 1024}
+                else:
+                    # Best-effort: disable thinking for Flash when possible.
+                    if model_lower.startswith("gemini-2.5-flash"):
+                        gen["thinkingConfig"] = {"thinkingBudget": 0}
+            except Exception:
+                pass
+            return gen
+
+        for oi in out_info:
+            pending_items: List[Dict[str, Any]] = oi.get("batch_pending") or []
+            if not pending_items:
+                continue
+
+            t = oi["target"]
+            prov_l = str(t.get("provider") or "").lower()
+            results_path: Path = oi["results_path"]
+            prov_path: Path = oi["provenance_path"]
+
+            if prov_l == "anthropic":
+                if anthropic is None:
+                    raise RuntimeError("Anthropic batch submission requested but anthropic SDK is not available")
+                secrets = load_secrets() if load_secrets else {}
+                key = get_provider_key(secrets, "anthropic") if get_provider_key else None
+                if not key:
+                    raise RuntimeError("Missing Anthropic API key in secrets.json or ANTHROPIC_API_KEY")
+                client = anthropic.Anthropic(api_key=key)  # type: ignore[union-attr]
+
+                thinking_cfg = t.get("thinking") or {}
+                thinking_enabled = bool(thinking_cfg.get("enabled"))
+                for chunk in _chunked(pending_items, anthropic_batch_size):
+                    batch_id: Optional[str] = None
+                    batch_status: Optional[str] = None
+                    submit_err: Optional[str] = None
+                    reqs = []
+                    for it in chunk:
+                        params: Dict[str, Any] = {
+                            "model": t.get("model"),
+                            "max_tokens": int(t.get("max_tokens") or 1000),
+                            "messages": [{"role": "user", "content": it.get("prompt_text") or ""}],
+                        }
+                        # System prompt is top-level in Anthropic Messages API.
+                        if sysprompt:
+                            params["system"] = str(sysprompt)
+                        # Temperature must be omitted when extended thinking is enabled.
+                        if not thinking_enabled:
+                            params["temperature"] = float(t.get("temperature") or 0.0)
+                        # Extended thinking.
+                        if thinking_enabled:
+                            budget = thinking_cfg.get("budget_tokens")
+                            params["thinking"] = {"type": "enabled"}
+                            if budget is not None:
+                                params["thinking"]["budget_tokens"] = int(budget)
+                        reqs.append({"custom_id": str(it.get("rid_row") or ""), "params": params})
+                    try:
+                        mb = client.messages.batches.create(requests=reqs)
+                        batch_id = str(mb.id)
+                        batch_status = str(mb.processing_status or "in_progress")
+                    except Exception as e:
+                        submit_err = str(e)
+
+                    for it in chunk:
+                        rid_it = str(it.get("rid_row") or "")
+                        model_resolved = None
+                        result_row: Dict[str, Any] = {
+                            "ts": datetime.now(timezone.utc).isoformat(),
+                            "invocation_id": invocation_id,
+                            "id": it.get("row_id"),
+                            "meta": it.get("meta"),
+                            "provider": t.get("provider"),
+                            "model": t.get("model"),
+                            "model_resolved": model_resolved,
+                            "parsed_answer": None,
+                            "correct": None,
+                            "error": (f"Anthropic batch submission failed: {submit_err}" if submit_err else None),
+                            "submission_id": batch_id,
+                            "submission_status": ("failed" if submit_err else batch_status),
+                            "submission_custom_id": rid_it,
+                            "submission_index": None,
+                            "openai_response_id": None,
+                            "openai_response_status": None,
+                        }
+                        prov_row: Dict[str, Any] = {
+                            **result_row,
+                            "prompt_template": it.get("prompt_template"),
+                            "representation": it.get("representation"),
+                            "answer_format": it.get("answer_format"),
+                            "prompt": it.get("prompt_for_prov"),
+                            "completion_text": None,
+                            "thinking_text": None,
+                            "finish_reason": None,
+                            "usage": None,
+                            "raw_response": None,
+                            "timing_ms": None,
+                            "attempts": 0,
+                        }
+                        try:
+                            oi["written_ids"].append(rid_it)
+                        except Exception:
+                            pass
+                        with results_path.open("a", encoding="utf-8") as f:
+                            f.write(json.dumps(result_row, ensure_ascii=False) + "\n")
+                        if cfg.outputs.provenance.enabled:
+                            with prov_path.open("a", encoding="utf-8") as f:
+                                f.write(json.dumps(prov_row, ensure_ascii=False) + "\n")
+
+            elif prov_l in ("google", "gemini"):
+                if http_client is None or _load_secrets is None or _get_key is None:
+                    raise RuntimeError("Google batch submission requested but HTTP/secrets helpers are not available")
+                secrets = _load_secrets()
+                key = _get_key(secrets, "google") or _get_key(secrets, "gemini")
+                if not key:
+                    raise RuntimeError("Missing Google/Gemini API key in secrets.json or GOOGLE_API_KEY/GEMINI_API_KEY")
+
+                host = "generativelanguage.googleapis.com"
+                model_name = str(t.get("model") or "")
+                thinking_cfg = t.get("thinking") if isinstance(t.get("thinking"), dict) else None
+                for chunk in _chunked(pending_items, google_batch_size):
+                    op_name: Optional[str] = None
+                    submit_err: Optional[str] = None
+                    inlined = []
+                    for it in chunk:
+                        gen_req: Dict[str, Any] = {
+                            "contents": [{"role": "user", "parts": [{"text": it.get("prompt_text") or ""}]}],
+                            "generationConfig": _google_generation_config(
+                                model_name=model_name,
+                                max_tokens=(int(t.get("max_tokens")) if t.get("max_tokens") is not None else None),
+                                temperature=float(t.get("temperature") or 0.0),
+                                thinking=thinking_cfg,
+                            ),
+                        }
+                        if sysprompt:
+                            # Proto JSON name in discovery doc is systemInstruction; keep best-effort.
+                            gen_req["systemInstruction"] = {"parts": [{"text": str(sysprompt)}]}
+                        inlined.append({"request": gen_req, "metadata": {"custom_id": str(it.get("rid_row") or "")}})
+
+                    payload = {
+                        "batch": {
+                            "displayName": f"{cfg.name}::{rid}",
+                            "inputConfig": {"requests": {"requests": inlined}},
+                        }
+                    }
+                    try:
+                        resp = _google_request_json(
+                            host=host,
+                            method="POST",
+                            path=f"/v1beta/models/{model_name}:batchGenerateContent?key={key}",
+                            key=key,
+                            payload=payload,
+                        )
+                        op_name = str(resp.get("name") or "")
+                        if not op_name:
+                            raise RuntimeError(f"Missing operation name in response: {resp}")
+                    except Exception as e:
+                        submit_err = str(e)
+
+                    for idx, it in enumerate(chunk):
+                        rid_it = str(it.get("rid_row") or "")
+                        result_row: Dict[str, Any] = {
+                            "ts": datetime.now(timezone.utc).isoformat(),
+                            "invocation_id": invocation_id,
+                            "id": it.get("row_id"),
+                            "meta": it.get("meta"),
+                            "provider": t.get("provider"),
+                            "model": t.get("model"),
+                            "model_resolved": None,
+                            "parsed_answer": None,
+                            "correct": None,
+                            "error": (f"Gemini batch submission failed: {submit_err}" if submit_err else None),
+                            "submission_id": (op_name if op_name else None),
+                            "submission_status": ("failed" if submit_err else "queued"),
+                            "submission_custom_id": rid_it,
+                            "submission_index": int(idx),
+                            "openai_response_id": None,
+                            "openai_response_status": None,
+                        }
+                        prov_row: Dict[str, Any] = {
+                            **result_row,
+                            "prompt_template": it.get("prompt_template"),
+                            "representation": it.get("representation"),
+                            "answer_format": it.get("answer_format"),
+                            "prompt": it.get("prompt_for_prov"),
+                            "completion_text": None,
+                            "thinking_text": None,
+                            "finish_reason": None,
+                            "usage": None,
+                            "raw_response": None,
+                            "timing_ms": None,
+                            "attempts": 0,
+                        }
+                        try:
+                            oi["written_ids"].append(rid_it)
+                        except Exception:
+                            pass
+                        with results_path.open("a", encoding="utf-8") as f:
+                            f.write(json.dumps(result_row, ensure_ascii=False) + "\n")
+                        if cfg.outputs.provenance.enabled:
+                            with prov_path.open("a", encoding="utf-8") as f:
+                                f.write(json.dumps(prov_row, ensure_ascii=False) + "\n")
 
     # Write summaries
     for oi in out_info:
