@@ -770,15 +770,16 @@ def run_suite(
     # Submit provider-side async work for submit-only runs that staged batch requests.
     # This lets the experiment be fully server-side (like OpenAI submit-only), and collected later.
     if submit_only and (not dry_run):
-        # Batch sizes: keep payload sizes reasonable and allow incremental completion.
+        # Batch sizes: default to 1 to mimic OpenAI submit-only semantics (one server-side job per item),
+        # which yields incremental results as jobs complete. Override via env vars to reduce job count.
         try:
-            anthropic_batch_size = int(os.environ.get("LLMLOG_ANTHROPIC_BATCH_SIZE") or 50)
+            anthropic_batch_size = int(os.environ.get("LLMLOG_ANTHROPIC_BATCH_SIZE") or 1)
         except Exception:
-            anthropic_batch_size = 50
+            anthropic_batch_size = 1
         try:
-            google_batch_size = int(os.environ.get("LLMLOG_GOOGLE_BATCH_SIZE") or 50)
+            google_batch_size = int(os.environ.get("LLMLOG_GOOGLE_BATCH_SIZE") or 1)
         except Exception:
-            google_batch_size = 50
+            google_batch_size = 1
         anthropic_batch_size = max(1, anthropic_batch_size)
         google_batch_size = max(1, google_batch_size)
 

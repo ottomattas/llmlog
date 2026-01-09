@@ -33,7 +33,8 @@ def main() -> int:
         help=(
             "Submit-only mode: submit work for later collection without waiting. "
             "OpenAI uses server-side Responses jobs; Anthropic uses Message Batches; "
-            "Google uses Gemini BatchGenerateContent when available; others may enqueue locally."
+            "Google uses Gemini BatchGenerateContent when available; others may enqueue locally. "
+            "Batch sizes can be tuned via env vars: LLMLOG_ANTHROPIC_BATCH_SIZE, LLMLOG_GOOGLE_BATCH_SIZE."
         ),
     )
     ap.add_argument("--resume", action="store_true", help="Resume if results files already exist")
