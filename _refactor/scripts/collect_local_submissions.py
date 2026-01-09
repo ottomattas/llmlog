@@ -352,7 +352,6 @@ def main() -> int:
     args = ap.parse_args()
 
     runs_dir = Path(args.runs_dir).resolve()
-    results_files = sorted(runs_dir.glob("**/results.jsonl"))
     providers = [p.strip() for p in str(args.providers or "").split(",") if p.strip()] or None
     try:
         backoffs = [int(x.strip()) for x in str(args.backoff_seconds or "").split(",") if x.strip()]
@@ -360,6 +359,8 @@ def main() -> int:
         backoffs = [2, 5, 10, 20, 30]
 
     def one_pass() -> Tuple[int, int]:
+        # Rescan every pass so newly created run dirs are picked up (OpenAI collector UX).
+        results_files = sorted(runs_dir.glob("**/results.jsonl"))
         total_pending = 0
         total_collected = 0
         for rp in results_files:
@@ -373,19 +374,20 @@ def main() -> int:
             )
             total_pending += int(out.get("pending") or 0)
             total_collected += int(out.get("collected") or 0)
+            if int(out.get("pending") or 0) > 0:
+                print(f"{rp}: pending={out.get('pending')} collected={out.get('collected')}", flush=True)
+        print(f"pass_done pending={total_pending} collected={total_collected}", flush=True)
         return total_pending, total_collected
 
     if args.watch_seconds is not None:
         while True:
             pending, collected = one_pass()
-            print(f"[collect-local] pending={pending} collected={collected}")
             if pending <= 0:
                 break
             time.sleep(max(1, int(args.watch_seconds)))
         return 0
 
     pending, collected = one_pass()
-    print(f"[collect-local] pending={pending} collected={collected}")
     return 0
 
 
