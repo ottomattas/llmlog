@@ -59,9 +59,15 @@ class ConcurrencySettings(BaseModel):
 
 class ThinkingOptions(BaseModel):
     enabled: bool = False
-    # Anthropic/Gemini
+    # Budget-based thinking control (token budget).
+    #
+    # - Anthropic: extended thinking `budget_tokens`
+    # - Google Gemini 3: prefer thinking levels; use `effort` (mapped to thinking level)
     budget_tokens: Optional[int] = None
-    # OpenAI
+    # Cross-provider thinking "level"/effort.
+    #
+    # - OpenAI: Responses API `reasoning.effort`
+    # - Google Gemini 3: Gemini API `thinkingConfig.thinkingLevel`
     effort: Optional[Literal["none", "minimal", "low", "medium", "high"]] = None
 
 

@@ -856,37 +856,37 @@ def run_suite(
             gen: Dict[str, Any] = {"temperature": float(temperature or 0.0)}
             if max_tokens is not None:
                 gen["maxOutputTokens"] = int(max_tokens)
-            try:
+            if thinking:
                 t = thinking or {}
                 enabled = bool(t.get("enabled"))
-                budget = t.get("budget_tokens")
                 model_lower = str(model_name or "").lower()
+
+                if t.get("budget_tokens") is not None:
+                    raise ValueError(
+                        "Google/Gemini thinking `budget_tokens` is not supported in `_refactor/`. "
+                        "Use thinking.effort (mapped to Gemini thinking levels)."
+                    )
+                if model_lower.startswith("gemini-2."):
+                    raise ValueError(
+                        f"Gemini 2.x model {model_name!r} is not supported in `_refactor/`; use a Gemini 3 model id."
+                    )
+
                 if enabled:
-                    if budget is not None:
-                        b = int(budget)
-                        is_pro = model_lower.startswith("gemini-2.5-pro")
-                        is_flash = model_lower.startswith("gemini-2.5-flash") and not model_lower.startswith("gemini-2.5-flash-lite")
-                        is_flash_lite = model_lower.startswith("gemini-2.5-flash-lite")
-                        if b == 0:
-                            gen["thinkingConfig"] = {"thinkingBudget": -1} if is_pro else {"thinkingBudget": 0}
-                        elif b == -1:
-                            gen["thinkingConfig"] = {"thinkingBudget": -1}
-                        else:
-                            if is_pro:
-                                b = max(128, min(32768, b))
-                            elif is_flash:
-                                b = max(0, min(24576, b))
-                            elif is_flash_lite and b != 0:
-                                b = max(512, min(24576, b))
-                            gen["thinkingConfig"] = {"thinkingBudget": int(b)}
+                    eff = t.get("effort") or t.get("thinking_level") or t.get("thinkingLevel")
+                    if not isinstance(eff, str) or not eff.strip():
+                        raise ValueError("Gemini thinking is enabled but no thinking level provided (set thinking.effort)")
+                    lvl = eff.strip().lower()
+                    if model_lower.startswith("gemini-3-pro"):
+                        allowed = {"low", "high"}
+                    elif model_lower.startswith("gemini-3-flash"):
+                        allowed = {"minimal", "low", "medium", "high"}
                     else:
-                        gen["thinkingConfig"] = {"thinkingBudget": 1024}
-                else:
-                    # Best-effort: disable thinking for Flash when possible.
-                    if model_lower.startswith("gemini-2.5-flash"):
-                        gen["thinkingConfig"] = {"thinkingBudget": 0}
-            except Exception:
-                pass
+                        allowed = {"minimal", "low", "medium", "high"}
+                    if lvl not in allowed:
+                        raise ValueError(
+                            f"Unsupported thinking level {lvl!r} for model {model_name!r} (allowed: {sorted(allowed)})"
+                        )
+                    gen["thinkingConfig"] = {"thinkingLevel": lvl}
             return gen
 
         for oi in out_info:

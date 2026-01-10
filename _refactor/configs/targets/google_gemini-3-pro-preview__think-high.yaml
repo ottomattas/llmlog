@@ -1,0 +1,14 @@
+name: google_gemini-3-pro-preview__think-high
+
+# Gemini 3 Pro with explicit high thinking level.
+# Reference: https://ai.google.dev/gemini-api/docs/thinking
+targets:
+  - provider: google
+    model: gemini-3-pro-preview
+    temperature: 0
+    seed: 1234
+    max_tokens: 30000
+    thinking:
+      enabled: true
+      effort: high
+

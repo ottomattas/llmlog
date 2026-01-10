@@ -1,0 +1,14 @@
+name: google_gemini-3-flash-preview__think-minimal
+
+# Gemini 3 Flash with explicit minimal thinking level (closest analogue to "no thinking").
+# Reference: https://ai.google.dev/gemini-api/docs/thinking
+targets:
+  - provider: google
+    model: gemini-3-flash-preview
+    temperature: 0
+    seed: 1234
+    max_tokens: 30000
+    thinking:
+      enabled: true
+      effort: minimal
+

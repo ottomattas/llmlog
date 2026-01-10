@@ -17,6 +17,12 @@ def _extract_text(data: Dict[str, Any]) -> str:
         parts = (((candidates[0] or {}).get("content") or {}).get("parts")) or []
         texts = []
         for p in parts:
+            if not isinstance(p, dict):
+                continue
+            # When thought summaries are enabled, Gemini can include `thought: true` parts.
+            # Exclude those from the visible answer text so parsing remains stable.
+            if bool(p.get("thought")):
+                continue
             t = p.get("text")
             if t:
                 texts.append(t)
@@ -40,6 +46,12 @@ def _extract_thinking_text(data: Dict[str, Any]) -> Optional[str]:
         for p in parts:
             if not isinstance(p, dict):
                 continue
+            # Thought summaries (Gemini): part has `thought: true` with summary text.
+            if bool(p.get("thought")):
+                t = p.get("text")
+                if isinstance(t, str) and t.strip():
+                    out.append(t.strip())
+                continue
             ptype = str(p.get("type") or "").lower()
             if ptype in ("thought", "thinking", "reasoning"):
                 t = p.get("text") or p.get("content")
@@ -53,6 +65,33 @@ def _extract_thinking_text(data: Dict[str, Any]) -> Optional[str]:
         return txt or None
     except Exception:
         return None
+
+
+def _validate_gemini3_thinking_level(*, model: str, level: str) -> str:
+    """Validate and normalize Gemini 3 thinking levels.
+
+    Gemini 3 Pro supports {low, high}. Gemini 3 Flash supports {minimal, low, medium, high}.
+
+    Reference: https://ai.google.dev/gemini-api/docs/thinking
+    """
+    model_l = str(model or "").lower()
+    lvl = str(level or "").strip().lower()
+    if not lvl:
+        raise ValueError("Gemini thinking level must be a non-empty string")
+    if model_l.startswith("gemini-2."):
+        raise ValueError(
+            f"Gemini 2.x model {model!r} is not supported in `_refactor/`; use a Gemini 3 model id."
+        )
+    if model_l.startswith("gemini-3-pro"):
+        allowed = {"low", "high"}
+    elif model_l.startswith("gemini-3-flash"):
+        allowed = {"minimal", "low", "medium", "high"}
+    else:
+        # Conservative fallback for unknown Gemini 3 variants.
+        allowed = {"minimal", "low", "medium", "high"}
+    if lvl not in allowed:
+        raise ValueError(f"Unsupported thinking level {lvl!r} for model {model!r} (allowed: {sorted(allowed)})")
+    return lvl
 
 
 def chat_completion(
@@ -80,36 +119,20 @@ def chat_completion(
         # Prefer structured system instruction when supported by the API.
         body["system_instruction"] = {"parts": [{"text": str(system)}]}
     gen_cfg = body.setdefault("generationConfig", {})
-    try:
-        if thinking and thinking.get("enabled"):
-            budget = thinking.get("budget_tokens")
-            if budget is not None:
-                b = int(budget)
-                model_lower = str(model or "").lower()
-                is_pro = model_lower.startswith("gemini-2.5-pro")
-                is_flash = model_lower.startswith("gemini-2.5-flash") and not model_lower.startswith("gemini-2.5-flash-lite")
-                is_flash_lite = model_lower.startswith("gemini-2.5-flash-lite")
-
-                if b == 0:
-                    gen_cfg["thinkingConfig"] = {"thinkingBudget": -1} if is_pro else {"thinkingBudget": 0}
-                elif b == -1:
-                    gen_cfg["thinkingConfig"] = {"thinkingBudget": -1}
-                else:
-                    if is_pro:
-                        b = max(128, min(32768, b))
-                    elif is_flash:
-                        b = max(0, min(24576, b))
-                    elif is_flash_lite:
-                        if b != 0:
-                            b = max(512, min(24576, b))
-                    gen_cfg["thinkingConfig"] = {"thinkingBudget": int(b)}
-            else:
-                gen_cfg["thinkingConfig"] = {"thinkingBudget": 1024}
-        else:
-            if str(model).startswith("gemini-2.5-flash"):
-                gen_cfg["thinkingConfig"] = {"thinkingBudget": 0}
-    except Exception:
-        pass
+    if thinking:
+        enabled = bool(thinking.get("enabled"))
+        # In `_refactor/`, we standardize Gemini on thinking levels (Gemini 3).
+        if thinking.get("budget_tokens") is not None:
+            raise ValueError(
+                "Google/Gemini thinking `budget_tokens` is not supported in `_refactor/`. "
+                "Use thinking.effort (mapped to Gemini thinking levels)."
+            )
+        if enabled:
+            eff = thinking.get("effort") or thinking.get("thinking_level") or thinking.get("thinkingLevel")
+            if not isinstance(eff, str) or not eff.strip():
+                raise ValueError("Gemini thinking is enabled but no thinking level provided (set thinking.effort)")
+            lvl = _validate_gemini3_thinking_level(model=model, level=eff)
+            gen_cfg["thinkingConfig"] = {"thinkingLevel": lvl}
 
     if max_tokens is not None:
         gen_cfg["maxOutputTokens"] = int(max_tokens)

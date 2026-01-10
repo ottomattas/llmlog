@@ -33,7 +33,7 @@ def test_convert_experiments_config_dict_maps_cnf_contradiction() -> None:
         "filters": {"horn_only": False},
         "prompt": {"template": "prompts/_template_unified.j2", "style": "cnf_v2", "variables": {}},
         "parse": {"type": "contradiction"},
-        "targets": [{"provider": "google", "model": "gemini-2.5-pro"}],
+        "targets": [{"provider": "google", "model": "gemini-3-pro-preview"}],
     }
 
     suite, _ = convert_experiments_config_dict(old)
