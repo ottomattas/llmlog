@@ -1,4 +1,14 @@
-c## llmlog — New Config-Driven Experiment Framework
+## llmlog
+
+### Active development (recommended)
+The actively maintained framework lives under `_refactor/` (config-driven runner + suites/targets/prompts).
+
+Start here:
+- `_refactor/README.md`
+- `_refactor/docs/README.md`
+
+### Legacy note
+The remainder of this README documents older frameworks (notably `experiments/` and `_legacy/`) that are kept for reference.
 
 This repository hosts a new, unified framework for running logic-focused LLM experiments efficiently and reproducibly. The legacy one-off scripts (exp1–exp8) have been moved under `_legacy/` and remain intact. The new setup replaces copy‑pasted per-experiment code with a single runner configured via YAML, prompt templates, and pluggable parsing/filters.
 

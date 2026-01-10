@@ -71,8 +71,8 @@ scripts/              # CLI entrypoints (thin wrappers around src/llmlog/)
 configs/              # YAML experiment suites and shared target definitions
 prompts/              # Jinja prompt templates
 datasets/             # curated datasets (legacy/validation/production)
-runs/                 # run artifacts (NOT committed by default)
-reports/              # plots/tables/dashboards (usually NOT committed)
+runs/                 # run artifacts (committed after runs have finished, for traceability)
+reports/              # plots/tables/dashboards (gitignored by default)
 docs/                 # documentation
 ```
 

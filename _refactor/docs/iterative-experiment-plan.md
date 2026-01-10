@@ -277,6 +277,11 @@ If you’re juggling many parallel runs, these helpers can keep everything consi
 - `scripts/manage_runs.py migrate --yes`: **move** `runs/<suite>/<run_id>` into `runs_by_run/<run_id>/<suite>` and leave a symlink behind so legacy paths keep working
 - `scripts/manage_runs.py queue ... --max-parallel 3`: run a list of suite×len jobs with a global concurrency cap until each is complete
 
+Note on committing runs:
+- The canonical run artifacts we commit live under `runs/` (after runs finish).
+- `runs_by_run_view/` and `runs_by_run/` are **gitignored** by default (they’re local organization aids / symlink views).
+- If you want committed runs to stay under `runs/`, avoid `manage_runs.py migrate` (or change ignore rules to track `runs_by_run/`).
+
 #### Important note: why “new processes keep popping up”
 If you run `scripts/manage_runs.py queue`, it acts as a **scheduler**:
 - it spawns `scripts/run.py ...`
