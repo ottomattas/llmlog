@@ -289,11 +289,6 @@ def main() -> int:
         description="Generate a Markdown matrix of what has been run vs what is missing (based on `_refactor/runs/**/results.jsonl`)."
     )
     ap.add_argument("--matrix", required=True, help="Matrix YAML config path (relative to _refactor/ or absolute)")
-    ap.add_argument(
-        "--view",
-        default=None,
-        help="Optional view name when the matrix YAML defines `views:` (e.g. compute_baseline).",
-    )
     ap.add_argument("--output", required=True, help="Output Markdown path")
     ap.add_argument(
         "--runs-dir",
@@ -306,31 +301,6 @@ def main() -> int:
     if not matrix_path.is_absolute():
         matrix_path = (refactor_root / matrix_path).resolve()
     matrix = _read_yaml(matrix_path)
-
-    # Optional view selection: allow one matrix file to define multiple suite lists under `views:`.
-    selected_view: Optional[str] = None
-    views = matrix.get("views")
-    if views is not None:
-        if not isinstance(views, dict):
-            raise SystemExit(f"Invalid matrix config: `views` must be a mapping, got {type(views)}")
-        view_name = args.view
-        if not view_name:
-            view_name = str(matrix.get("default_view") or "").strip() or None
-        if not view_name:
-            try:
-                view_name = next(iter(views.keys()))
-            except Exception:
-                view_name = None
-        if not view_name:
-            raise SystemExit("Matrix config has `views` but no view could be selected (set `default_view` or pass --view)")
-        view_obj = views.get(view_name)
-        if not isinstance(view_obj, dict):
-            raise SystemExit(f"Invalid matrix config view {view_name!r}: expected mapping, got {type(view_obj)}")
-        base = {k: v for k, v in matrix.items() if k not in ("views", "default_view")}
-        merged = dict(base)
-        merged.update(view_obj)
-        matrix = merged
-        selected_view = str(view_name)
 
     name = str(matrix.get("name") or matrix_path.stem)
     runs_dir = Path(args.runs_dir or matrix.get("runs_dir") or (refactor_root / "runs")).resolve()
@@ -434,8 +404,6 @@ def main() -> int:
     out_lines.append(f"## Experiment matrix: {name}")
     out_lines.append("")
     out_lines.append(f"- **Matrix config**: `{matrix_path}`")
-    if selected_view:
-        out_lines.append(f"- **view**: `{selected_view}`")
     out_lines.append(f"- **Runs dir**: `{runs_dir}`")
     out_lines.append(f"- **maxvars**: `{maxvars_spec or '(none)'}`")
     out_lines.append(f"- **lens**: `{','.join(str(x) for x in lens)}`")

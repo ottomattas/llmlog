@@ -1,7 +1,6 @@
 ## Experiment matrix: openai_gpt-5.2__think-none__prompt-matrix
 
-- **Matrix config**: `/Users/ottomattas/Downloads/repos/llmlog/_refactor/configs/matrices/openai_gpt-5.2__matrix.yaml`
-- **view**: `think_none_prompt_matrix`
+- **Matrix config**: `/Users/ottomattas/Downloads/repos/llmlog/_refactor/configs/matrices/openai_gpt-5.2__think-none__prompt-matrix.yaml`
 - **Runs dir**: `/Users/ottomattas/Downloads/repos/llmlog/_refactor/runs`
 - **maxvars**: `10,20,30,40,50`
 - **lens**: `3,4,5`

@@ -27,21 +27,12 @@ python scripts/experiment_matrix.py \
   --output docs/experiment-status/openai_gpt-5.2-pro__think-high__prompt-matrix.md
 ```
 
-Compute-baseline tracking (gpt-5.2-2025-12-11 think-none vs gpt-5.2-pro think-high):
-
-```
-cd _refactor
-python scripts/experiment_matrix.py \
-  --matrix configs/matrices/openai_gpt-5.2__matrix.yaml --view compute_baseline \
-  --output docs/experiment-status/openai_gpt-5.2__compute_baseline.md
-```
-
 Full think-none prompt matrix (mirrors the pro think-high prompt matrix):
 
 ```
 cd _refactor
 python scripts/experiment_matrix.py \
-  --matrix configs/matrices/openai_gpt-5.2__matrix.yaml --view think_none_prompt_matrix \
+  --matrix configs/matrices/openai_gpt-5.2__think-none__prompt-matrix.yaml \
   --output docs/experiment-status/openai_gpt-5.2__think-none__prompt-matrix.md
 ```
 
@@ -62,6 +53,6 @@ Matrix specs live under `configs/matrices/`. They define:
 
 Start with the OpenAI-focused one:
 - `configs/matrices/openai_gpt-5.2-pro__think-high__prompt-matrix.yaml`
-- `configs/matrices/openai_gpt-5.2__matrix.yaml` (use `--view compute_baseline` or `--view think_none_prompt_matrix`)
+- `configs/matrices/openai_gpt-5.2__think-none__prompt-matrix.yaml`
 
 
