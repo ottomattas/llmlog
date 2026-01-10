@@ -1,0 +1,55 @@
+name: openai_gpt-5.2__matrix
+description: >
+  Unified matrix file for the GPT-5.2 family. Use `views:` to select the suite list
+  for either full prompt-variant tracking or the minimal compute-baseline set.
+
+runs_dir: runs
+
+# Standard coarse sweep selection (vars 10/20/30/40/50; len 3/4/5; case_limit=10).
+maxvars: "10,20,30,40,50"
+lens: [3, 4, 5]
+case_limit: 10
+
+default_view: think_none_prompt_matrix
+
+views:
+  # Full think-none prompt matrix (mirrors the pro think-high prompt matrix):
+  think_none_prompt_matrix:
+    name: openai_gpt-5.2__think-none__prompt-matrix
+    suites:
+      # Horn-only
+      - path: configs/suites/sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2__think-none.yaml
+      - path: configs/suites/sat__repr-cnf_compact__subset-hornonly__prompt-horn_alg_linear__openai_gpt-5.2__think-none.yaml
+      - path: configs/suites/sat__repr-cnf_compact__subset-hornonly__prompt-horn_alg_from__openai_gpt-5.2__think-none.yaml
+      - path: configs/suites/sat__repr-cnf_nl__subset-hornonly__prompt-examples_only__openai_gpt-5.2__think-none.yaml
+      - path: configs/suites/sat__repr-cnf_nl__subset-hornonly__prompt-horn_alg_linear__openai_gpt-5.2__think-none.yaml
+      - path: configs/suites/sat__repr-cnf_nl__subset-hornonly__prompt-horn_alg_from__openai_gpt-5.2__think-none.yaml
+      - path: configs/suites/sat__repr-horn_if_then__subset-hornonly__prompt-examples_only__openai_gpt-5.2__think-none.yaml
+      - path: configs/suites/sat__repr-horn_if_then__subset-hornonly__prompt-horn_alg_linear__openai_gpt-5.2__think-none.yaml
+      - path: configs/suites/sat__repr-horn_if_then__subset-hornonly__prompt-horn_alg_from__openai_gpt-5.2__think-none.yaml
+
+      # Non-Horn-only
+      - path: configs/suites/sat__repr-cnf_compact__subset-nonhornonly__prompt-examples_only__openai_gpt-5.2__think-none.yaml
+      - path: configs/suites/sat__repr-cnf_compact__subset-nonhornonly__prompt-dpll_alg_linear__openai_gpt-5.2__think-none.yaml
+      - path: configs/suites/sat__repr-cnf_compact__subset-nonhornonly__prompt-dpll_alg_from__openai_gpt-5.2__think-none.yaml
+      - path: configs/suites/sat__repr-cnf_nl__subset-nonhornonly__prompt-examples_only__openai_gpt-5.2__think-none.yaml
+      - path: configs/suites/sat__repr-cnf_nl__subset-nonhornonly__prompt-dpll_alg_linear__openai_gpt-5.2__think-none.yaml
+      - path: configs/suites/sat__repr-cnf_nl__subset-nonhornonly__prompt-dpll_alg_from__openai_gpt-5.2__think-none.yaml
+      - path: configs/suites/sat__repr-horn_if_then__subset-nonhornonly__prompt-examples_only__openai_gpt-5.2__think-none.yaml
+      - path: configs/suites/sat__repr-horn_if_then__subset-nonhornonly__prompt-horn_alg_linear__openai_gpt-5.2__think-none.yaml
+      - path: configs/suites/sat__repr-horn_if_then__subset-nonhornonly__prompt-horn_alg_from__openai_gpt-5.2__think-none.yaml
+
+  # Minimal compute ablation tracking (gpt-5.2 think-none vs gpt-5.2-pro think-high):
+  compute_baseline:
+    name: openai_gpt-5.2__compute_baseline
+    suites:
+      # Higher-compute (gpt-5.2-pro think-high)
+      - path: configs/suites/sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2-pro__think-high.yaml
+      - path: configs/suites/sat__repr-cnf_compact__subset-hornonly__prompt-horn_alg_linear__openai_gpt-5.2-pro__think-high.yaml
+      - path: configs/suites/sat__repr-cnf_compact__subset-nonhornonly__prompt-dpll_alg_linear__openai_gpt-5.2-pro__think-high.yaml
+
+      # Lower reasoning effort baseline (gpt-5.2 think-none)
+      - path: configs/suites/sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2__think-none.yaml
+      - path: configs/suites/sat__repr-cnf_compact__subset-hornonly__prompt-horn_alg_linear__openai_gpt-5.2__think-none.yaml
+      - path: configs/suites/sat__repr-cnf_compact__subset-nonhornonly__prompt-dpll_alg_linear__openai_gpt-5.2__think-none.yaml
+
