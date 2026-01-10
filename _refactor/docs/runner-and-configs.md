@@ -6,15 +6,12 @@ This document describes how to configure and run experiments inside `_refactor/`
 - **Suite config**: a YAML file in `configs/suites/` describing *what to measure* (task/subset/representation/prompting policy) and where the dataset is.
 - **Target set**: a YAML file in `configs/targets/` listing provider/model combinations (plus thinking/max_tokens/etc).
 
-We include two example target sets:
-- `configs/targets/twelve_models.yaml`: stable 12-model matrix used in earlier experiments (legacy; not used by the current model-specific suite set)
-- `configs/targets/latest_models.yaml`: curated pinned “latest models” set (see provider docs)
-- `configs/targets/rolling_latest.yaml`: uses provider aliases where supported (fast adoption; less reproducible)
+Target sets in this repo are intentionally **model-specific**: each suite references one or more
+target files under `configs/targets/` via `targets_ref`.
 
-If you want to refresh targets automatically from provider APIs, use:
-```
-python scripts/sync_targets.py --out configs/targets/generated_latest_models.yaml --inventory-out reports/models_inventory.json
-```
+We do **not** auto-sync targets from provider model listing APIs inside `_refactor/` in order to
+keep research runs reproducible. When you adopt a new model id, add a new target YAML explicitly
+and wire it into suites.
 
 ### Running a suite
 From `_refactor/`:
