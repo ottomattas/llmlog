@@ -22,6 +22,7 @@
   "pricing_rate": {
     "provider": "openai",
     "model_prefix": "gpt-5.2",
+    "tier": "standard",
     "input_per_million_usd": 1.75,
     "output_per_million_usd": 14.0
   },
@@ -37,10 +38,11 @@
     "reasoning_tokens": 0,
     "cache_creation_input_tokens": 0,
     "cache_read_input_tokens": 3328,
-    "cost_total_usd": 0.6518609999999999,
-    "cost_input_usd": 0.46784499999999996,
+    "cost_total_usd": 0.6460370000000001,
+    "cost_input_usd": 0.46202099999999996,
     "cost_output_usd": 0.184016,
     "attempts_total": 100
   },
-  "accuracy": 0.48
+  "accuracy": 0.48,
+  "pricing_tier": "standard"
 }

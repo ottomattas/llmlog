@@ -24,8 +24,12 @@
   "pricing_rate": {
     "provider": "anthropic",
     "model_prefix": "claude-opus-4-5",
-    "input_per_million_usd": 5.0,
-    "output_per_million_usd": 25.0
+    "tier": "batch",
+    "input_per_million_usd": 2.5,
+    "output_per_million_usd": 12.5,
+    "cache_read_input_per_million_usd": 0.25,
+    "cache_creation_input_per_million_usd": 3.125,
+    "cache_creation_input_1h_per_million_usd": 5.0
   },
   "stats": {
     "total": 150,
@@ -39,10 +43,11 @@
     "reasoning_tokens": 0,
     "cache_creation_input_tokens": 0,
     "cache_read_input_tokens": 0,
-    "cost_total_usd": 10.508974999999996,
-    "cost_input_usd": 6.19645,
-    "cost_output_usd": 4.312525000000001,
+    "cost_total_usd": 5.254487499999998,
+    "cost_input_usd": 3.098225,
+    "cost_output_usd": 2.1562625000000004,
     "attempts_total": 300
   },
-  "accuracy": 0.5133333333333333
+  "accuracy": 0.5133333333333333,
+  "pricing_tier": "batch"
 }

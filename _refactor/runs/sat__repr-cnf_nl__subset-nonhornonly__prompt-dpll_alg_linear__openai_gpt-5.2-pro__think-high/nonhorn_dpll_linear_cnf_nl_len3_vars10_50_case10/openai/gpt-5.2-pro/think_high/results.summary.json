@@ -26,6 +26,7 @@
   "pricing_rate": {
     "provider": "openai",
     "model": "gpt-5.2-pro",
+    "tier": "standard",
     "input_per_million_usd": 21.0,
     "output_per_million_usd": 168.0
   },
@@ -46,5 +47,6 @@
     "cost_output_usd": 298.062744,
     "attempts_total": 781
   },
-  "accuracy": 0.72
+  "accuracy": 0.72,
+  "pricing_tier": "standard"
 }
