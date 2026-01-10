@@ -1,11 +1,10 @@
 ## Runs and results (artifacts policy)
 
-Run artifacts are written under `_refactor/runs/` and are **gitignored by default** (to keep the repo light).
-For traceability (e.g. paper snapshots / reproducible audits), you can optionally force-add selected run folders and commit them.
+Run artifacts are written under `_refactor/runs/`.
+In this repo, **completed runs are intended to be committed** (for paper traceability / reproducible audits).
 
 ### Git ignore policy
 `_refactor/.gitignore` ignores:
-- `runs/`
 - `reports/`
 - `secrets.json`
 
@@ -15,6 +14,7 @@ The runner writes one folder per target:
 runs/<suite>/<run>/<provider>/<model>/<thinking_mode>/
   results.jsonl
   results.provenance.jsonl
+  results.provenance.v2.jsonl
   results.summary.json
   run.manifest.json
   run.invocations.jsonl
@@ -22,7 +22,8 @@ runs/<suite>/<run>/<provider>/<model>/<thinking_mode>/
 
 ### File semantics
 - `results.jsonl`: minimal rows for fast aggregation.
-- `results.provenance.jsonl`: optional full provenance (prompt, raw response, usage, timing, thinking text when available).
+- `results.provenance.jsonl`: full provenance (v1).
+- `results.provenance.v2.jsonl`: full provenance (v2; preferred by dashboards/analysis when present).
 - `results.summary.json`: per-target aggregate stats (accuracy, token totals, etc).
 - `run.manifest.json`: reproducibility snapshot (suite inputs + target config + matched pricing rate row).
 - `run.invocations.jsonl`: append-only operational log of each `scripts/run.py` invocation that wrote into this folder (timestamp, submit-only vs live, `--limit`, etc). Useful when terminal history is lost.
@@ -56,6 +57,6 @@ python scripts/recover_openai_timeouts.py
 ### Export for inspection
 To export a provenance file into prompt/response text files:
 ```
-python scripts/export_provenance.py --provenance runs/<suite>/<run>/<provider>/<model>/<thinking_mode>/results.provenance.jsonl --out reports/exports --limit 50 --no-raw
+python scripts/export_provenance.py --provenance runs/<suite>/<run>/<provider>/<model>/<thinking_mode>/results.provenance.v2.jsonl --out reports/exports --limit 50 --no-raw
 ```
 

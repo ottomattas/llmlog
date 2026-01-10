@@ -50,7 +50,7 @@ python scripts/generate_dashboard.py --input reports/validation_001.aggregated.j
 
 6) (Optional) Export prompts + model outputs for human inspection:
 ```
-python scripts/export_provenance.py --provenance runs/sat__repr-cnf_compact__subset-mixed/validation_001/<provider>/<model>/<thinking_mode>/results.provenance.jsonl --out reports/exports --limit 10 --no-raw
+python scripts/export_provenance.py --provenance runs/sat__repr-cnf_compact__subset-mixed/validation_001/<provider>/<model>/<thinking_mode>/results.provenance.v2.jsonl --out reports/exports --limit 10 --no-raw
 ```
 
 ### Documentation

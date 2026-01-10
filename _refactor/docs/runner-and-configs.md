@@ -27,9 +27,11 @@ Files:
 - `results.jsonl`: **minimal** per-item record used for completion accounting:
   - `parsed_answer`, `error`, `submission_id`, etc.
   - Append-only: the **latest row per `id`** is authoritative.
-- `results.provenance.jsonl`: **full provenance** (enabled by default) with:
+- `results.provenance.jsonl`: **full provenance (v1)** (enabled by default) with:
   - `prompt` (optional), `completion_text`, `thinking_text`, `usage`, `finish_reason`, `raw_response`
-  - This is where we keep provider-specific payloads in a consistent wrapper.
+- `results.provenance.v2.jsonl`: **full provenance (v2)** (also written by default):
+  - Same core fields as v1, plus unified `job` / `provider_output` / timing source fields.
+  - Dashboard/analysis prefers v2 when present; v1 remains for backwards compatibility.
 - `results.summary.json`: aggregate stats (counts + token/cost totals when available)
 - `run.manifest.json`: manifest with suite/model metadata used by dashboards/analysis
 

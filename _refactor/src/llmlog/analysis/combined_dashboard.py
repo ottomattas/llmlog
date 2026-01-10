@@ -393,7 +393,8 @@ def build_combined_dashboard_data(
 
         # Attempt-level totals from provenance (spend + latency). These are summed across all attempts,
         # matching `runner.py`'s "stable spend across resume" approach.
-        prov_path = results_path.parent / "results.provenance.jsonl"
+        prov_v2 = results_path.parent / "results.provenance.v2.jsonl"
+        prov_path = prov_v2 if prov_v2.exists() else (results_path.parent / "results.provenance.jsonl")
         manifest_path = results_path.parent / "run.manifest.json"
         rate_obj: Optional[Dict[str, Any]] = None
         if manifest_path.exists():

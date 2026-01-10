@@ -30,6 +30,7 @@ from .providers.router import run_chat
 from .prompts.render import render_prompt
 from .pricing.loader import load_pricing_table
 from .pricing.cost import compute_cost_usd, match_rate
+from .provenance_v2 import build_provenance_v2_row, provenance_v2_path_for_results
 
 
 def _find_refactor_root(suite_path: Path) -> Path:
@@ -397,8 +398,10 @@ def run_suite(
     for t in targets:
         results_path = _build_outpath(out_root, cfg, t, rid)
         prov_path, summary_path = _derive_paths(results_path)
+        prov2_path = provenance_v2_path_for_results(results_path)
         _ensure_dir(results_path)
         _ensure_dir(prov_path)
+        _ensure_dir(prov2_path)
         _ensure_dir(summary_path)
         done_ids = (
             _load_done_ids(results_path, rerun_errors=rerun_errors, rerun_unclear=rerun_unclear)
@@ -422,6 +425,7 @@ def run_suite(
                 "target": t,
                 "results_path": results_path,
                 "provenance_path": prov_path,
+                "provenance_v2_path": prov2_path,
                 "summary_path": summary_path,
                 "pricing_tier": pricing_tier,
                 "pricing_rate": rate.model_dump(mode="json", exclude_none=True) if rate is not None else None,
@@ -593,6 +597,7 @@ def run_suite(
             t = oi["target"]
             results_path: Path = oi["results_path"]
             prov_path: Path = oi["provenance_path"]
+            prov2_path: Path = oi["provenance_v2_path"]
             stats = oi["stats"]
             prov_l = str(t.get("provider") or "").lower()
 
@@ -745,6 +750,23 @@ def run_suite(
             if cfg.outputs.provenance.enabled:
                 with prov_path.open("a") as f:
                     f.write(json.dumps(prov_row, ensure_ascii=False) + "\n")
+                try:
+                    prov2_row = build_provenance_v2_row(
+                        base=prov_row,
+                        results_path=results_path,
+                        event=("submit" if submit_only else "attempt"),
+                        http=(meta.get("http") if isinstance(meta, dict) else None),
+                        job_meta=None,
+                        extra={
+                            "thinking_mode": _thinking_mode_label(t),
+                            "pricing_tier": oi.get("pricing_tier"),
+                            "submit_only": bool(submit_only),
+                        },
+                    )
+                    with prov2_path.open("a", encoding="utf-8") as f:
+                        f.write(json.dumps(prov2_row, ensure_ascii=False) + "\n")
+                except Exception:
+                    pass
 
             # Update stats
             stats["total"] += 1
@@ -912,6 +934,7 @@ def run_suite(
             prov_l = str(t.get("provider") or "").lower()
             results_path: Path = oi["results_path"]
             prov_path: Path = oi["provenance_path"]
+            prov2_path: Path = oi["provenance_v2_path"]
 
             if prov_l == "anthropic":
                 if anthropic is None:
@@ -999,6 +1022,23 @@ def run_suite(
                         if cfg.outputs.provenance.enabled:
                             with prov_path.open("a", encoding="utf-8") as f:
                                 f.write(json.dumps(prov_row, ensure_ascii=False) + "\n")
+                            try:
+                                prov2_row = build_provenance_v2_row(
+                                    base=prov_row,
+                                    results_path=results_path,
+                                    event="submit",
+                                    http=None,
+                                    job_meta=None,
+                                    extra={
+                                        "thinking_mode": _thinking_mode_label(t),
+                                        "pricing_tier": oi.get("pricing_tier"),
+                                        "submit_only": True,
+                                    },
+                                )
+                                with prov2_path.open("a", encoding="utf-8") as f:
+                                    f.write(json.dumps(prov2_row, ensure_ascii=False) + "\n")
+                            except Exception:
+                                pass
 
             elif prov_l in ("google", "gemini"):
                 if http_client is None or _load_secrets is None or _get_key is None:
@@ -1093,6 +1133,23 @@ def run_suite(
                         if cfg.outputs.provenance.enabled:
                             with prov_path.open("a", encoding="utf-8") as f:
                                 f.write(json.dumps(prov_row, ensure_ascii=False) + "\n")
+                            try:
+                                prov2_row = build_provenance_v2_row(
+                                    base=prov_row,
+                                    results_path=results_path,
+                                    event="submit",
+                                    http=None,
+                                    job_meta=None,
+                                    extra={
+                                        "thinking_mode": _thinking_mode_label(t),
+                                        "pricing_tier": oi.get("pricing_tier"),
+                                        "submit_only": True,
+                                    },
+                                )
+                                with prov2_path.open("a", encoding="utf-8") as f:
+                                    f.write(json.dumps(prov2_row, ensure_ascii=False) + "\n")
+                            except Exception:
+                                pass
 
     # Write summaries
     for oi in out_info:

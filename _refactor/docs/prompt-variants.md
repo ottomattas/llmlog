@@ -11,7 +11,8 @@ This document describes the prompt variants introduced for controlled experiment
 - **Why this works**: the `_refactor` parser prefers the **last decisive token**, so intermediate uses of words like “contradiction” in the trace won’t break parsing.
 
 Where the trace is saved:
-- `runs/<suite>/<run>/<provider>/<model>/<thinking_mode>/results.provenance.jsonl`
+- `runs/<suite>/<run>/<provider>/<model>/<thinking_mode>/results.provenance.v2.jsonl` (preferred)
+  - (v1 also exists as `results.provenance.jsonl` for backwards compatibility)
   - `completion_text`: full model output (this is where the trace lives)
   - `raw_response`: provider response (best-effort)
   - `thinking_text`: provider-returned reasoning summaries when available (often partial; OpenAI usually does not return full hidden reasoning)

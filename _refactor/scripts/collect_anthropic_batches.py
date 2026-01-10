@@ -102,9 +102,15 @@ def collect_for_results_file(
     from llmlog.providers.secrets import get_provider_key, load_secrets
     from llmlog.response_meta import normalize_meta
     from llmlog.parsers import parse_contradiction, parse_yes_no
+    from llmlog.provenance_v2 import build_provenance_v2_row, provenance_v2_path_for_results
     import llmlog.runner as runner_mod
 
     prov_path, summary_path = _derive_paths(results_path)
+    prov2_path = provenance_v2_path_for_results(results_path)
+    try:
+        prov2_path.parent.mkdir(parents=True, exist_ok=True)
+    except Exception:
+        pass
 
     latest: Dict[str, Dict[str, Any]] = {}
     for obj in _jsonl_iter(results_path):
@@ -174,6 +180,38 @@ def collect_for_results_file(
         st = str(getattr(mb, "processing_status", "") or "").lower()
         if st != "ended":
             continue
+
+        # Job-level metadata (best-effort) for provenance v2 timing.
+        job_meta: Optional[Dict[str, Any]] = None
+        try:
+            rc = getattr(mb, "request_counts", None)
+            try:
+                rc_obj = getattr(rc, "dict", lambda: rc)()
+            except Exception:
+                rc_obj = rc if isinstance(rc, dict) else None
+
+            def _s(v: Any) -> Optional[str]:
+                if v is None:
+                    return None
+                try:
+                    if hasattr(v, "isoformat"):
+                        return str(v.isoformat())
+                except Exception:
+                    pass
+                return str(v)
+
+            job_meta = {
+                "batch_id": batch_id,
+                "processing_status": str(getattr(mb, "processing_status", None) or ""),
+                "created_at": _s(getattr(mb, "created_at", None)),
+                "ended_at": _s(getattr(mb, "ended_at", None)),
+                "expires_at": _s(getattr(mb, "expires_at", None)),
+                "archived_at": _s(getattr(mb, "archived_at", None)),
+                "cancel_initiated_at": _s(getattr(mb, "cancel_initiated_at", None)),
+                "request_counts": rc_obj,
+            }
+        except Exception:
+            job_meta = None
 
         # Results are a JSONL stream of MessageBatchIndividualResponse objects.
         try:
@@ -298,6 +336,19 @@ def collect_for_results_file(
                     f.write(json.dumps(result_row, ensure_ascii=False) + "\n")
                 with prov_path.open("a", encoding="utf-8") as f:
                     f.write(json.dumps(prov_row, ensure_ascii=False) + "\n")
+                try:
+                    prov2_row = build_provenance_v2_row(
+                        base=prov_row,
+                        results_path=results_path,
+                        event="collect",
+                        http=None,
+                        job_meta=job_meta,
+                        extra={"submit_only": True},
+                    )
+                    with prov2_path.open("a", encoding="utf-8") as f:
+                        f.write(json.dumps(prov2_row, ensure_ascii=False) + "\n")
+                except Exception:
+                    pass
                 wrote_any = True
 
             collected += 1

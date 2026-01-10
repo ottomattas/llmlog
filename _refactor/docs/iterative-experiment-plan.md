@@ -23,7 +23,8 @@ Key paths under `_refactor/`:
 
 Per target run folder you should expect:
 - `results.jsonl`: minimal rows (`parsed_answer`, `correct`, `error`)
-- `results.provenance.jsonl`: prompt + full completion + usage + raw response (when enabled)
+- `results.provenance.jsonl`: full provenance (v1; kept for backwards compatibility)
+- `results.provenance.v2.jsonl`: full provenance (v2; preferred by dashboards/analysis when present)
 - `results.summary.json`: per-target stats (accuracy, counts, token totals)
 - `run.manifest.json`: reproducibility snapshot (suite, dataset selection, target)
 
@@ -316,7 +317,8 @@ python3 scripts/collect_openai_submissions.py --runs-dir runs
 python3 scripts/collect_openai_submissions.py --runs-dir runs --watch-seconds 60
 ```
 Collection fetches `GET /v1/responses/{resp_id}` and appends final rows into `results.jsonl` /
-`results.provenance.jsonl`, updating `results.summary.json` when present.
+`results.provenance.v2.jsonl` (and also `results.provenance.jsonl` for backwards compatibility), updating
+`results.summary.json` when present.
 
 #### Batch size / spend control (recommended)
 If a single model call is expensive (e.g. ~€1–€2/request), submit in **small batches**.
@@ -337,20 +339,21 @@ Repeat until you reach your desired coverage/spend.
 
 Where the reasoning trace is stored:
 - For each leaf run:
-  - `runs/<suite>/<run>/<provider>/<model>/<thinking_mode>/results.provenance.jsonl`
+  - `runs/<suite>/<run>/<provider>/<model>/<thinking_mode>/results.provenance.v2.jsonl` (preferred)
+  - (v1 also exists as `results.provenance.jsonl` for backwards compatibility)
   - the full text is in `completion_text` (plus `raw_response` and best-effort `thinking_text` if present)
 
 Export a handful of provenance rows to readable files (good for third-party validation):
 ```
 python3 scripts/export_provenance.py \
-  --provenance runs/<suite>/<run>/<provider>/<model>/<thinking_mode>/results.provenance.jsonl \
+  --provenance runs/<suite>/<run>/<provider>/<model>/<thinking_mode>/results.provenance.v2.jsonl \
   --out reports/exports/<run_name> --limit 50 --no-raw
 ```
 
 Export specific ids (repeat `--id`):
 ```
 python3 scripts/export_provenance.py \
-  --provenance runs/<suite>/<run>/<provider>/<model>/<thinking_mode>/results.provenance.jsonl \
+  --provenance runs/<suite>/<run>/<provider>/<model>/<thinking_mode>/results.provenance.v2.jsonl \
   --out reports/exports/<run_name> --id 123 --id 456 --no-raw
 ```
 

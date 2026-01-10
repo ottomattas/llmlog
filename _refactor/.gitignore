@@ -1,5 +1,6 @@
 # Generated artifacts (never commit)
 reports/
+_api_probes/
 
 # Canonical run organization helpers (optional)
 runs_by_run/

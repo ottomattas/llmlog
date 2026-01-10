@@ -104,11 +104,13 @@ class RunPaths:
 def _iter_runs(runs_dir: Path) -> Iterator[RunPaths]:
     for summary_path in runs_dir.rglob("results.summary.json"):
         run_dir = summary_path.parent
+        prov2 = run_dir / "results.provenance.v2.jsonl"
+        prov1 = run_dir / "results.provenance.jsonl"
         yield RunPaths(
             run_dir=run_dir,
             summary_path=summary_path,
             manifest_path=run_dir / "run.manifest.json",
-            provenance_path=run_dir / "results.provenance.jsonl",
+            provenance_path=(prov2 if prov2.exists() else prov1),
         )
 
 

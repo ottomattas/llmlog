@@ -148,9 +148,15 @@ def collect_for_results_file(
     from llmlog.parsers import parse_contradiction, parse_yes_no
     from llmlog.providers.google_client import _extract_text as _extract_text_google  # type: ignore
     from llmlog.providers.google_client import _extract_thinking_text as _extract_thinking_text_google  # type: ignore
+    from llmlog.provenance_v2 import build_provenance_v2_row, provenance_v2_path_for_results
     import llmlog.runner as runner_mod
 
     prov_path, summary_path = _derive_paths(results_path)
+    prov2_path = provenance_v2_path_for_results(results_path)
+    try:
+        prov2_path.parent.mkdir(parents=True, exist_ok=True)
+    except Exception:
+        pass
 
     latest: Dict[str, Dict[str, Any]] = {}
     for obj in _jsonl_iter(results_path):
@@ -224,6 +230,19 @@ def collect_for_results_file(
         if op.get("error"):
             # Whole-batch error.
             err_obj = op.get("error")
+            opm = op.get("metadata") if isinstance(op, dict) else None
+            job_meta = None
+            if isinstance(opm, dict):
+                job_meta = {
+                    "name": opm.get("name") or op.get("name"),
+                    "state": opm.get("state"),
+                    "model": opm.get("model"),
+                    "displayName": opm.get("displayName"),
+                    "createTime": opm.get("createTime"),
+                    "endTime": opm.get("endTime"),
+                    "updateTime": opm.get("updateTime"),
+                    "batchStats": opm.get("batchStats"),
+                }
             for idx, rid in idx_to_rid.items():
                 row = latest.get(rid) or {}
                 result_row = {
@@ -265,6 +284,19 @@ def collect_for_results_file(
                         f.write(json.dumps(result_row, ensure_ascii=False) + "\n")
                     with prov_path.open("a", encoding="utf-8") as f:
                         f.write(json.dumps(prov_row, ensure_ascii=False) + "\n")
+                    try:
+                        prov2_row = build_provenance_v2_row(
+                            base=prov_row,
+                            results_path=results_path,
+                            event="collect",
+                            http=None,
+                            job_meta=job_meta,
+                            extra={"submit_only": True},
+                        )
+                        with prov2_path.open("a", encoding="utf-8") as f:
+                            f.write(json.dumps(prov2_row, ensure_ascii=False) + "\n")
+                    except Exception:
+                        pass
                     wrote_any = True
                 collected += 1
             continue
@@ -325,6 +357,20 @@ def collect_for_results_file(
         if responses is None:
             continue
 
+        opm = op.get("metadata") if isinstance(op, dict) else None
+        job_meta = None
+        if isinstance(opm, dict):
+            job_meta = {
+                "name": opm.get("name") or op.get("name"),
+                "state": opm.get("state"),
+                "model": opm.get("model"),
+                "displayName": opm.get("displayName"),
+                "createTime": opm.get("createTime"),
+                "endTime": opm.get("endTime"),
+                "updateTime": opm.get("updateTime"),
+                "batchStats": opm.get("batchStats"),
+            }
+
         # Build collected rows for any pending indices present.
         for idx, rid in sorted(idx_to_rid.items(), key=lambda kv: kv[0]):
             if idx < 0 or idx >= len(responses):
@@ -345,11 +391,19 @@ def collect_for_results_file(
                 resp_obj = item.get("response") if isinstance(item, dict) and isinstance(item.get("response"), dict) else (item if isinstance(item, dict) else {})
                 completion_text = _extract_text_google(resp_obj)
                 thinking_text = _extract_thinking_text_google(resp_obj)
+                finish_reason = None
+                try:
+                    if isinstance(resp_obj, dict):
+                        cands = resp_obj.get("candidates") or []
+                        if isinstance(cands, list) and cands and isinstance(cands[0], dict):
+                            finish_reason = cands[0].get("finishReason")
+                except Exception:
+                    finish_reason = None
                 norm = normalize_meta(
                     "google",
                     req_model,
                     {
-                        "finish_reason": None,
+                        "finish_reason": finish_reason,
                         "usage": resp_obj.get("usageMetadata"),
                         "raw_response": resp_obj,
                     },
@@ -413,6 +467,19 @@ def collect_for_results_file(
                     f.write(json.dumps(result_row, ensure_ascii=False) + "\n")
                 with prov_path.open("a", encoding="utf-8") as f:
                     f.write(json.dumps(prov_row, ensure_ascii=False) + "\n")
+                try:
+                    prov2_row = build_provenance_v2_row(
+                        base=prov_row,
+                        results_path=results_path,
+                        event="collect",
+                        http=None,
+                        job_meta=job_meta,
+                        extra={"submit_only": True},
+                    )
+                    with prov2_path.open("a", encoding="utf-8") as f:
+                        f.write(json.dumps(prov2_row, ensure_ascii=False) + "\n")
+                except Exception:
+                    pass
                 wrote_any = True
             collected += 1
 

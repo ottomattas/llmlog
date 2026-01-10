@@ -197,9 +197,15 @@ def collect_for_results_file(
     from llmlog.providers.secrets import get_provider_key, load_secrets
     from llmlog.response_meta import normalize_meta
     from llmlog.parsers import parse_contradiction, parse_yes_no
+    from llmlog.provenance_v2 import build_provenance_v2_row, provenance_v2_path_for_results
     import llmlog.runner as runner_mod
 
     prov_path, summary_path = _derive_paths(results_path)
+    prov2_path = provenance_v2_path_for_results(results_path)
+    try:
+        prov2_path.parent.mkdir(parents=True, exist_ok=True)
+    except Exception:
+        pass
 
     # Latest result row per id
     latest: Dict[str, Dict[str, Any]] = {}
@@ -354,6 +360,19 @@ def collect_for_results_file(
                 f.write(json.dumps(result_row, ensure_ascii=False) + "\n")
             with prov_path.open("a") as f:
                 f.write(json.dumps(prov_row, ensure_ascii=False) + "\n")
+            try:
+                prov2_row = build_provenance_v2_row(
+                    base=prov_row,
+                    results_path=results_path,
+                    event="collect",
+                    http=None,
+                    job_meta=None,
+                    extra={"submit_only": True},
+                )
+                with prov2_path.open("a", encoding="utf-8") as f:
+                    f.write(json.dumps(prov2_row, ensure_ascii=False) + "\n")
+            except Exception:
+                pass
 
             # Update summary if present.
             if summary_path.exists():

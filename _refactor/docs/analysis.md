@@ -97,6 +97,6 @@ python scripts/generate_combined_dashboard.py --output reports/combined.dashboar
 ### Inspect prompts + reasoning
 If you enabled provenance output, you can export individual prompts and responses:
 ```
-python scripts/export_provenance.py --provenance runs/<suite>/<run>/<provider>/<model>/<thinking_mode>/results.provenance.jsonl --out reports/exports --limit 50 --no-raw
+python scripts/export_provenance.py --provenance runs/<suite>/<run>/<provider>/<model>/<thinking_mode>/results.provenance.v2.jsonl --out reports/exports --limit 50 --no-raw
 ```
 
