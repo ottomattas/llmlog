@@ -68,7 +68,19 @@ def compute_cost_usd(rate: ModelRate, usage: Dict[str, Any]) -> Dict[str, Any]:
     cache_read_input_tokens = _i("cache_read_input_tokens")
     cache_creation_input_tokens = _i("cache_creation_input_tokens")
 
-    input_usd = (input_tokens / 1_000_000.0) * float(rate.input_per_million_usd)
+    provider_l = (rate.provider or "").lower()
+
+    # Input pricing nuance:
+    # - OpenAI: usage may include `input_tokens_details.cached_tokens` (we normalize to
+    #   `cache_read_input_tokens`). Those cached tokens are a subset of input tokens and are billed at
+    #   a separate cached-input rate. Avoid double-counting by charging:
+    #     (input_tokens - cached_tokens) at input rate, plus cached_tokens at cached-input rate.
+    # - Anthropic: cache read/write tokens are surfaced separately and should be charged in addition.
+    non_cached_input_tokens = input_tokens
+    if provider_l == "openai" and cache_read_input_tokens:
+        non_cached_input_tokens = max(0, input_tokens - cache_read_input_tokens)
+
+    input_usd = (non_cached_input_tokens / 1_000_000.0) * float(rate.input_per_million_usd)
 
     # Provider nuance:
     # - Google Gemini pricing is listed as "output tokens including thinking tokens".
@@ -77,7 +89,7 @@ def compute_cost_usd(rate: ModelRate, usage: Dict[str, Any]) -> Dict[str, Any]:
     # - OpenAI and Anthropic output token counts already reflect billed output semantics.
     billed_output_tokens = output_tokens
     try:
-        if (rate.provider or "").lower() == "google" and reasoning_tokens:
+        if provider_l == "google" and reasoning_tokens:
             billed_output_tokens = output_tokens + reasoning_tokens
     except Exception:
         pass

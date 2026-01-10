@@ -299,10 +299,15 @@ def build_combined_dashboard_data(
         cache_read_input_tokens = _i(usage.get("cache_read_input_tokens"))
         cache_creation_input_tokens = _i(usage.get("cache_creation_input_tokens"))
 
-        input_usd = (input_tokens / 1_000_000.0) * input_per_m
+        provider_l = str(rate_obj.get("provider") or "").lower()
+        non_cached_input_tokens = input_tokens
+        if provider_l == "openai" and cache_read_input_tokens:
+            non_cached_input_tokens = max(0, input_tokens - cache_read_input_tokens)
+
+        input_usd = (non_cached_input_tokens / 1_000_000.0) * input_per_m
         billed_output_tokens = output_tokens
         try:
-            if str(rate_obj.get("provider") or "").lower() == "google" and reasoning_tokens:
+            if provider_l == "google" and reasoning_tokens:
                 billed_output_tokens = output_tokens + reasoning_tokens
         except Exception:
             billed_output_tokens = output_tokens

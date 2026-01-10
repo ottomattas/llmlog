@@ -68,6 +68,27 @@ def test_compute_cost_usd() -> None:
     assert abs(cost["total_usd"] - 2.0) < 1e-9
 
 
+def test_compute_cost_usd_openai_cached_input_not_double_counted() -> None:
+    from llmlog.pricing.schema import ModelRate
+    from llmlog.pricing.cost import compute_cost_usd
+
+    # OpenAI cached input tokens are a subset of input tokens and should be billed at the cached-input rate.
+    rate = ModelRate(
+        provider="openai",
+        model="gpt-5.2",
+        input_per_million_usd=2.0,
+        output_per_million_usd=10.0,
+        cache_read_input_per_million_usd=0.5,
+    )
+    usage = {"input_tokens": 1_000_000, "cache_read_input_tokens": 400_000, "output_tokens": 0, "reasoning_tokens": 0}
+    cost = compute_cost_usd(rate, usage)
+    # input_usd = (1_000_000 - 400_000) * 2 / 1e6 = 1.2
+    # cache_read_usd = 400_000 * 0.5 / 1e6 = 0.2
+    assert abs(cost["input_usd"] - 1.2) < 1e-12
+    assert abs(cost["cache_read_input_usd"] - 0.2) < 1e-12
+    assert abs(cost["total_usd"] - 1.4) < 1e-12
+
+
 def test_compute_cost_usd_google_includes_reasoning_tokens_in_output() -> None:
     from llmlog.pricing.schema import ModelRate
     from llmlog.pricing.cost import compute_cost_usd
