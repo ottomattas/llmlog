@@ -19,6 +19,28 @@ From `_refactor/`:
 python scripts/run.py --suite configs/suites/sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2__think-none.yaml --run demo-001 --limit 10 --resume --lockstep
 ```
 
+### Where results are stored (results vs provenance)
+Each suite+run+target writes to:
+`runs/<suite_name>/<run_id>/<provider>/<model>/<thinking_mode>/`
+
+Files:
+- `results.jsonl`: **minimal** per-item record used for completion accounting:
+  - `parsed_answer`, `error`, `submission_id`, etc.
+  - Append-only: the **latest row per `id`** is authoritative.
+- `results.provenance.jsonl`: **full provenance** (enabled by default) with:
+  - `prompt` (optional), `completion_text`, `thinking_text`, `usage`, `finish_reason`, `raw_response`
+  - This is where we keep provider-specific payloads in a consistent wrapper.
+- `results.summary.json`: aggregate stats (counts + token/cost totals when available)
+- `run.manifest.json`: manifest with suite/model metadata used by dashboards/analysis
+
+Provider-specific notes (what is / is not “chain-of-thought”):
+- **OpenAI**: `completion_text` is the visible answer; `thinking_text` is a best-effort **reasoning summary** when the API exposes one. Full raw chain-of-thought is not generally exposed.
+- **Anthropic**: when extended thinking is enabled, `thinking_text` captures streamed thinking deltas (see Anthropic extended thinking docs: `https://platform.claude.com/docs/en/build-with-claude/extended-thinking`).
+- **Google Gemini**:
+  - `raw_response` stores the full Gemini response object. For Gemini 3, responses may include **`thoughtSignature`** fields.
+  - **Thought signatures are encrypted** and are **not** readable chain-of-thought. They are used to preserve reasoning context for tool/function calling and must be preserved when required (Gemini thought signatures docs: `https://ai.google.dev/gemini-api/docs/thought-signatures`).
+  - If thought summaries are enabled on requests, we store them into `thinking_text` and exclude them from `completion_text` so answer parsing remains stable (Gemini thinking docs: `https://ai.google.dev/gemini-api/docs/thinking`).
+
 ### Two execution modes (recommended naming)
 In this repo it helps to think of two modes:
 
