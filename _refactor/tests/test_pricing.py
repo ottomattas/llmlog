@@ -21,6 +21,41 @@ def test_match_rate_exact_and_prefix() -> None:
     assert r2.model_prefix == "gpt-5"
 
 
+def test_match_rate_tier_selection_and_fallback() -> None:
+    from llmlog.pricing.schema import PricingTable
+    from llmlog.pricing.cost import match_rate
+
+    tbl = PricingTable(
+        name="t",
+        rates=[
+            {
+                "provider": "openai",
+                "tier": "standard",
+                "model": "gpt-5.2",
+                "input_per_million_usd": 1.75,
+                "output_per_million_usd": 14.0,
+            },
+            {
+                "provider": "openai",
+                "tier": "batch",
+                "model": "gpt-5.2",
+                "input_per_million_usd": 0.875,
+                "output_per_million_usd": 7.0,
+            },
+        ],
+    )
+
+    r = match_rate(tbl, provider="openai", model="gpt-5.2", tier="batch")
+    assert r is not None
+    assert r.tier == "batch"
+    assert abs(r.input_per_million_usd - 0.875) < 1e-12
+
+    # If the requested tier isn't present, we fall back to standard.
+    r2 = match_rate(tbl, provider="openai", model="gpt-5.2", tier="priority")
+    assert r2 is not None
+    assert r2.tier == "standard"
+
+
 def test_compute_cost_usd() -> None:
     from llmlog.pricing.schema import ModelRate
     from llmlog.pricing.cost import compute_cost_usd

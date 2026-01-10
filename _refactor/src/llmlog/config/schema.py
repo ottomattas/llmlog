@@ -93,6 +93,8 @@ class TargetConfig(BaseModel):
     seed: Optional[int] = None
     max_tokens: Optional[int] = None
     thinking: Optional[ThinkingOptions] = None
+    # Optional pricing tier override (e.g. OpenAI flex/priority, or forcing standard vs batch).
+    pricing_tier: Optional[Literal["standard", "batch", "flex", "priority"]] = None
 
 
 class TargetSetConfig(BaseModel):

@@ -298,6 +298,29 @@ def _derive_paths(results_path: Path) -> Tuple[Path, Path]:
     return (Path(p + ".provenance.jsonl"), Path(p + ".summary.json"))
 
 
+def _pricing_tier_for_target(*, target: Dict[str, Any], submit_only: bool) -> str:
+    """Best-effort pricing tier selection for a given target and run mode.
+
+    Rules:
+    - If target specifies `pricing_tier`, use it.
+    - Else, if submit-only and provider uses batch APIs (Anthropic/Gemini), use `batch`.
+    - Else, default to `standard`.
+    """
+    try:
+        explicit = target.get("pricing_tier")
+        if explicit:
+            return str(explicit)
+    except Exception:
+        pass
+    try:
+        prov_l = str(target.get("provider") or "").lower()
+    except Exception:
+        prov_l = ""
+    if submit_only and prov_l in ("anthropic", "google", "gemini"):
+        return "batch"
+    return "standard"
+
+
 def run_suite(
     *,
     suite_path: str,
@@ -395,10 +418,16 @@ def run_suite(
             if cfg.resume
             else set()
         )
+        pricing_tier = _pricing_tier_for_target(target=t, submit_only=submit_only)
         rate = None
         if pricing_table is not None:
             try:
-                rate = match_rate(pricing_table, provider=str(t.get("provider")), model=str(t.get("model")))
+                rate = match_rate(
+                    pricing_table,
+                    provider=str(t.get("provider")),
+                    model=str(t.get("model")),
+                    tier=pricing_tier,
+                )
             except Exception:
                 rate = None
         out_info.append(
@@ -407,6 +436,7 @@ def run_suite(
                 "results_path": results_path,
                 "provenance_path": prov_path,
                 "summary_path": summary_path,
+                "pricing_tier": pricing_tier,
                 "pricing_rate": rate.model_dump(mode="json", exclude_none=True) if rate is not None else None,
                 "done_ids": done_ids,
                 # Per-invocation trace fields populated during execution (useful for cost/timing audits).
@@ -1102,6 +1132,7 @@ def run_suite(
             "thinking_mode": _thinking_mode_label(oi["target"]),
             "dataset_selection": dataset_selection,
             "pricing_table": cfg.pricing_table,
+            "pricing_tier": oi.get("pricing_tier"),
             "pricing_rate": oi.get("pricing_rate"),
             "stats": stats,
             "accuracy": acc,
@@ -1120,6 +1151,7 @@ def run_suite(
                 "target": oi["target"],
                 "thinking_mode": _thinking_mode_label(oi["target"]),
                 "pricing_table": cfg.pricing_table,
+                "pricing_tier": oi.get("pricing_tier"),
                 "pricing_rate": oi.get("pricing_rate"),
             }
             manifest_path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n")
@@ -1142,6 +1174,7 @@ def run_suite(
                 "thinking_mode": _thinking_mode_label(oi["target"]),
                 "submit_only": bool(submit_only),
                 "poll": (not submit_only),
+                "pricing_tier": oi.get("pricing_tier"),
                 "limit": (int(limit) if limit is not None else None),
                 "effective_limit_rows": (int(effective_limit_rows) if effective_limit_rows is not None else None),
                 "resume": bool(cfg.resume),

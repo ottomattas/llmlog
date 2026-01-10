@@ -5,16 +5,36 @@ from typing import Any, Dict, Optional
 from .schema import ModelRate, PricingTable
 
 
-def match_rate(table: PricingTable, *, provider: str, model: str) -> Optional[ModelRate]:
-    """Find the best matching rate row for a given provider/model."""
+def match_rate(
+    table: PricingTable,
+    *,
+    provider: str,
+    model: str,
+    tier: str = "standard",
+    allow_fallback_to_standard: bool = True,
+) -> Optional[ModelRate]:
+    """Find the best matching rate row for a given provider/model + pricing tier.
+
+    Matching precedence:
+    - Provider must match (case-insensitive)
+    - Tier must match (default: standard). Rows with missing tier are treated as standard.
+    - Prefer exact `model`
+    - Else use `model_prefix` (longest prefix wins)
+
+    If `tier` isn't found and `allow_fallback_to_standard` is True, we retry with tier=standard.
+    """
     prov = (provider or "").lower()
     mod = (model or "")
+    tier_l = (tier or "standard").lower()
 
     best: Optional[ModelRate] = None
     best_score = -1
 
     for r in table.rates:
         if (r.provider or "").lower() != prov:
+            continue
+        r_tier = (getattr(r, "tier", None) or "standard")
+        if str(r_tier).lower() != tier_l:
             continue
         if r.model and r.model == mod:
             score = 10_000  # exact match always wins
@@ -27,6 +47,8 @@ def match_rate(table: PricingTable, *, provider: str, model: str) -> Optional[Mo
             best = r
             best_score = score
 
+    if best is None and allow_fallback_to_standard and tier_l != "standard":
+        return match_rate(table, provider=provider, model=model, tier="standard", allow_fallback_to_standard=False)
     return best
 
 

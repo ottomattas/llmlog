@@ -161,7 +161,13 @@ def preflight_suite(
         rate = None
         if pricing_table is not None:
             try:
-                r = match_rate(pricing_table, provider=str(t.get("provider")), model=str(t.get("model")))
+                pricing_tier = str(t.get("pricing_tier") or "standard")
+                r = match_rate(
+                    pricing_table,
+                    provider=str(t.get("provider")),
+                    model=str(t.get("model")),
+                    tier=pricing_tier,
+                )
                 rate = r.model_dump(mode="json", exclude_none=True) if r is not None else None
             except Exception:
                 rate = None

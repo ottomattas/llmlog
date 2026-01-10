@@ -300,7 +300,13 @@ def build_combined_dashboard_data(
         cache_creation_input_tokens = _i(usage.get("cache_creation_input_tokens"))
 
         input_usd = (input_tokens / 1_000_000.0) * input_per_m
-        output_usd = (output_tokens / 1_000_000.0) * output_per_m
+        billed_output_tokens = output_tokens
+        try:
+            if str(rate_obj.get("provider") or "").lower() == "google" and reasoning_tokens:
+                billed_output_tokens = output_tokens + reasoning_tokens
+        except Exception:
+            billed_output_tokens = output_tokens
+        output_usd = (billed_output_tokens / 1_000_000.0) * output_per_m
 
         cache_read_usd = (
             (cache_read_input_tokens / 1_000_000.0) * float(cache_read_per_m) if cache_read_per_m is not None else 0.0

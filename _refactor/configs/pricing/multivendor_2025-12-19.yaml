@@ -3,73 +3,222 @@ currency: USD
 sources:
   - source_url: https://platform.openai.com/pricing
     retrieved_at: "2025-12-18"
-    notes: "OpenAI rates were initially seeded in configs/pricing/openai_2025-12-18.yaml (Standard/default tier); duplicated here for multi-provider runs."
+    notes: "OpenAI rates were initially seeded in configs/pricing/openai_2025-12-18.yaml (Standard/default tier); this table expands to include additional service tiers (Batch/Flex/Priority) where applicable."
   - source_url: https://platform.openai.com/docs/pricing
     retrieved_at: "2025-12-30"
-    notes: "OpenAI pricing docs include tiers (Batch/Flex/Standard/Priority). This table currently uses Standard/default rates."
+    notes: "OpenAI pricing docs include tiers (Batch/Flex/Standard/Priority). Rates below include per-tier pricing where available."
   - source_url: https://platform.claude.com/docs/en/about-claude/models/overview
     retrieved_at: "2025-12-19"
     notes: "Anthropic model overview includes headline per-MTok input/output pricing for current + legacy models."
   - source_url: https://ai.google.dev/gemini-api/docs/pricing
     retrieved_at: "2026-01-08"
-    notes: "Google Gemini API pricing page; rates below are standard (non-batch) for typical prompts (<=200k input tokens)."
+    notes: "Google Gemini API pricing page; rates below include standard + batch tiers for typical prompts (<=200k input tokens) and text-only where applicable."
 
 rates:
-  # OpenAI (copied from openai_2025-12-18.yaml)
+  # OpenAI — include service tiers (Standard/Batch/Flex/Priority) where applicable.
+  # Note: OpenAI pricing tables include a "Cached input" column; we map it to `cache_read_input_per_million_usd`.
   - provider: openai
+    tier: standard
     model: gpt-5.2
     input_per_million_usd: 1.75
+    cache_read_input_per_million_usd: 0.175
     output_per_million_usd: 14.0
+
+  - provider: openai
+    tier: batch
+    model: gpt-5.2
+    input_per_million_usd: 0.875
+    cache_read_input_per_million_usd: 0.0875
+    output_per_million_usd: 7.0
+
+  - provider: openai
+    tier: flex
+    model: gpt-5.2
+    input_per_million_usd: 0.875
+    cache_read_input_per_million_usd: 0.0875
+    output_per_million_usd: 7.0
+
+  - provider: openai
+    tier: priority
+    model: gpt-5.2
+    input_per_million_usd: 3.5
+    cache_read_input_per_million_usd: 0.35
+    output_per_million_usd: 28.0
 
   # NOTE: gpt-5.2-pro is priced differently than gpt-5.2 (do not rely on prefix match).
   # Keep an exact match for the stable alias and a prefix match for pinned snapshot ids
   # (e.g. `gpt-5.2-pro-2025-12-11`) so we don't fall back to `gpt-5.2` prefix pricing.
   - provider: openai
+    tier: standard
     model: gpt-5.2-pro
     input_per_million_usd: 21.0
     output_per_million_usd: 168.0
 
   - provider: openai
+    tier: batch
+    model: gpt-5.2-pro
+    input_per_million_usd: 10.5
+    output_per_million_usd: 84.0
+
+  - provider: openai
+    tier: standard
     model_prefix: gpt-5.2-pro
     input_per_million_usd: 21.0
     output_per_million_usd: 168.0
 
   - provider: openai
+    tier: batch
+    model_prefix: gpt-5.2-pro
+    input_per_million_usd: 10.5
+    output_per_million_usd: 84.0
+
+  - provider: openai
+    tier: standard
     model_prefix: gpt-5.2
     input_per_million_usd: 1.75
+    cache_read_input_per_million_usd: 0.175
     output_per_million_usd: 14.0
 
   - provider: openai
+    tier: batch
+    model_prefix: gpt-5.2
+    input_per_million_usd: 0.875
+    cache_read_input_per_million_usd: 0.0875
+    output_per_million_usd: 7.0
+
+  - provider: openai
+    tier: flex
+    model_prefix: gpt-5.2
+    input_per_million_usd: 0.875
+    cache_read_input_per_million_usd: 0.0875
+    output_per_million_usd: 7.0
+
+  - provider: openai
+    tier: priority
+    model_prefix: gpt-5.2
+    input_per_million_usd: 3.5
+    cache_read_input_per_million_usd: 0.35
+    output_per_million_usd: 28.0
+
+  - provider: openai
+    tier: standard
     model: o4-mini
     input_per_million_usd: 1.10
+    cache_read_input_per_million_usd: 0.275
     output_per_million_usd: 4.40
 
+  - provider: openai
+    tier: batch
+    model: o4-mini
+    input_per_million_usd: 0.55
+    output_per_million_usd: 2.20
+
+  - provider: openai
+    tier: flex
+    model: o4-mini
+    input_per_million_usd: 0.55
+    cache_read_input_per_million_usd: 0.138
+    output_per_million_usd: 2.20
+
+  - provider: openai
+    tier: priority
+    model: o4-mini
+    input_per_million_usd: 2.0
+    cache_read_input_per_million_usd: 0.50
+    output_per_million_usd: 8.0
+
   # Anthropic (Claude API) — use prefixes so aliases and snapshot IDs match.
+  # Notes:
+  # - Prompt caching has separate billing for cache writes (5m vs 1h) and cache hits/refreshes.
+  # - Batch tier is 50% off input/output; cache-write/cache-read pricing is derived from the published multipliers:
+  #   cache_write_5m = 1.25x base input, cache_write_1h = 2x base input, cache_read = 0.1x base input.
   - provider: anthropic
+    tier: standard
     model_prefix: claude-sonnet-4-5
     input_per_million_usd: 3.0
     output_per_million_usd: 15.0
+    cache_creation_input_per_million_usd: 3.75
+    cache_creation_input_1h_per_million_usd: 6.0
+    cache_read_input_per_million_usd: 0.30
 
   - provider: anthropic
+    tier: batch
+    model_prefix: claude-sonnet-4-5
+    input_per_million_usd: 1.5
+    output_per_million_usd: 7.5
+    cache_creation_input_per_million_usd: 1.875
+    cache_creation_input_1h_per_million_usd: 3.0
+    cache_read_input_per_million_usd: 0.15
+
+  - provider: anthropic
+    tier: standard
     model_prefix: claude-haiku-4-5
     input_per_million_usd: 1.0
     output_per_million_usd: 5.0
+    cache_creation_input_per_million_usd: 1.25
+    cache_creation_input_1h_per_million_usd: 2.0
+    cache_read_input_per_million_usd: 0.10
 
   - provider: anthropic
+    tier: batch
+    model_prefix: claude-haiku-4-5
+    input_per_million_usd: 0.5
+    output_per_million_usd: 2.5
+    cache_creation_input_per_million_usd: 0.625
+    cache_creation_input_1h_per_million_usd: 1.0
+    cache_read_input_per_million_usd: 0.05
+
+  - provider: anthropic
+    tier: standard
     model_prefix: claude-opus-4-5
     input_per_million_usd: 5.0
     output_per_million_usd: 25.0
+    cache_creation_input_per_million_usd: 6.25
+    cache_creation_input_1h_per_million_usd: 10.0
+    cache_read_input_per_million_usd: 0.50
 
-  # Google (Gemini API / AI Studio) — standard tier.
+  - provider: anthropic
+    tier: batch
+    model_prefix: claude-opus-4-5
+    input_per_million_usd: 2.5
+    output_per_million_usd: 12.5
+    cache_creation_input_per_million_usd: 3.125
+    cache_creation_input_1h_per_million_usd: 5.0
+    cache_read_input_per_million_usd: 0.25
+
+  # Google (Gemini API / AI Studio) — Standard + Batch tiers (text-only).
   # Note: Google pricing lists output as "including thinking tokens".
   - provider: google
+    tier: standard
     model: gemini-3-pro-preview
     input_per_million_usd: 2.0
     output_per_million_usd: 12.0
+    cache_creation_input_per_million_usd: 0.20
+    cache_storage_per_million_token_hours_usd: 4.50
 
   - provider: google
+    tier: batch
+    model: gemini-3-pro-preview
+    input_per_million_usd: 1.0
+    output_per_million_usd: 6.0
+    cache_creation_input_per_million_usd: 0.20
+    cache_storage_per_million_token_hours_usd: 4.50
+
+  - provider: google
+    tier: standard
     model: gemini-3-flash-preview
     input_per_million_usd: 0.5
     output_per_million_usd: 3.0
+    cache_creation_input_per_million_usd: 0.05
+    cache_storage_per_million_token_hours_usd: 1.00
+
+  - provider: google
+    tier: batch
+    model: gemini-3-flash-preview
+    input_per_million_usd: 0.25
+    output_per_million_usd: 1.5
+    # Google notes Batch context caching is "same as Standard" (batch caching not yet implemented).
+    cache_creation_input_per_million_usd: 0.05
+    cache_storage_per_million_token_hours_usd: 1.00
 
 
