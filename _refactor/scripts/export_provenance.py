@@ -19,7 +19,11 @@ def main() -> int:
     from llmlog.exports import export_provenance_human_readable
 
     ap = argparse.ArgumentParser(description="Export provenance JSONL to human-readable files.")
-    ap.add_argument("--provenance", required=True, help="Path to a *.provenance.jsonl file")
+    ap.add_argument(
+        "--provenance",
+        required=True,
+        help="Path to a results.provenance.jsonl or results.provenance.v2.jsonl file",
+    )
     ap.add_argument("--out", required=True, help="Output directory")
     ap.add_argument("--limit", type=int, default=None, help="Limit number of exported rows")
     ap.add_argument("--id", dest="ids", action="append", default=None, help="Filter to specific id(s); repeatable")

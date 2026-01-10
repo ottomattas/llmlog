@@ -18,7 +18,7 @@ Key paths under `_refactor/`:
 - **Targets** (which provider/model): `configs/targets/*.yaml`
 - **Datasets**: `datasets/validation/*.jsonl`
 - **Runner CLI**: `scripts/run.py` (calls `src/llmlog/runner.py`)
-- **Artifacts (gitignored)**: `runs/<suite>/<run>/<provider>/<model>/<thinking_mode>/...`
+- **Artifacts (committed when complete)**: `runs/<suite>/<run>/<provider>/<model>/<thinking_mode>/...`
 - **Reports (gitignored)**: `reports/` (dashboards, exports)
 
 Per target run folder you should expect:
@@ -28,7 +28,7 @@ Per target run folder you should expect:
 - `results.summary.json`: per-target stats (accuracy, counts, token totals)
 - `run.manifest.json`: reproducibility snapshot (suite, dataset selection, target)
 
-Note: `_refactor/.gitignore` intentionally ignores `runs/` and `reports/`.
+Note: `_refactor/.gitignore` intentionally ignores `reports/` (and `_api_probes/`), but **not** `runs/`.
 For third-party validation, export provenance into a standalone folder (see below) or archive the run folder.
 
 ### What counts as “done” (for a run id)

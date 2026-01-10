@@ -13,7 +13,14 @@ The runner can optionally compute **USD cost totals** per target using a version
 
 When enabled, `results.summary.json` will include:
 - `stats.cost_input_usd`, `stats.cost_output_usd`, `stats.cost_total_usd`
-- `pricing_table` and `pricing_rate` (the matched rate row snapshot used for the run)
+- `pricing_table`, resolved `pricing_tier`, and `pricing_rate` (the matched rate row snapshot used for the run)
+
+Notes:
+- `pricing_tier` defaults to `standard` unless the target explicitly overrides it.
+- For submit-only batch APIs (Anthropic Message Batches, Gemini BatchGenerateContent), `_refactor` auto-selects
+  `pricing_tier=batch` unless overridden.
+- Cost totals are computed from **per-attempt provenance usage** and the saved `pricing_rate` snapshot. See
+  `docs/runs-and-results.md` for provider-specific nuances (Google thinking tokens, OpenAI cached input, etc.).
 
 ### Generate a dashboard
 ```
@@ -64,6 +71,11 @@ Use **Y metric** to switch the plot from accuracy to:
 - **Latency (seconds, mean)** (from `timing_ms` in provenance)
 
 This supports paper tables/figures for RQ3 (test-time compute vs cost-efficiency) and RQ5 (cross-provider comparisons).
+
+Timing nuance:
+- Dashboards/analysis prefer `results.provenance.v2.jsonl` when present.
+- In batch submit-only modes, providers typically do **not** expose per-item latency; provenance v2 records batch-level
+  durations when available and includes `timing_ms_source` to explain what the latency represents.
 
 #### Suggested “figure recipes” (quick)
 - **Cross-provider baseline comparison (RQ5)**:

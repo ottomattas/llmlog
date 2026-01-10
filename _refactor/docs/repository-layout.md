@@ -6,7 +6,7 @@ This document describes a target layout that cleanly separates:
 - **Configs** (YAML)
 - **Prompts** (templates)
 - **Datasets** (curated inputs)
-- **Artifacts** (runs/plots/reports; usually not committed)
+- **Artifacts** (runs are committed when complete; reports/exports are usually gitignored)
 
 ### Current layout (what exists today)
 - `_legacy/`: original exp1–exp8 scripts and outputs (kept intact).
@@ -47,11 +47,11 @@ datasets/
   validation/
   production/
 
-runs/                # run artifacts (NOT committed by default)
-reports/             # plots/tables/dashboards (usually NOT committed)
+runs/                # run artifacts (committed when complete, for traceability)
+reports/             # plots/tables/dashboards (gitignored by default)
 ```
 
 ### Conventions
 - **Code lives under `src/`**: avoids accidental imports from the repo root and makes packaging straightforward.
-- **Artifacts are not code**: treat `runs/` and most of `reports/` as generated outputs. Keep the repo lean by default.
+- **Artifacts are not code**: treat most of `reports/` as generated outputs (keep it gitignored). Runs are committed when complete so paper figures can be reproduced from the repo state.
 - **Datasets are curated**: keep validation/production sets separated; record seed + generation command + checksum. Large datasets are tracked via Git LFS (see `.gitattributes`).

@@ -6,6 +6,10 @@ This document describes how to configure and run experiments inside `_refactor/`
 - **Suite config**: a YAML file in `configs/suites/` describing *what to measure* (task/subset/representation/prompting policy) and where the dataset is.
 - **Target set**: a YAML file in `configs/targets/` listing provider/model combinations (plus thinking/max_tokens/etc).
 
+Targets can also include:
+- `pricing_tier`: `standard|batch|flex|priority` (used to pick the correct pricing row when computing `cost_*` totals).
+  If omitted, the runner defaults to `standard`, except that submit-only batch APIs (Anthropic/Gemini) default to `batch`.
+
 Target sets in this repo are intentionally **model-specific**: each suite references one or more
 target files under `configs/targets/` via `targets_ref`.
 

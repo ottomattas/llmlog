@@ -23,15 +23,22 @@ See `src/llmlog/providers/secrets.py`.
 The runner uses `llmlog.providers.router.run_chat()` to call a provider/model and normalize response metadata.
 
 Providers implemented:
-- `openai` (Chat Completions + Responses API best-effort for `gpt-5*`)
+- `openai` (Responses API; `gpt-5*` uses server-side `background=true` and is polled in “live” mode)
 - `anthropic` (Anthropic SDK, streaming)
 - `google` / `gemini` (Gemini generateContent endpoint)
 
 ### Thinking / reasoning options
 Targets may include a `thinking` block:
 - `enabled`: boolean
-- `budget_tokens`: for Anthropic + Gemini (best-effort)
-- `effort`: for OpenAI reasoning effort (`low|medium|high`)
+- `budget_tokens`: **Anthropic only** (extended thinking budget)
+- `effort`: cross-provider “thinking level” / reasoning effort:
+  - **OpenAI**: Responses API `reasoning.effort` (`none|minimal|low|medium|high`)
+  - **Google Gemini 3**: Gemini API `thinkingConfig.thinkingLevel`
+    - `gemini-3-pro*`: `low|high`
+    - `gemini-3-flash*`: `minimal|low|medium|high`
+
+Notes:
+- In `_refactor/`, **Gemini `budget_tokens` is rejected**; use `thinking.effort` (thinking levels) instead.
 
 ### What we can (and can’t) save about “thinking”
 **Anthropic (Claude)**:

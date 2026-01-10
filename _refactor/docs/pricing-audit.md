@@ -9,6 +9,10 @@ This doc explains how we **validate and maintain** the pricing YAML tables used 
 - **Matching rule** (see `src/llmlog/pricing/cost.py`):
   - Prefer an **exact** `model:` match
   - Else use the **longest** matching `model_prefix:`
+ - **Tiered pricing**:
+   - The runner resolves a `pricing_tier` per target (`standard|batch|flex|priority`) and matches rates on `{provider, model, tier}`.
+   - If a tiered row is missing, matching falls back to `standard` (see `match_rate(..., allow_fallback_to_standard=True)`).
+   - The resolved `pricing_tier` and matched `pricing_rate` row snapshot are persisted into `run.manifest.json` and `results.summary.json`.
 
 Important practical note:
 - **OpenAI dashboard exports** often report a **pinned snapshot id** (example: `gpt-5.2-pro-2025-12-11`)
@@ -38,6 +42,10 @@ OpenAI publishes **different token prices** depending on how requests are proces
 How this relates to our exports + runs:
 - The **usage export** includes a `service_tier` column (your export shows `service_tier=default`), which corresponds to **Standard** pricing.
 - The usage export also includes a `batch` boolean (your export shows `batch=False`), so these calls were **not** Batch API calls.
+
+Note:
+- In `_refactor/`, OpenAI “submit-only” runs use **Responses background mode**, not the OpenAI Batch API, so they still
+  correspond to **Standard** pricing unless you explicitly configure a different tier (e.g., Flex/Priority) in the target.
 
 So if you compare the export-implied rates to the **Batch** table on the docs page, they will look ~2× higher
 (because Batch is ~50% of Standard for many models). The correct comparison here is the **Standard** table.
