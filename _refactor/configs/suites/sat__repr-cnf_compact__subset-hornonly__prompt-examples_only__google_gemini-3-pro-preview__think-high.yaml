@@ -1,8 +1,8 @@
-name: sat__repr-cnf_compact__subset-nonhornonly__prompt-examples_only__google_gemini-3-pro-preview__think-none
-description: "Non-Horn-only subset. Compact CNF representation. Examples-only prompt. Google gemini-3-pro-preview with think_none baseline (no thinking budget)."
+name: sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__google_gemini-3-pro-preview__think-high
+description: "Horn-only subset. Compact CNF representation. Examples-only prompt. Google gemini-3-pro-preview with think_high baseline (high thinking level)."
 
 task: sat_decision
-subset: nonhornonly
+subset: hornonly
 
 dataset:
   path: datasets/validation/full_vars3-50_len3-5_hornmixed_per50_seed12345.jsonl
@@ -17,7 +17,7 @@ prompting:
   answer_format: contradiction_satisfiable
 
 targets_ref:
-  - ../targets/google_gemini-3-pro-preview__think-none.yaml
+  - ../targets/google_gemini-3-pro-preview__think-high.yaml
 
 pricing_table: configs/pricing/multivendor_2025-12-19.yaml
 

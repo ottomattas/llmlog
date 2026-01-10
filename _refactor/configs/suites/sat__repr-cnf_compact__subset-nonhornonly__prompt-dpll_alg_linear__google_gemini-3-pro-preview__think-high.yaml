@@ -1,5 +1,5 @@
-name: sat__repr-cnf_compact__subset-nonhornonly__prompt-dpll_alg_from__google_gemini-3-pro-preview__think-none
-description: "Non-Horn-only subset. Compact CNF representation. DPLL-style algorithm with forcing-clause provenance ('from'). Google gemini-3-pro-preview with think_none baseline (no thinking budget)."
+name: sat__repr-cnf_compact__subset-nonhornonly__prompt-dpll_alg_linear__google_gemini-3-pro-preview__think-high
+description: "Non-Horn-only subset. Compact CNF representation. Explicit DPLL-style algorithm (linear trace). Google gemini-3-pro-preview with think_high baseline (high thinking level)."
 
 task: sat_decision
 subset: nonhornonly
@@ -11,13 +11,13 @@ dataset:
 prompting:
   render_policy: fixed
   representation: cnf_compact
-  template: prompts/sat_decision__cnf_compact__dpll_alg_from.j2
+  template: prompts/sat_decision__cnf_compact__dpll_alg_linear.j2
   prompt_profile: direct
   response_style: answer_only
   answer_format: contradiction_satisfiable
 
 targets_ref:
-  - ../targets/google_gemini-3-pro-preview__think-none.yaml
+  - ../targets/google_gemini-3-pro-preview__think-high.yaml
 
 pricing_table: configs/pricing/multivendor_2025-12-19.yaml
 

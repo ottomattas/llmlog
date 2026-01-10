@@ -1,5 +1,5 @@
-name: sat__repr-horn_if_then__subset-hornonly__prompt-examples_only__google_gemini-3-pro-preview__think-none
-description: "Horn-only subset. Horn if-then (facts + rules) rendering. Examples-only prompt. Google gemini-3-pro-preview think_none baseline (no thinking budget)."
+name: sat__repr-horn_if_then__subset-hornonly__prompt-examples_only__google_gemini-3-pro-preview__think-high
+description: "Horn-only subset. Horn if-then (facts + rules) rendering. Examples-only prompt. Google gemini-3-pro-preview think_high baseline (high thinking level)."
 
 task: sat_decision
 subset: hornonly
@@ -17,7 +17,7 @@ prompting:
   answer_format: yes_no
 
 targets_ref:
-  - ../targets/google_gemini-3-pro-preview__think-none.yaml
+  - ../targets/google_gemini-3-pro-preview__think-high.yaml
 
 pricing_table: configs/pricing/multivendor_2025-12-19.yaml
 
