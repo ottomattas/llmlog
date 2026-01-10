@@ -291,7 +291,31 @@ def build_provenance_v2_row(
 
     # Timing: keep v1 timing_ms if present, otherwise derive best-effort.
     timing_ms = out.get("timing_ms")
-    timing_src = "v1.timing_ms" if timing_ms is not None else None
+    # Prefer a semantic source label when we can infer it.
+    # This matters because timing can mean different things across execution modes.
+    ev = str(event or "").lower()
+    submit_only = bool(out.get("submit_only"))
+
+    timing_src: Optional[str] = None
+    if timing_ms is not None:
+        # Live mode: runner measured client wall time for the call (includes polling when applicable).
+        if ev == "attempt":
+            timing_src = "runner.live_wall_ms"
+        # Submit-only: runner measured submission HTTP wall time (not model completion latency).
+        elif ev == "submit":
+            # For OpenAI, submit rows are always submission overhead (not completion latency),
+            # even if older/migrated rows don't carry an explicit submit_only flag.
+            if provider_l == "openai":
+                timing_src = "openai.submit.http_wall_ms"
+            elif submit_only:
+                timing_src = "runner.submit.http_wall_ms"
+        # Collector/recovery: for OpenAI prefer server-side created_at->completed_at semantics when available.
+        elif ev in ("collect", "recover") and provider_l == "openai":
+            if _duration_ms_from_openai(openai_obj.get("created_at"), openai_obj.get("completed_at")) is not None:
+                timing_src = "openai.created_at_to_completed_at"
+        # Final fallback: preserve legacy meaning.
+        if timing_src is None:
+            timing_src = "v1.timing_ms"
     if timing_ms is None:
         # OpenAI: created_at/completed_at
         if provider_l == "openai":

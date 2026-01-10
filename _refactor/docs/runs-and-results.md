@@ -46,14 +46,28 @@ runs/<suite>/<run>/<provider>/<model>/<thinking_mode>/
 - `timing_ms_source`: explains what `timing_ms` represents (see below)
 
 ### Timing semantics (nuances)
-`timing_ms` can mean different things depending on provider + execution mode; v2 includes `timing_ms_source` so you
-can interpret it correctly:
+`timing_ms` can mean different things depending on provider + execution mode. In provenance v2, interpret timing using:
+- `event` (`attempt|submit|collect|recover`)
+- `timing_ms_source` (what the number represents)
 
 - **Live mode** (`scripts/run.py` default): `timing_ms` is client-side wall time for the call (includes polling).
 - **OpenAI submit-only**: collectors record `timing_ms` from `created_at → completed_at` when available.
 - **Anthropic/Gemini batch submit-only**: providers do not expose per-item latency; we record **batch-level**
   `createTime → endTime` (Google) / `created_at → ended_at` (Anthropic) when available. This is most interpretable when
   batch size is 1; otherwise treat it as a coarse upper bound for items in that batch.
+
+#### `timing_ms_source` values (current)
+- `runner.live_wall_ms`: wall time measured by `scripts/run.py` in live mode (includes polling when applicable).
+- `openai.submit.http_wall_ms`: wall time of the HTTP submission call for OpenAI `--submit-only` rows (**not** completion latency).
+- `openai.created_at_to_completed_at`: OpenAI Responses server-side duration from `created_at` to `completed_at`.
+- `google.batch.createTime_to_endTime`: Google batch operation duration from `createTime` to `endTime` (batch-level).
+- `anthropic.batch.created_at_to_ended_at`: Anthropic message batch duration from `created_at` to `ended_at` (batch-level).
+- `collector.submit_ts_to_ts`: best-effort end-to-end wall time from submit timestamp to collect timestamp (includes queueing
+  and any collector delay; used when provider-side job timing isn’t available in the provenance row, e.g. when migrating v1 → v2).
+- `v1.timing_ms`: legacy timing value carried through from v1 without a more specific classification.
+
+Practical note: for latency analysis, you typically want `event in {attempt,collect,recover}` and should ignore `event=submit`
+unless you specifically care about submission overhead.
 
 ### Pricing semantics (nuances)
 Pricing is enabled per suite via `pricing_table`. For each target run folder:

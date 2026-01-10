@@ -448,7 +448,13 @@ def build_combined_dashboard_data(
                 c.cache_creation_input_tokens += _i(usage.get("cache_creation_input_tokens"))
                 c.cache_read_input_tokens += _i(usage.get("cache_read_input_tokens"))
 
-                tm = prow.get("timing_ms")
+                # Timing semantics vary by mode. For v2 rows, ignore submit events because they represent
+                # submission overhead, not model completion/attempt latency.
+                ev = prow.get("event")
+                if isinstance(ev, str) and ev.strip().lower() == "submit":
+                    tm = None
+                else:
+                    tm = prow.get("timing_ms")
                 if tm is not None:
                     try:
                         c.latency_ms_sum += float(tm)
