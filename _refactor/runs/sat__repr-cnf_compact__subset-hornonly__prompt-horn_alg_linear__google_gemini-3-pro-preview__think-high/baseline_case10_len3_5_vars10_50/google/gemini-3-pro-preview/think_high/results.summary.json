@@ -1,0 +1,48 @@
+{
+  "suite": "sat__repr-cnf_compact__subset-hornonly__prompt-horn_alg_linear__google_gemini-3-pro-preview__think-high",
+  "run": "baseline_case10_len3_5_vars10_50",
+  "provider": "google",
+  "model": "gemini-3-pro-preview",
+  "thinking_mode": "think_high",
+  "dataset_selection": {
+    "only_maxvars": [
+      10,
+      20,
+      30,
+      40,
+      50
+    ],
+    "only_maxlen": [
+      3,
+      4,
+      5
+    ],
+    "only_ids": null,
+    "case_limit": 10
+  },
+  "pricing_table": "configs/pricing/multivendor_2025-12-19.yaml",
+  "pricing_rate": {
+    "provider": "google",
+    "model": "gemini-3-pro-preview",
+    "input_per_million_usd": 2.0,
+    "output_per_million_usd": 12.0
+  },
+  "stats": {
+    "total": 150,
+    "answered": 148,
+    "correct": 148,
+    "unclear": 2,
+    "pending": 0,
+    "errors": 0,
+    "input_tokens": 325234,
+    "output_tokens": 137813,
+    "reasoning_tokens": 1775593,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "cost_total_usd": 23.611340000000006,
+    "cost_input_usd": 0.6504680000000003,
+    "cost_output_usd": 22.960872,
+    "attempts_total": 831
+  },
+  "accuracy": 0.9866666666666667
+}
