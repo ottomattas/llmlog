@@ -1,0 +1,51 @@
+{
+  "suite": "sat__repr-horn_if_then__subset-nonhornonly__prompt-horn_alg_from__anthropic_claude-opus-4-5-20251101__think-none",
+  "run": "baseline_case10_len3_5_vars10_50",
+  "provider": "anthropic",
+  "model": "claude-opus-4-5-20251101",
+  "thinking_mode": "think_none",
+  "dataset_selection": {
+    "only_maxvars": [
+      10,
+      20,
+      30,
+      40,
+      50
+    ],
+    "only_maxlen": [
+      5
+    ],
+    "only_ids": null,
+    "case_limit": 10
+  },
+  "pricing_table": "configs/pricing/multivendor_2025-12-19.yaml",
+  "pricing_tier": "batch",
+  "pricing_rate": {
+    "provider": "anthropic",
+    "model_prefix": "claude-opus-4-5",
+    "tier": "batch",
+    "input_per_million_usd": 2.5,
+    "output_per_million_usd": 12.5,
+    "cache_read_input_per_million_usd": 0.25,
+    "cache_creation_input_per_million_usd": 3.125,
+    "cache_creation_input_1h_per_million_usd": 5.0
+  },
+  "stats": {
+    "total": 150,
+    "answered": 150,
+    "correct": 82,
+    "unclear": 0,
+    "pending": 0,
+    "errors": 0,
+    "input_tokens": 957609,
+    "output_tokens": 110861,
+    "reasoning_tokens": 0,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "cost_total_usd": 3.7797850000000013,
+    "cost_input_usd": 2.3940225000000015,
+    "cost_output_usd": 1.3857625000000002,
+    "attempts_total": 300
+  },
+  "accuracy": 0.5466666666666666
+}

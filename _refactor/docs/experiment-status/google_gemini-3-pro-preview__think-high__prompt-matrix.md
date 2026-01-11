@@ -1,0 +1,35 @@
+## Experiment matrix: google_gemini-3-pro-preview__think-high__prompt-matrix
+
+- **Matrix config**: `/Users/ottomattas/Downloads/repos/llmlog/_refactor/configs/matrices/google_gemini-3-pro-preview__think-high__prompt-matrix.yaml`
+- **Runs dir**: `/Users/ottomattas/Downloads/repos/llmlog/_refactor/runs`
+- **maxvars**: `10,20,30,40,50`
+- **lens**: `3,4,5`
+- **case_limit**: `10`
+
+Notes:
+- Status is computed from **latest-per-id** rows in `results.jsonl` (append-only logs).
+- `run.manifest.json` can be overwritten by later `--ids` reruns; this tool avoids relying on it for selection.
+
+### Target: google/gemini-3-pro-preview/think_high
+
+| subset | repr | prompt | suite | len=3 | len=4 | len=5 |
+| --- | --- | --- | --- | --- | --- | --- |
+| hornonly | cnf_compact | examples_only | `sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__google_gemini-3-pro-preview__think-high` | UNCLEAR baseline_case10_len3_5_vars10_50 50/50 acc=1.00 (unclear=1) | DONE baseline_case10_len3_5_vars10_50 50/50 acc=0.98 | UNCLEAR baseline_case10_len3_5_vars10_50 50/50 acc=0.98 (unclear=5) |
+| hornonly | cnf_compact | horn_alg_from | `sat__repr-cnf_compact__subset-hornonly__prompt-horn_alg_from__google_gemini-3-pro-preview__think-high` | DONE baseline_case10_len3_5_vars10_50 50/50 acc=1.00 | UNCLEAR baseline_case10_len3_5_vars10_50 50/50 acc=1.00 (unclear=1) | UNCLEAR baseline_case10_len3_5_vars10_50 50/50 acc=1.00 (unclear=2) |
+| hornonly | cnf_compact | horn_alg_linear | `sat__repr-cnf_compact__subset-hornonly__prompt-horn_alg_linear__google_gemini-3-pro-preview__think-high` | DONE baseline_case10_len3_5_vars10_50 50/50 acc=1.00 | UNCLEAR baseline_case10_len3_5_vars10_50 50/50 acc=1.00 (unclear=2) | DONE baseline_case10_len3_5_vars10_50 50/50 acc=1.00 |
+| hornonly | cnf_nl | examples_only | `sat__repr-cnf_nl__subset-hornonly__prompt-examples_only__google_gemini-3-pro-preview__think-high` | UNCLEAR baseline_case10_len3_5_vars10_50 50/50 acc=1.00 (unclear=1) | UNCLEAR baseline_case10_len3_5_vars10_50 50/50 acc=1.00 (unclear=2) | UNCLEAR baseline_case10_len3_5_vars10_50 50/50 acc=0.94 (unclear=2) |
+| hornonly | cnf_nl | horn_alg_from | `sat__repr-cnf_nl__subset-hornonly__prompt-horn_alg_from__google_gemini-3-pro-preview__think-high` | DONE baseline_case10_len3_5_vars10_50 50/50 acc=1.00 | UNCLEAR baseline_case10_len3_5_vars10_50 50/50 acc=1.00 (unclear=3) | UNCLEAR baseline_case10_len3_5_vars10_50 50/50 acc=1.00 (unclear=2) |
+| hornonly | cnf_nl | horn_alg_linear | `sat__repr-cnf_nl__subset-hornonly__prompt-horn_alg_linear__google_gemini-3-pro-preview__think-high` | DONE baseline_case10_len3_5_vars10_50 50/50 acc=1.00 | UNCLEAR baseline_case10_len3_5_vars10_50 50/50 acc=1.00 (unclear=1) | DONE baseline_case10_len3_5_vars10_50 50/50 acc=1.00 |
+| hornonly | horn_if_then | examples_only | `sat__repr-horn_if_then__subset-hornonly__prompt-examples_only__google_gemini-3-pro-preview__think-high` | DONE baseline_case10_len3_5_vars10_50 50/50 acc=1.00 | DONE baseline_case10_len3_5_vars10_50 50/50 acc=1.00 | UNCLEAR baseline_case10_len3_5_vars10_50 50/50 acc=1.00 (unclear=2) |
+| hornonly | horn_if_then | horn_alg_from | `sat__repr-horn_if_then__subset-hornonly__prompt-horn_alg_from__google_gemini-3-pro-preview__think-high` | ERRORS baseline_case10_len3_5_vars10_50 50/50 acc=1.00 (errors=1) | DONE baseline_case10_len3_5_vars10_50 50/50 acc=1.00 | UNCLEAR baseline_case10_len3_5_vars10_50 50/50 acc=1.00 (unclear=3) |
+| hornonly | horn_if_then | horn_alg_linear | `sat__repr-horn_if_then__subset-hornonly__prompt-horn_alg_linear__google_gemini-3-pro-preview__think-high` | DONE baseline_case10_len3_5_vars10_50 50/50 acc=1.00 | DONE baseline_case10_len3_5_vars10_50 50/50 acc=1.00 | DONE baseline_case10_len3_5_vars10_50 50/50 acc=1.00 |
+| nonhornonly | cnf_compact | dpll_alg_from | `sat__repr-cnf_compact__subset-nonhornonly__prompt-dpll_alg_from__google_gemini-3-pro-preview__think-high` | UNCLEAR baseline_case10_len3_5_vars10_50 50/50 acc=0.96 (unclear=23) | UNCLEAR baseline_case10_len3_5_vars10_50 50/50 acc=0.88 (unclear=34) | UNCLEAR baseline_case10_len3_5_vars10_50 50/50 acc=0.81 (unclear=34) |
+| nonhornonly | cnf_compact | dpll_alg_linear | `sat__repr-cnf_compact__subset-nonhornonly__prompt-dpll_alg_linear__google_gemini-3-pro-preview__think-high` | UNCLEAR baseline_case10_len3_5_vars10_50 50/50 acc=0.86 (unclear=21) | UNCLEAR baseline_case10_len3_5_vars10_50 50/50 acc=1.00 (unclear=40) | UNCLEAR baseline_case10_len3_5_vars10_50 50/50 acc=0.58 (unclear=38) |
+| nonhornonly | cnf_compact | examples_only | `sat__repr-cnf_compact__subset-nonhornonly__prompt-examples_only__google_gemini-3-pro-preview__think-high` | UNCLEAR baseline_case10_len3_5_vars10_50 50/50 acc=0.91 (unclear=17) | UNCLEAR baseline_case10_len3_5_vars10_50 50/50 acc=0.81 (unclear=34) | UNCLEAR baseline_case10_len3_5_vars10_50 50/50 acc=0.62 (unclear=24) |
+| nonhornonly | cnf_nl | dpll_alg_from | `sat__repr-cnf_nl__subset-nonhornonly__prompt-dpll_alg_from__google_gemini-3-pro-preview__think-high` | UNCLEAR baseline_case10_len3_5_vars10_50 50/50 acc=0.84 (unclear=25) | UNCLEAR baseline_case10_len3_5_vars10_50 50/50 acc=0.62 (unclear=42) | UNCLEAR baseline_case10_len3_5_vars10_50 50/50 acc=0.79 (unclear=36) |
+| nonhornonly | cnf_nl | dpll_alg_linear | `sat__repr-cnf_nl__subset-nonhornonly__prompt-dpll_alg_linear__google_gemini-3-pro-preview__think-high` | UNCLEAR baseline_case10_len3_5_vars10_50 50/50 acc=0.91 (unclear=18) | UNCLEAR baseline_case10_len3_5_vars10_50 50/50 acc=0.67 (unclear=35) | UNCLEAR baseline_case10_len3_5_vars10_50 50/50 acc=0.64 (unclear=36) |
+| nonhornonly | cnf_nl | examples_only | `sat__repr-cnf_nl__subset-nonhornonly__prompt-examples_only__google_gemini-3-pro-preview__think-high` | UNCLEAR baseline_case10_len3_5_vars10_50 50/50 acc=0.94 (unclear=17) | UNCLEAR baseline_case10_len3_5_vars10_50 50/50 acc=0.68 (unclear=25) | UNCLEAR baseline_case10_len3_5_vars10_50 50/50 acc=0.79 (unclear=17) |
+| nonhornonly | horn_if_then | examples_only | `sat__repr-horn_if_then__subset-nonhornonly__prompt-examples_only__google_gemini-3-pro-preview__think-high` | UNCLEAR baseline_case10_len3_5_vars10_50 50/50 acc=0.88 (unclear=17) | ERRORS baseline_case10_len3_5_vars10_50 50/50 acc=0.76 (errors=3, unclear=22) | UNCLEAR baseline_case10_len3_5_vars10_50 50/50 acc=0.50 (unclear=24) |
+| nonhornonly | horn_if_then | horn_alg_from | `sat__repr-horn_if_then__subset-nonhornonly__prompt-horn_alg_from__google_gemini-3-pro-preview__think-high` | UNCLEAR baseline_case10_len3_5_vars10_50 50/50 acc=0.54 (unclear=4) | UNCLEAR baseline_case10_len3_5_vars10_50 50/50 acc=0.45 (unclear=17) | UNCLEAR baseline_case10_len3_5_vars10_50 50/50 acc=0.53 (unclear=18) |
+| nonhornonly | horn_if_then | horn_alg_linear | `sat__repr-horn_if_then__subset-nonhornonly__prompt-horn_alg_linear__google_gemini-3-pro-preview__think-high` | ERRORS baseline_case10_len3_5_vars10_50 50/50 acc=0.77 (errors=1, unclear=6) | ERRORS baseline_case10_len3_5_vars10_50 50/50 acc=0.67 (errors=2, unclear=12) | UNCLEAR baseline_case10_len3_5_vars10_50 50/50 acc=0.58 (unclear=19) |
+
