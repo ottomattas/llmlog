@@ -26,13 +26,22 @@ def main() -> int:
     from llmlog.analysis.paper_figures import generate_paper_figures
 
     ap = argparse.ArgumentParser(
-        description="Generate reproducible RQ figures (fig_rq1.pdf..fig_rq5.pdf) from `_refactor/runs/**/results.jsonl`."
+        description=(
+            "Generate reproducible paper figures (PDF) from `_refactor/runs/**/results.jsonl`.\n\n"
+            "This script writes the figure files referenced by `article1/neus2025-article.tex`, e.g.:\n"
+            "- figures/fig_rq_representation.pdf\n"
+            "- figures/fig_rq_prompting.pdf\n"
+            "- figures/fig_rq_test-time_compute.pdf\n"
+            "- figures/fig_rq_failure_modes_sat_unsat_asymmetry.pdf\n"
+            "- figures/fig_rq_failure_modes_semantic_alignment_brittleness.pdf\n"
+            "- figures/fig_rq_cross-provider_consistency.pdf\n"
+        )
     )
     ap.add_argument("--runs-dir", default=str(refactor_root / "runs"), help="Runs directory (default: _refactor/runs)")
     ap.add_argument(
         "--output-dir",
-        default=str(refactor_root / "reports"),
-        help="Output directory for figure PDFs (default: _refactor/reports)",
+        default=str(repo_root / "article1" / "figures"),
+        help="Output directory for figure PDFs (default: article1/figures)",
     )
     ap.add_argument(
         "--accuracy-mode",
@@ -58,11 +67,6 @@ def main() -> int:
         help="Exclude runs whose run name matches this regex (default: 'smoke').",
     )
     ap.add_argument(
-        "--no-latency-panel",
-        action="store_true",
-        help="Do not include the latency panel in RQ3 (default: include it).",
-    )
-    ap.add_argument(
         "--watch-seconds",
         type=int,
         default=None,
@@ -78,7 +82,6 @@ def main() -> int:
             include_suites=[s for s in (args.include_suite or []) if s],
             exclude_suites=[s for s in (args.exclude_suite or []) if s],
             exclude_run_regex=str(args.exclude_run_regex),
-            include_latency_panel_rq3=(not bool(args.no_latency_panel)),
         )
         out_dir = Path(meta.get("output_dir") or args.output_dir)
         print(f"Wrote RQ figures to: {out_dir}")
