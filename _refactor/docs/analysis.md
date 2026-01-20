@@ -112,3 +112,19 @@ If you enabled provenance output, you can export individual prompts and response
 python scripts/export_provenance.py --provenance runs/<suite>/<run>/<provider>/<model>/<thinking_mode>/results.provenance.v2.jsonl --out reports/exports --limit 50 --no-raw
 ```
 
+### Export validation slices (single Markdown)
+For quick manual validation across many targets, you can export slices from `runs/**/results.provenance*.jsonl`
+into a **single, shareable Markdown file** with an index and collapsible sections:
+```
+python scripts/export_validation_slices_md.py --runs-dir runs --out reports/validation_slices_vars40_all.md --maxvars 40
+```
+
+Notes:
+- Outputs under `reports/` are **gitignored by default** (see `docs/runs-and-results.md`).
+- The exporter prefers `results.provenance.v2.jsonl` when present and falls back to v1.
+- Useful flags:
+  - `--include-thinking`: include `thinking_text` blocks when present
+  - `--ids-mode intersection`: only include ids present for every target-run in a slice
+  - `--run-regex ...` / `--suite-regex ...`: restrict which runs are included
+  - `--max-ids-per-slice 1`: generate a small preview quickly
+

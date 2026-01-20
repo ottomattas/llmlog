@@ -121,3 +121,19 @@ To export a provenance file into prompt/response text files:
 python scripts/export_provenance.py --provenance runs/<suite>/<run>/<provider>/<model>/<thinking_mode>/results.provenance.v2.jsonl --out reports/exports --limit 50 --no-raw
 ```
 
+#### Validation slice export (single Markdown)
+For manual audits across **all targets** for a particular slice, you can export a single Markdown file with:
+- an index (links to each slice)
+- collapsible sections per slice, per id, and per target response
+
+Example (vars=40, all representations, all prompt styles, horn+non-horn, all runs under `runs/`):
+```
+python scripts/export_validation_slices_md.py --runs-dir runs --out reports/validation_slices_vars40_all.md --maxvars 40
+```
+
+Useful flags:
+- `--include-thinking`: include `thinking_text` when present
+- `--ids-mode intersection`: only ids present for every target-run in the slice
+- `--run-regex ...` / `--suite-regex ...`: restrict which runs are included
+- `--max-ids-per-slice 1`: quick preview
+

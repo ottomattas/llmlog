@@ -53,6 +53,11 @@ python scripts/generate_dashboard.py --input reports/validation_001.aggregated.j
 python scripts/export_provenance.py --provenance runs/sat__repr-cnf_compact__subset-mixed/validation_001/<provider>/<model>/<thinking_mode>/results.provenance.v2.jsonl --out reports/exports --limit 10 --no-raw
 ```
 
+7) (Optional) Export validation slices (single Markdown) for manual audits:
+```
+python scripts/export_validation_slices_md.py --runs-dir runs --out reports/validation_slices_vars40_all.md --maxvars 40
+```
+
 ### Documentation
 - **Documentation index**: [`docs/README.md`](docs/README.md)
 - **Problem generation**: [`docs/problem-generation.md`](docs/problem-generation.md)
