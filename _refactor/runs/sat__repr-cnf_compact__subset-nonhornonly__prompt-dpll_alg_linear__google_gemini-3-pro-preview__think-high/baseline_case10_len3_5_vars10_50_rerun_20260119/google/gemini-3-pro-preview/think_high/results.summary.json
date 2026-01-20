@@ -1,0 +1,52 @@
+{
+  "suite": "sat__repr-cnf_compact__subset-nonhornonly__prompt-dpll_alg_linear__google_gemini-3-pro-preview__think-high",
+  "run": "baseline_case10_len3_5_vars10_50_rerun_20260119",
+  "provider": "google",
+  "model": "gemini-3-pro-preview",
+  "thinking_mode": "think_high",
+  "dataset_selection": {
+    "only_maxvars": [
+      10,
+      20,
+      30,
+      40,
+      50
+    ],
+    "only_maxlen": [
+      3,
+      4,
+      5
+    ],
+    "only_ids": null,
+    "case_limit": 10
+  },
+  "pricing_table": "configs/pricing/multivendor_2025-12-19.yaml",
+  "pricing_tier": "batch",
+  "pricing_rate": {
+    "provider": "google",
+    "model": "gemini-3-pro-preview",
+    "tier": "batch",
+    "input_per_million_usd": 1.0,
+    "output_per_million_usd": 6.0,
+    "cache_creation_input_per_million_usd": 0.2,
+    "cache_storage_per_million_token_hours_usd": 4.5
+  },
+  "stats": {
+    "total": 150,
+    "answered": 48,
+    "correct": 40,
+    "unclear": 102,
+    "pending": 0,
+    "errors": 1,
+    "input_tokens": 1072721,
+    "output_tokens": 79060,
+    "reasoning_tokens": 3985978,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "cost_total_usd": 25.462948999999988,
+    "cost_input_usd": 1.0727209999999998,
+    "cost_output_usd": 24.390227999999976,
+    "attempts_total": 300
+  },
+  "accuracy": 0.26666666666666666
+}
