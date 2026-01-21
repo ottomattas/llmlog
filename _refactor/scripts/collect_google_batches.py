@@ -111,15 +111,66 @@ def _download_text(url: str, *, timeout_s: int = 60) -> str:
         return resp.read().decode("utf-8", errors="replace")
 
 
+def _extract_batch_state(op: Dict[str, Any]) -> Optional[str]:
+    """Best-effort extraction of a batch/job state string.
+
+    Gemini batch polling can return either:
+    - an Operation-like object with `done` + `metadata.state`, or
+    - a Batch-like object with top-level `state` (no `done` field).
+    """
+    md = op.get("metadata")
+    if isinstance(md, dict):
+        st = md.get("state")
+        if isinstance(st, str) and st.strip():
+            return st.strip()
+    st2 = op.get("state")
+    if isinstance(st2, str) and st2.strip():
+        return st2.strip()
+    return None
+
+
+def _is_done_snapshot(op: Dict[str, Any]) -> bool:
+    """Return True when a poll snapshot indicates completion."""
+    if bool(op.get("done")):
+        return True
+    st = _extract_batch_state(op)
+    if isinstance(st, str) and st:
+        s = st.strip().upper()
+        # Handle both enum-style and plain strings, e.g.:
+        # - "SUCCEEDED" / "FAILED"
+        # - "BATCH_STATE_SUCCEEDED" / "BATCH_STATE_FAILED"
+        if any(tok in s for tok in ("SUCCEEDED", "FAILED", "CANCELLED", "CANCELED", "COMPLETED", "DONE")):
+            return True
+    # Some variants omit `done` but include output handles when complete.
+    try:
+        out = op.get("output")
+        if isinstance(out, dict) and (out.get("inlinedResponses") is not None or out.get("responsesFile") is not None):
+            return True
+        resp = op.get("response")
+        if isinstance(resp, dict):
+            out2 = resp.get("output")
+            if isinstance(out2, dict) and (out2.get("inlinedResponses") is not None or out2.get("responsesFile") is not None):
+                return True
+            batch = resp.get("batch")
+            if isinstance(batch, dict):
+                out3 = batch.get("output")
+                if isinstance(out3, dict) and (out3.get("inlinedResponses") is not None or out3.get("responsesFile") is not None):
+                    return True
+    except Exception:
+        pass
+    return False
+
+
 def _poll_until_done(*, host: str, key: str, op_name: str, poll_timeout_s: int) -> Dict[str, Any]:
     deadline = time.time() + float(poll_timeout_s)
     poll_s = 1.0
     while True:
         snap = _request_json(host=host, key=key, method="GET", path=f"/v1beta/{op_name}?key={key}", timeout_s=60)
-        if bool(snap.get("done")):
+        if _is_done_snapshot(snap):
             return snap
         if time.time() >= deadline:
-            raise TimeoutError(f"Gemini batch {op_name} still not done after {poll_timeout_s}s")
+            st = _extract_batch_state(snap)
+            raise TimeoutError(f"Gemini batch {op_name} still not done after {poll_timeout_s}s (state={st!r})")
         time.sleep(poll_s)
         poll_s = min(10.0, poll_s * 1.5)
 
@@ -224,7 +275,7 @@ def collect_for_results_file(
         except Exception:
             continue
 
-        if not bool(op.get("done")):
+        if not _is_done_snapshot(op):
             continue
 
         if op.get("error"):
@@ -243,6 +294,18 @@ def collect_for_results_file(
                     "updateTime": opm.get("updateTime"),
                     "batchStats": opm.get("batchStats"),
                 }
+            elif isinstance(op, dict):
+                if any(k in op for k in ("state", "model", "displayName", "createTime", "endTime", "updateTime", "batchStats")):
+                    job_meta = {
+                        "name": op.get("name"),
+                        "state": op.get("state"),
+                        "model": op.get("model"),
+                        "displayName": op.get("displayName"),
+                        "createTime": op.get("createTime"),
+                        "endTime": op.get("endTime"),
+                        "updateTime": op.get("updateTime"),
+                        "batchStats": op.get("batchStats"),
+                    }
             for idx, rid in idx_to_rid.items():
                 row = latest.get(rid) or {}
                 result_row = {
@@ -314,6 +377,9 @@ def collect_for_results_file(
 
         if responses is None:
             batch = _batch_from_operation(op)
+            if batch is None and isinstance(op, dict) and isinstance(op.get("output"), dict) and isinstance(op.get("inputConfig"), dict):
+                # Some Gemini batch endpoints return a Batch-like object directly (no operation wrapper).
+                batch = op
             if not batch:
                 continue
             output = batch.get("output") if isinstance(batch.get("output"), dict) else {}
@@ -370,6 +436,18 @@ def collect_for_results_file(
                 "updateTime": opm.get("updateTime"),
                 "batchStats": opm.get("batchStats"),
             }
+        elif isinstance(op, dict):
+            if any(k in op for k in ("state", "model", "displayName", "createTime", "endTime", "updateTime", "batchStats")):
+                job_meta = {
+                    "name": op.get("name"),
+                    "state": op.get("state"),
+                    "model": op.get("model"),
+                    "displayName": op.get("displayName"),
+                    "createTime": op.get("createTime"),
+                    "endTime": op.get("endTime"),
+                    "updateTime": op.get("updateTime"),
+                    "batchStats": op.get("batchStats"),
+                }
 
         # Build collected rows for any pending indices present.
         for idx, rid in sorted(idx_to_rid.items(), key=lambda kv: kv[0]):

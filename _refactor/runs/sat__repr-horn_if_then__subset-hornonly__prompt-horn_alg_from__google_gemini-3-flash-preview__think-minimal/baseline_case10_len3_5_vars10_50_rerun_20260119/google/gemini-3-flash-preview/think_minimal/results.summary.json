@@ -5,20 +5,12 @@
   "model": "gemini-3-flash-preview",
   "thinking_mode": "think_minimal",
   "dataset_selection": {
-    "only_maxvars": [
-      10,
-      20,
-      30,
-      40,
-      50
+    "only_maxvars": null,
+    "only_maxlen": null,
+    "only_ids": [
+      "11105"
     ],
-    "only_maxlen": [
-      3,
-      4,
-      5
-    ],
-    "only_ids": null,
-    "case_limit": 10
+    "case_limit": null
   },
   "pricing_table": "configs/pricing/multivendor_2025-12-19.yaml",
   "pricing_tier": "batch",
@@ -38,15 +30,15 @@
     "unclear": 1,
     "pending": 0,
     "errors": 0,
-    "input_tokens": 227696,
-    "output_tokens": 149673,
+    "input_tokens": 228994,
+    "output_tokens": 179669,
     "reasoning_tokens": 0,
     "cache_creation_input_tokens": 0,
     "cache_read_input_tokens": 0,
-    "cost_total_usd": 0.28143349999999995,
-    "cost_input_usd": 0.05692399999999999,
-    "cost_output_usd": 0.2245095,
-    "attempts_total": 300
+    "cost_total_usd": 0.32675199999999993,
+    "cost_input_usd": 0.05724849999999999,
+    "cost_output_usd": 0.2695035,
+    "attempts_total": 302
   },
   "accuracy": 0.9466666666666667
 }

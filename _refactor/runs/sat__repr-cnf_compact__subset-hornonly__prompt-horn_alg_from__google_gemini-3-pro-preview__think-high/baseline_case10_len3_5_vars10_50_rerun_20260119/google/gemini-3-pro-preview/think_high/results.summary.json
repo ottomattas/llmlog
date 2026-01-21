@@ -33,20 +33,20 @@
   },
   "stats": {
     "total": 150,
-    "answered": 120,
-    "correct": 120,
-    "unclear": 30,
+    "answered": 122,
+    "correct": 122,
+    "unclear": 28,
     "pending": 0,
-    "errors": 0,
-    "input_tokens": 321362,
-    "output_tokens": 27575,
-    "reasoning_tokens": 2275432,
+    "errors": 27,
+    "input_tokens": 327016,
+    "output_tokens": 27828,
+    "reasoning_tokens": 2323515,
     "cache_creation_input_tokens": 0,
     "cache_read_input_tokens": 0,
-    "cost_total_usd": 14.139403999999995,
-    "cost_input_usd": 0.32136200000000004,
-    "cost_output_usd": 13.818042,
-    "attempts_total": 300
+    "cost_total_usd": 14.435073999999995,
+    "cost_input_usd": 0.32701600000000003,
+    "cost_output_usd": 14.108058,
+    "attempts_total": 360
   },
-  "accuracy": 0.8
+  "accuracy": 0.8133333333333334
 }

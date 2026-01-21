@@ -8,20 +8,12 @@
     "limit_rows": null
   },
   "dataset_selection": {
-    "only_maxvars": [
-      10,
-      20,
-      30,
-      40,
-      50
+    "only_maxvars": null,
+    "only_maxlen": null,
+    "only_ids": [
+      "11105"
     ],
-    "only_maxlen": [
-      3,
-      4,
-      5
-    ],
-    "only_ids": null,
-    "case_limit": 10
+    "case_limit": null
   },
   "prompting": {
     "render_policy": "fixed",
