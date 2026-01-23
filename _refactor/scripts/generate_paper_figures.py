@@ -29,12 +29,12 @@ def main() -> int:
         description=(
             "Generate reproducible paper figures (PDF) from `_refactor/runs/**/results.jsonl`.\n\n"
             "This script writes the figure files referenced by `article1/neus2025-article.tex`, e.g.:\n"
-            "- figures/fig_rq_representation.pdf\n"
-            "- figures/fig_rq_prompting.pdf\n"
-            "- figures/fig_rq_test-time_compute.pdf\n"
-            "- figures/fig_rq_failure_modes_sat_unsat_asymmetry.pdf\n"
-            "- figures/fig_rq_failure_modes_semantic_alignment_brittleness.pdf\n"
-            "- figures/fig_rq_cross-provider_consistency.pdf\n"
+            "- figures/fig_representation_effects.pdf\n"
+            "- figures/fig_prompting_effects.pdf\n"
+            "- figures/fig_test_time_compute.pdf\n"
+            "- figures/fig_model_comparison.pdf\n"
+            "- figures/fig_supp_sat_unsat_asymmetry.pdf\n"
+            "- figures/fig_supp_semantic_alignment_mismatch.pdf\n"
         )
     )
     ap.add_argument("--runs-dir", default=str(refactor_root / "runs"), help="Runs directory (default: _refactor/runs)")
@@ -84,7 +84,7 @@ def main() -> int:
             exclude_run_regex=str(args.exclude_run_regex),
         )
         out_dir = Path(meta.get("output_dir") or args.output_dir)
-        print(f"Wrote RQ figures to: {out_dir}")
+        print(f"Wrote paper figures to: {out_dir}")
         print(f"Metadata: {out_dir / 'paper_figures.meta.json'}")
 
     if args.watch_seconds is None:

@@ -7,7 +7,7 @@ import time
 from dataclasses import dataclass
 from fnmatch import fnmatch
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Sequence, Set, Tuple
 
 try:
     # Force a non-interactive backend for CI and headless runs.
@@ -24,7 +24,6 @@ except Exception as e:  # pragma: no cover
     ) from e
 
 from llmlog.analysis.combined_dashboard import build_combined_dashboard_data  # noqa: E402
-from llmlog.problems.reader import iter_problem_rows  # noqa: E402
 
 
 REP_LABEL: Mapping[str, str] = {
@@ -44,6 +43,30 @@ PROMPT_LABEL: Mapping[str, str] = {
 SUBSET_LABEL: Mapping[int, str] = {
     1: "Horn",
     0: "Non-Horn",
+}
+
+# Consistent legend styling across all figures.
+LEGEND_LOC = "lower right"
+LEGEND_FONTSIZE = 8.5
+LEGEND_KW = {
+    "loc": LEGEND_LOC,
+    "fontsize": LEGEND_FONTSIZE,
+    "frameon": False,
+    "borderaxespad": 0.2,
+    "handlelength": 2.0,
+    "labelspacing": 0.25,
+    "handletextpad": 0.4,
+    "columnspacing": 0.9,
+}
+
+# Stable, cross-figure target palette (match Figure 4 / cross-provider figure).
+# Keys are "{provider}/{model}/{thinking_mode}" (using full model ids, not shortened labels).
+TARGET_COLOR: Mapping[str, str] = {
+    "anthropic/claude-opus-4-5-20251101/think_none": "#1f77b4",  # tab10 blue
+    "google/gemini-3-flash-preview/think_minimal": "#ff7f0e",  # tab10 orange
+    "google/gemini-3-pro-preview/think_high": "#2ca02c",  # tab10 green
+    "openai/gpt-5.2-2025-12-11/think_none": "#d62728",  # tab10 red
+    "openai/gpt-5.2-pro/think_high": "#9467bd",  # tab10 purple
 }
 
 
@@ -281,6 +304,7 @@ def _plot_line_panel(
     show_ci95: bool = False,
     marker_size_by_trials: bool = False,
     show_legend: bool = True,
+    show_empty_message: bool = True,
     line_style: str = "-",
     color_map: Optional[Mapping[str, Any]] = None,
     label_map: Optional[Mapping[str, str]] = None,
@@ -382,6 +406,8 @@ def _plot_line_panel(
                 y = c.cost_per_correct_usd()
             elif y_metric == "cost_per_item_usd":
                 y = c.cost_per_item_usd(y_mode)
+            elif y_metric == "cost_total_usd":
+                y = float(c.cost_total_usd)
             elif y_metric == "reasoning_cost_per_correct_usd":
                 y = c.reasoning_cost_per_correct_usd()
             elif y_metric == "latency_s_mean":
@@ -467,19 +493,20 @@ def _plot_line_panel(
         ax.set_ylim(*y_lim)
     if plotted > 0:
         if show_legend:
-            ax.legend(fontsize=9, frameon=False)
+            ax.legend(**LEGEND_KW)
     else:
-        # Avoid "mysteriously empty" panels: explain why nothing was plotted.
-        ax.text(
-            0.02,
-            0.98,
-            "No plottable points\n(after filters / metric undefined)",
-            transform=ax.transAxes,
-            ha="left",
-            va="top",
-            fontsize=9,
-            color="#4a5568",
-        )
+        if show_empty_message:
+            # Avoid "mysteriously empty" panels: explain why nothing was plotted.
+            ax.text(
+                0.02,
+                0.98,
+                "No plottable points\n(after filters / metric undefined)",
+                transform=ax.transAxes,
+                ha="left",
+                va="top",
+                fontsize=9,
+                color="#4a5568",
+            )
     if plotted > 0 and y_metric == "accuracy":
         notes: List[str] = []
         if show_ci95:
@@ -505,14 +532,15 @@ def _plot_line_panel(
     }
 
 
-def _write_placeholder_figure(path: Path, *, title: str, message: str) -> None:
-    fig, ax = plt.subplots(1, 1, figsize=(7.2, 3.2))
-    ax.axis("off")
-    ax.set_title(title)
-    ax.text(0.01, 0.7, message, va="top", ha="left", fontsize=10)
-    fig.tight_layout()
-    fig.savefig(path, bbox_inches="tight")
-    plt.close(fig)
+def _save_paper_figure(fig: Any, out_path: Path, *, dpi: int = 200) -> None:
+    """Save the paper PDF plus a small PNG thumbnail for quick viewing."""
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(out_path, bbox_inches="tight")
+
+    thumbs_dir = out_path.parent / "_thumbs"
+    thumbs_dir.mkdir(parents=True, exist_ok=True)
+    thumb_path = thumbs_dir / f"{out_path.name}.png"  # e.g., fig_x.pdf.png
+    fig.savefig(thumb_path, bbox_inches="tight", dpi=dpi)
 
 
 def _make_color_map(keys: Sequence[str]) -> Dict[str, Any]:
@@ -526,37 +554,71 @@ def _make_color_map(keys: Sequence[str]) -> Dict[str, Any]:
     return out
 
 
-def _add_satflag_style_legend(ax: Any) -> None:
-    # Add a tiny second legend describing line styles for SAT vs UNSAT.
-    from matplotlib.lines import Line2D  # type: ignore
-
-    handles = [
-        Line2D([0], [0], color="#1a202c", lw=2.0, linestyle="-", label="satisfiable"),
-        Line2D([0], [0], color="#1a202c", lw=2.0, linestyle="--", label="unsatisfiable"),
-    ]
-    # Preserve an existing series legend (Matplotlib replaces it on ax.legend()).
-    prev = ax.get_legend()
-    if prev is not None:
-        prev.remove()
-    ax.legend(handles=handles, loc="lower right", fontsize=8.5, frameon=False, title=None)
-    if prev is not None:
-        ax.add_artist(prev)
+def _make_target_color_map(keys: Sequence[str]) -> Dict[str, Any]:
+    """Color-map for target series keys, stable across figures."""
+    out = _make_color_map(keys)
+    for k, v in TARGET_COLOR.items():
+        if k in out:
+            out[k] = v
+    return out
 
 
-def _add_subset_style_legend(ax: Any) -> None:
-    """Add a tiny legend describing line styles for Horn vs Non-Horn."""
+def _dedupe_legend(handles: Sequence[Any], labels: Sequence[str]) -> Tuple[List[Any], List[str]]:
+    seen: Set[str] = set()
+    out_h: List[Any] = []
+    out_l: List[str] = []
+    for h, l in zip(handles, labels):
+        if not l or l.startswith("_"):
+            continue
+        if l in seen:
+            continue
+        seen.add(l)
+        out_h.append(h)
+        out_l.append(l)
+    return out_h, out_l
+
+
+def _subset_style_handles() -> Tuple[List[Any], List[str]]:
+    """Legend handles for Horn vs Non-Horn line styles."""
     from matplotlib.lines import Line2D  # type: ignore
 
     handles = [
         Line2D([0], [0], color="#1a202c", lw=2.0, linestyle="-", label="Horn"),
         Line2D([0], [0], color="#1a202c", lw=2.0, linestyle="--", label="Non-Horn"),
     ]
-    prev = ax.get_legend()
-    if prev is not None:
-        prev.remove()
-    ax.legend(handles=handles, loc="lower right", fontsize=8.5, frameon=False, title=None)
-    if prev is not None:
-        ax.add_artist(prev)
+    labels = [h.get_label() for h in handles]
+    return handles, labels
+
+
+def _apply_legend(ax: Any, handles: Sequence[Any], labels: Sequence[str], *, ncol: int = 1) -> None:
+    if not handles or not labels:
+        return
+    kw = dict(LEGEND_KW)
+    kw["ncol"] = int(ncol)
+    ax.legend(handles, labels, **kw)
+
+
+def _apply_usd_axis_format(ax: Any) -> None:
+    """Format a y-axis with USD tick labels (works well on log axes)."""
+    from matplotlib.ticker import FuncFormatter  # type: ignore
+
+    def fmt(y: float, _pos: int) -> str:
+        try:
+            v = float(y)
+        except Exception:
+            return ""
+        if v <= 0.0 or math.isnan(v) or math.isinf(v):
+            return ""
+        if v >= 1.0:
+            return f"${v:g}"
+        if v >= 0.01:
+            return f"${v:.2f}"
+        if v >= 0.001:
+            return f"${v:.3f}"
+        # sub-cent: show cents
+        return f"{v * 100.0:.2f}¢"
+
+    ax.yaxis.set_major_formatter(FuncFormatter(fmt))
 
 
 def _plot_accuracy_subset_overlay(
@@ -609,7 +671,8 @@ def _plot_accuracy_subset_overlay(
         min_trials=min_trials,
         show_ci95=show_ci95,
         marker_size_by_trials=marker_size_by_trials,
-        show_legend=show_legend,
+        show_legend=False,
+        show_empty_message=False,
         line_style="-",
         color_map=color_map,
         label_map=label_map,
@@ -631,7 +694,8 @@ def _plot_accuracy_subset_overlay(
         min_trials=min_trials,
         show_ci95=show_ci95,
         marker_size_by_trials=marker_size_by_trials,
-        show_legend=False,  # avoid duplicate legend entries
+        show_legend=False,
+        show_empty_message=False,
         line_style="--",
         color_map=color_map,
         label_map=label_map,
@@ -643,147 +707,44 @@ def _plot_accuracy_subset_overlay(
         y_lim=(-0.05, 1.05),
         y_scale="linear",
     )
-    if show_subset_style_legend:
-        _add_subset_style_legend(ax)
+    # Avoid confusing "empty panel" notes when only one subset is present.
+    horn_plotted = bool(meta["horn"].get("plotted_series", 0))
+    nonhorn_plotted = bool(meta["nonhorn"].get("plotted_series", 0))
+    if not horn_plotted and not nonhorn_plotted:
+        ax.text(
+            0.02,
+            0.98,
+            "No plottable points\n(after filters / metric undefined)",
+            transform=ax.transAxes,
+            ha="left",
+            va="top",
+            fontsize=9,
+            color="#4a5568",
+        )
+    elif horn_plotted and not nonhorn_plotted:
+        msg = "Non-Horn: not run" if len(nonhorn_rows) == 0 else "Non-Horn: filtered / metric undefined"
+        ax.text(0.02, 0.98, msg, transform=ax.transAxes, ha="left", va="top", fontsize=9, color="#4a5568")
+    elif nonhorn_plotted and not horn_plotted:
+        msg = "Horn: not run" if len(horn_rows) == 0 else "Horn: filtered / metric undefined"
+        ax.text(0.02, 0.98, msg, transform=ax.transAxes, ha="left", va="top", fontsize=9, color="#4a5568")
+    if show_legend:
+        # One legend per subplot, consistent placement:
+        # - series entries (deduped across Horn/non-Horn overlays)
+        # - optional subset style key (Horn vs Non-Horn)
+        handles, labels = ax.get_legend_handles_labels()
+        uniq_h, uniq_l = _dedupe_legend(handles, labels)
+        if show_subset_style_legend:
+            sh, sl = _subset_style_handles()
+            uniq_h = list(uniq_h) + list(sh)
+            uniq_l = list(uniq_l) + list(sl)
+        _apply_legend(ax, uniq_h, uniq_l, ncol=1)
     return meta
 
 
-def _plot_accuracy_collapsed(
-    ax: Any,
-    *,
-    groups: Sequence[Dict[str, Any]],
-    base_filters: Mapping[str, Any],
-    series_field: str,
-    x_field: str,
-    y_mode: str,
-    exclude_run_regex: Optional[str],
-    allowed_series: Optional[Sequence[str]] = None,
-    preferred_series_order: Optional[Sequence[str]] = None,
-    min_trials: int = 1,
-    show_ci95: bool = True,
-    marker_size_by_trials: bool = True,
-    show_legend: bool = False,
-    label_map: Optional[Mapping[str, str]] = None,
-    title: str = "",
-    x_label: str = "# vars (n)",
-    y_label: str = "Accuracy",
+def _figure_representation_effects(
+    groups: Sequence[Dict[str, Any]], *, out_path: Path, accuracy_mode: str, exclude_run_regex: str
 ) -> Dict[str, Any]:
-    """Plot overall accuracy (SAT+UNSAT combined) per series."""
-    rows = _filter_groups(groups, filters=base_filters, exclude_run_regex=exclude_run_regex)
-    series_vals = sorted({str(r.get(series_field) or "unknown") for r in rows})
-    color_map = _make_color_map(series_vals)
-    meta: Dict[str, Any] = {"rows": len(rows)}
-    meta["collapsed"] = _plot_line_panel(
-        ax,
-        rows=rows,
-        series_field=series_field,
-        x_field=x_field,
-        y_metric="accuracy",
-        y_mode=y_mode,
-        min_trials=min_trials,
-        show_ci95=show_ci95,
-        marker_size_by_trials=marker_size_by_trials,
-        show_legend=show_legend,
-        line_style="-",
-        color_map=color_map,
-        label_map=label_map,
-        allowed_series=allowed_series,
-        preferred_series_order=preferred_series_order,
-        title=title,
-        x_label=x_label,
-        y_label=y_label,
-        # Give a margin so points at 0/1 are visible (not glued to the frame).
-        y_lim=(-0.05, 1.05),
-        y_scale="linear",
-    )
-    return meta
-
-
-def _plot_accuracy_sat_unsat_overlay(
-    ax: Any,
-    *,
-    groups: Sequence[Dict[str, Any]],
-    base_filters: Mapping[str, Any],
-    series_field: str,
-    x_field: str,
-    y_mode: str,
-    exclude_run_regex: str,
-    allowed_series: Optional[Sequence[str]] = None,
-    preferred_series_order: Optional[Sequence[str]] = None,
-    min_trials: int = 1,
-    show_ci95: bool = True,
-    marker_size_by_trials: bool = True,
-    show_legend: bool = False,
-    show_style_legend: bool = False,
-    label_map: Optional[Mapping[str, str]] = None,
-    title: str = "",
-    x_label: str = "# vars (n)",
-    y_label: str = "Accuracy",
-) -> Dict[str, Any]:
-    sat_rows = _filter_groups(groups, filters={**dict(base_filters), "satflag": 1}, exclude_run_regex=exclude_run_regex)
-    unsat_rows = _filter_groups(groups, filters={**dict(base_filters), "satflag": 0}, exclude_run_regex=exclude_run_regex)
-    series_vals = sorted({str(r.get(series_field) or "unknown") for r in (sat_rows + unsat_rows)})
-    color_map = _make_color_map(series_vals)
-
-    meta: Dict[str, Any] = {"sat_rows": len(sat_rows), "unsat_rows": len(unsat_rows)}
-
-    meta["sat"] = _plot_line_panel(
-        ax,
-        rows=sat_rows,
-        series_field=series_field,
-        x_field=x_field,
-        y_metric="accuracy",
-        y_mode=y_mode,
-        min_trials=min_trials,
-        show_ci95=show_ci95,
-        marker_size_by_trials=marker_size_by_trials,
-        show_legend=show_legend,
-        line_style="-",
-        color_map=color_map,
-        label_map=label_map,
-        allowed_series=allowed_series,
-        preferred_series_order=preferred_series_order,
-        title=title,
-        x_label=x_label,
-        y_label=y_label,
-        # Give a margin so points at 0/1 are visible (not glued to the frame).
-        y_lim=(-0.05, 1.05),
-        y_scale="linear",
-    )
-    meta["unsat"] = _plot_line_panel(
-        ax,
-        rows=unsat_rows,
-        series_field=series_field,
-        x_field=x_field,
-        y_metric="accuracy",
-        y_mode=y_mode,
-        min_trials=min_trials,
-        show_ci95=show_ci95,
-        marker_size_by_trials=marker_size_by_trials,
-        show_legend=False,  # avoid duplicate legend entries
-        line_style="--",
-        color_map=color_map,
-        label_map=label_map,
-        allowed_series=allowed_series,
-        preferred_series_order=preferred_series_order,
-        title=title,
-        x_label=x_label,
-        y_label=y_label,
-        # Give a margin so points at 0/1 are visible (not glued to the frame).
-        y_lim=(-0.05, 1.05),
-        y_scale="linear",
-    )
-
-    # Optional small legend describing SAT vs UNSAT line styles.
-    if show_style_legend:
-        _add_satflag_style_legend(ax)
-    return meta
-
-
-def _figure_rq1(groups: Sequence[Dict[str, Any]], *, out_path: Path, accuracy_mode: str, exclude_run_regex: str) -> Dict[str, Any]:
-    # Representation effects with Horn+Non-Horn overlaid (line style encodes subset),
-    # and clause length maxlen as columns.
-    #
+    """Representation effects (controlled target; Horn vs Non-Horn overlay)."""
     # Controlled target: OpenAI gpt-5.2-pro (think_high).
     base = {
         "provider": "openai",
@@ -793,13 +754,20 @@ def _figure_rq1(groups: Sequence[Dict[str, Any]], *, out_path: Path, accuracy_mo
         # Include the baseline grid and (when present) extended-n slices.
         "maxvars": [10, 20, 30, 40, 50, 60, 80, 100],
     }
-    lens = [3, 4, 5]
-    fig, axes = plt.subplots(1, len(lens), figsize=(13.8, 3.6), sharex=True, sharey=True)
-    meta: Dict[str, Any] = {"figure": "rq1", "output": str(out_path), "layout": {"rows": "combined subset", "cols": "maxlen"}}
+    # Paper simplification: show k=3 only (k=4/5 adds little given current coverage).
+    lens = [3]
+    fig, axes = plt.subplots(1, len(lens), figsize=(6.6, 3.6), sharex=True, sharey=True)
+    if len(lens) == 1:
+        axes = [axes]
+    meta: Dict[str, Any] = {
+        "figure": "representation_effects",
+        "output": str(out_path),
+        "layout": {"rows": "combined subset", "cols": "maxlen"},
+    }
 
     for j, maxlen in enumerate(lens):
         ax = axes[j]
-        show_legend = bool(j == 0)
+        show_legend = True
         title = f"k={maxlen}"
         m = _plot_accuracy_subset_overlay(
             ax,
@@ -821,17 +789,17 @@ def _figure_rq1(groups: Sequence[Dict[str, Any]], *, out_path: Path, accuracy_mo
         )
         meta[f"{maxlen}"] = m
 
-    fig.suptitle("RQ1: Representation (OpenAI · gpt-5.2-pro · think=high · examples-only)")
+    fig.suptitle("Representation effects (OpenAI · gpt-5.2-pro · think=high · examples-only; k=3)")
     fig.tight_layout()
-    fig.savefig(out_path, bbox_inches="tight")
+    _save_paper_figure(fig, out_path)
     plt.close(fig)
     return meta
 
 
-def _figure_rq2(groups: Sequence[Dict[str, Any]], *, out_path: Path, accuracy_mode: str, exclude_run_regex: str) -> Dict[str, Any]:
-    # Prompting policy with Horn+Non-Horn overlaid (line style encodes subset),
-    # and clause length maxlen as columns.
-    #
+def _figure_prompting_effects(
+    groups: Sequence[Dict[str, Any]], *, out_path: Path, accuracy_mode: str, exclude_run_regex: str
+) -> Dict[str, Any]:
+    """Prompting-policy effects (controlled target; Horn vs Non-Horn overlay)."""
     # Controlled target: OpenAI gpt-5.2-pro (think_high). Representation fixed to cnf_compact to isolate prompting.
     base = {
         "provider": "openai",
@@ -843,11 +811,15 @@ def _figure_rq2(groups: Sequence[Dict[str, Any]], *, out_path: Path, accuracy_mo
     }
     lens = [3, 4, 5]
     fig, axes = plt.subplots(1, len(lens), figsize=(13.8, 3.6), sharex=True, sharey=True)
-    meta: Dict[str, Any] = {"figure": "rq2", "output": str(out_path), "layout": {"rows": "combined subset", "cols": "maxlen"}}
+    meta: Dict[str, Any] = {
+        "figure": "prompting_effects",
+        "output": str(out_path),
+        "layout": {"rows": "combined subset", "cols": "maxlen"},
+    }
 
     for j, maxlen in enumerate(lens):
         ax = axes[j]
-        show_legend = bool(j == 0)
+        show_legend = True
         title = f"k={maxlen}"
 
         m = _plot_accuracy_subset_overlay(
@@ -870,28 +842,30 @@ def _figure_rq2(groups: Sequence[Dict[str, Any]], *, out_path: Path, accuracy_mo
             x_label="# vars (n)",
             y_label=f"Accuracy ({accuracy_mode})" if j == 0 else "",
         )
+        # Chance baseline (balanced binary decision).
+        ax.axhline(0.5, color="#718096", lw=1.0, linestyle="--", alpha=0.5, zorder=0)
         meta[f"{maxlen}"] = m
 
-    fig.suptitle("RQ2: Prompting policy (OpenAI · gpt-5.2-pro · think=high · cnf_compact)")
+    fig.suptitle("Prompting-policy effects (OpenAI · gpt-5.2-pro · think=high · Compact CNF)")
     fig.tight_layout()
-    fig.savefig(out_path, bbox_inches="tight")
+    _save_paper_figure(fig, out_path)
     plt.close(fig)
     return meta
 
 
-def _figure_rq3(
+def _figure_test_time_compute(
     groups: Sequence[Dict[str, Any]],
     *,
     out_path: Path,
     accuracy_mode: str,
     exclude_run_regex: str,
 ) -> Dict[str, Any]:
-    # Test-time compute / thinking vs accuracy and cost.
+    """Test-time compute vs accuracy and cost (OpenAI; Horn vs Non-Horn overlay)."""
     #
     # Layout:
     # - columns: maxlen (3/4/5)
     # - row 1: overall accuracy (SAT+UNSAT combined), Horn+Non-Horn overlaid (line style)
-    # - row 2: USD/item (log)
+    # - row 2: USD/slice (log)
     base = {
         "provider": "openai",
         "representation": "cnf_compact",
@@ -921,7 +895,7 @@ def _figure_rq3(
         series_keys.append(key)
         tm_disp = thinking_mode.replace("think_", "") if thinking_mode else "?"
         label_map[key] = f"openai/{_short_openai_model(model)} ({tm_disp})"
-    color_map = _make_color_map(sorted(set(series_keys)))
+    color_map = _make_target_color_map(sorted(set(series_keys)))
     allowed_series = sorted(set(series_keys))
 
     nrows = 2
@@ -929,10 +903,10 @@ def _figure_rq3(
     fig_h = 2.0 * nrows + 1.6
     fig, axes = plt.subplots(nrows, ncols, figsize=(13.8, fig_h), sharex=True)
     meta: Dict[str, Any] = {
-        "figure": "rq3",
+        "figure": "test_time_compute",
         "output": str(out_path),
         "layout": {"rows": "accuracy; cost", "cols": "maxlen"},
-        "note": "RQ3 overlays Horn vs Non-Horn (line style).",
+        "note": "Overlays Horn vs Non-Horn (line style).",
     }
 
     # Normalize axes indexing when nrows/ncols == 1
@@ -945,7 +919,7 @@ def _figure_rq3(
         # Accuracy row
         ax_acc = axes[0][j]
         ax_acc.set_title(f"k={maxlen}")
-        show_legend = bool(j == 0)
+        show_legend = True
 
         def _prep_slice(horn: int) -> List[Dict[str, Any]]:
             rs = _filter_groups(
@@ -972,7 +946,7 @@ def _figure_rq3(
             min_trials=3,
             show_ci95=False,
             marker_size_by_trials=False,
-            show_legend=show_legend,
+            show_legend=False,
             line_style="-",
             color_map=color_map,
             label_map=label_map,
@@ -1005,7 +979,10 @@ def _figure_rq3(
             y_scale="linear",
         )
         if show_legend:
-            _add_subset_style_legend(ax_acc)
+            h, l = ax_acc.get_legend_handles_labels()
+            uh, ul = _dedupe_legend(h, l)
+            sh, sl = _subset_style_handles()
+            _apply_legend(ax_acc, list(uh) + list(sh), list(ul) + list(sl), ncol=1)
 
         if j == 0:
             ax_acc.set_ylabel(f"Accuracy ({accuracy_mode})")
@@ -1018,7 +995,7 @@ def _figure_rq3(
             rows=horn_rows,
             series_field="_series_target_key",
             x_field="maxvars",
-            y_metric="cost_per_item_usd",
+            y_metric="cost_total_usd",
             y_mode="nonpending",
             min_trials=3,
             show_ci95=False,
@@ -1039,7 +1016,7 @@ def _figure_rq3(
             rows=nonhorn_rows,
             series_field="_series_target_key",
             x_field="maxvars",
-            y_metric="cost_per_item_usd",
+            y_metric="cost_total_usd",
             y_mode="nonpending",
             min_trials=3,
             show_ci95=False,
@@ -1057,184 +1034,24 @@ def _figure_rq3(
         )
 
         if j == 0:
-            ax_cost.set_ylabel("USD / item (log)")
+            ax_cost.set_ylabel("USD / slice (10 items; log)")
         ax_cost.set_xlabel("# vars (n)")
+        _apply_usd_axis_format(ax_cost)
+        if show_legend:
+            h2, l2 = ax_cost.get_legend_handles_labels()
+            uh2, ul2 = _dedupe_legend(h2, l2)
+            sh2, sl2 = _subset_style_handles()
+            _apply_legend(ax_cost, list(uh2) + list(sh2), list(ul2) + list(sl2), ncol=1)
 
-    fig.suptitle("RQ3: Test-time compute (OpenAI · Compact CNF · examples-only)")
+    fig.suptitle("Test-time compute (OpenAI · Compact CNF · examples-only)")
     fig.tight_layout()
-    fig.savefig(out_path, bbox_inches="tight")
+    _save_paper_figure(fig, out_path)
     plt.close(fig)
     return meta
 
 
-def _infer_subset_from_suite_name(suite: str) -> Optional[int]:
-    s = str(suite or "")
-    if "subset-hornonly" in s or "hornonly" in s:
-        return 1
-    if "subset-nonhornonly" in s or "nonhornonly" in s:
-        return 0
-    return None
-
-
-def _estimate_dataset_ratio_m_over_n(
-    *,
-    refactor_root: Path,
-    dataset_rel_path: str,
-    skip_rows: int,
-    only_maxvars: Optional[Sequence[int]],
-    only_maxlen: Optional[Sequence[int]],
-    mustbehorn: Optional[int],
-) -> Optional[float]:
-    ds_path = (refactor_root / str(dataset_rel_path)).resolve()
-    if not ds_path.exists():
-        return None
-    mv_set = set(int(x) for x in (only_maxvars or []) if x is not None)
-    ml_set = set(int(x) for x in (only_maxlen or []) if x is not None)
-    for row in iter_problem_rows(str(ds_path), skip_rows=int(skip_rows or 0)):
-        if row.problem is None or row.maxvarnr is None or row.maxlen is None:
-            continue
-        if mv_set and int(row.maxvarnr) not in mv_set:
-            continue
-        if ml_set and int(row.maxlen) not in ml_set:
-            continue
-        if mustbehorn is not None and row.mustbehorn is not None and int(row.mustbehorn) != int(mustbehorn):
-            continue
-        m = len(row.problem)
-        n = int(row.maxvarnr) if int(row.maxvarnr) > 0 else None
-        if not n:
-            continue
-        return float(m) / float(n)
-    return None
-
-
-def _figure_rq4(
-    groups: Sequence[Dict[str, Any]],
-    *,
-    runs_dir: Path,
-    out_path: Path,
-    accuracy_mode: str,
-    exclude_run_regex: str,
-) -> Dict[str, Any]:
-    """
-    RQ4 requires ratio-sweep datasets. We support it when runs are present, but do not fail if absent.
-
-    Heuristic: include any run where the dataset path or run name contains "ratio" or "phase".
-    """
-    # Look for manifests first.
-    manifests = list(runs_dir.glob("**/run.manifest.json"))
-    candidates: List[Dict[str, Any]] = []
-    for mp in manifests:
-        try:
-            m = json.loads(mp.read_text(encoding="utf-8"))
-        except Exception:
-            continue
-        if not isinstance(m, dict):
-            continue
-        run = str(m.get("run") or "")
-        suite = str(m.get("suite") or "")
-        ds = m.get("dataset") if isinstance(m.get("dataset"), dict) else {}
-        ds_path = str(ds.get("path") or "")
-        if exclude_run_regex and re.search(exclude_run_regex, run, re.IGNORECASE):
-            continue
-        hay = f"{run} {suite} {ds_path}".lower()
-        if ("ratio" not in hay) and ("phase" not in hay):
-            continue
-        candidates.append(m)
-
-    if not candidates:
-        _write_placeholder_figure(
-            out_path,
-            title="RQ4: Hardness regimes / 3-SAT phase transition",
-            message=(
-                "No ratio-sweep runs detected yet.\n\n"
-                "To enable this figure:\n"
-                "- Generate k=3 non-Horn datasets at multiple m/n ratios (encode ratio in dataset name or run name, e.g. 'ratio4p25').\n"
-                "- Run llmlog on each dataset.\n"
-                "- Re-run this script; it will detect runs whose dataset path/run name contains 'ratio' or 'phase'."
-            ),
-        )
-        return {"figure": "rq4", "output": str(out_path), "note": "placeholder_no_ratio_runs"}
-
-    # Build points: x=ratio, y=accuracy (completed) aggregated over the run; series=target (provider/model/thinking).
-    refactor_root = runs_dir.parents[0]
-    points_rows: List[Dict[str, Any]] = []
-
-    # Index group rows by (suite, run, provider, model, thinking_mode) so we can aggregate quickly.
-    # Note: group rows include maxvars/maxlen/horn/satflag — for RQ4 we default to non-Horn k=3 UNSAT.
-    for m in candidates:
-        suite = str(m.get("suite") or "")
-        run = str(m.get("run") or "")
-        target = m.get("target") if isinstance(m.get("target"), dict) else {}
-        provider = str(target.get("provider") or "")
-        model = str(target.get("model") or "")
-        thinking_mode = str(m.get("thinking_mode") or "")
-        ds = m.get("dataset") if isinstance(m.get("dataset"), dict) else {}
-        sel = m.get("dataset_selection") if isinstance(m.get("dataset_selection"), dict) else {}
-        only_maxvars = sel.get("only_maxvars") if isinstance(sel.get("only_maxvars"), list) else None
-        only_maxlen = sel.get("only_maxlen") if isinstance(sel.get("only_maxlen"), list) else None
-        mustbehorn = _infer_subset_from_suite_name(suite)
-        ratio = _estimate_dataset_ratio_m_over_n(
-            refactor_root=refactor_root,
-            dataset_rel_path=str(ds.get("path") or ""),
-            skip_rows=_safe_int(ds.get("skip_rows")),
-            only_maxvars=[int(x) for x in (only_maxvars or [])],
-            only_maxlen=[int(x) for x in (only_maxlen or [])],
-            mustbehorn=mustbehorn,
-        )
-        if ratio is None:
-            continue
-
-        # Pull matching rows from the combined groups (best-effort) and tag with ratio.
-        for gr in _filter_groups(
-            groups,
-            filters={
-                "suite": suite,
-                "run": run,
-                "provider": provider,
-                "model": model,
-                "thinking_mode": thinking_mode,
-                "maxlen": 3,
-                "horn": 0,
-                "satflag": 0,
-            },
-            exclude_run_regex=exclude_run_regex,
-        ):
-            g2 = dict(gr)
-            g2["ratio_m_over_n"] = float(ratio)
-            g2["_series_target"] = f"{provider}/{model}/{thinking_mode}"
-            points_rows.append(g2)
-
-    if not points_rows:
-        _write_placeholder_figure(
-            out_path,
-            title="RQ4: Hardness regimes / 3-SAT phase transition",
-            message="Found candidate manifests, but could not extract usable (ratio, accuracy) points yet.",
-        )
-        return {"figure": "rq4", "output": str(out_path), "note": "placeholder_no_points"}
-
-    fig, ax = plt.subplots(1, 1, figsize=(7.2, 3.4))
-    meta = _plot_line_panel(
-        ax,
-        rows=points_rows,
-        series_field="_series_target",
-        x_field="ratio_m_over_n",
-        y_metric="accuracy",
-        y_mode=accuracy_mode,
-        title="Non-Horn k=3 (UNSAT)",
-        x_label="clause/variable ratio (m/n)",
-        y_label=f"Accuracy ({accuracy_mode})",
-        y_lim=(0.0, 1.0),
-    )
-    fig.suptitle("RQ4: Hardness regimes (phase-transition-style sweep)")
-    fig.tight_layout()
-    fig.savefig(out_path, bbox_inches="tight")
-    plt.close(fig)
-    return {"figure": "rq4", "output": str(out_path), "meta": meta, "points": len(points_rows)}
-
-
-def _figure_rq5(groups: Sequence[Dict[str, Any]], *, out_path: Path, accuracy_mode: str, exclude_run_regex: str) -> Dict[str, Any]:
-    # Cross-provider generality across Horn vs Non-Horn (rows) and maxlen (columns).
-    #
+def _figure_model_comparison(groups: Sequence[Dict[str, Any]], *, out_path: Path, accuracy_mode: str, exclude_run_regex: str) -> Dict[str, Any]:
+    """Model comparison under a fixed task setting (no averaging across targets)."""
     # Paper honesty rules:
     # - Series = provider/model/thinking_mode (NO averaging).
     # - Accuracy uses the same denominator as tables by default (completed = answered+unclear).
@@ -1261,20 +1078,20 @@ def _figure_rq5(groups: Sequence[Dict[str, Any]], *, out_path: Path, accuracy_mo
         tm_disp = thinking_mode.replace("think_", "") if thinking_mode else "?"
         model_disp = _short_openai_model(model) if provider == "openai" else model
         label_map[key] = f"{provider}/{model_disp} ({tm_disp})"
-    color_map = _make_color_map(sorted(label_map.keys()))
+    color_map = _make_target_color_map(sorted(label_map.keys()))
 
     fig, axes = plt.subplots(len(subsets), len(lens), figsize=(13.8, 6.6), sharex=True, sharey=True)
     meta: Dict[str, Any] = {
-        "figure": "rq4_model_wise_consistency",
+        "figure": "model_comparison",
         "output": str(out_path),
         "layout": {"rows": "subset", "cols": "maxlen"},
-        "note": "RQ4 includes thinking_mode as separate series (no averaging).",
+        "note": "Includes thinking_mode as separate series (no averaging).",
     }
 
     for i, horn in enumerate(subsets):
         for j, maxlen in enumerate(lens):
             ax = axes[i][j]
-            show_legend = bool(i == 0 and j == 0)
+            show_legend = True
             title = f"{SUBSET_LABEL.get(int(horn), str(horn))} · k={maxlen}"
 
             # Synthesize a stable per-model series key in the row dicts.
@@ -1312,14 +1129,14 @@ def _figure_rq5(groups: Sequence[Dict[str, Any]], *, out_path: Path, accuracy_mo
             )
             meta[f"{horn}_{maxlen}"] = m
 
-    fig.suptitle("RQ4: Model-wise consistency across providers (Compact CNF · examples-only · per-model)")
+    fig.suptitle("Model comparison under a fixed task setting (Compact CNF · examples-only · per-model)")
     fig.tight_layout()
-    fig.savefig(out_path, bbox_inches="tight")
+    _save_paper_figure(fig, out_path)
     plt.close(fig)
     return meta
 
 
-def _figure_rq_failure_modes_sat_unsat_asymmetry(
+def _figure_supp_sat_unsat_asymmetry(
     groups: Sequence[Dict[str, Any]],
     *,
     out_path: Path,
@@ -1327,9 +1144,9 @@ def _figure_rq_failure_modes_sat_unsat_asymmetry(
     exclude_run_regex: str,
 ) -> Dict[str, Any]:
     """
-    RQ4-A: summarize satisfiable-skewed behavior across the evaluated matrix.
+    Supplementary: summarize satisfiable/unsatisfiable asymmetry across the evaluated matrix.
 
-    To keep this stylistically consistent with RQ4-B, we summarize per target with grouped bars:
+    We summarize per target with grouped bars:
     - color: satisfiable vs unsatisfiable
     - hatch: examples-only vs algorithmic prompting (Horn: Horn-alg variants; Non-Horn: DPLL variants)
     """
@@ -1441,7 +1258,7 @@ def _figure_rq_failure_modes_sat_unsat_asymmetry(
             k = (str(provider), str(model), str(thinking_mode), int(horn), str(prompt_group), int(satflag))
             per_target.setdefault(k, []).append(float(acc))
 
-    # Stable target ordering (match RQ5 legend conventions).
+    # Stable target ordering (consistent across figures).
     def _tlabel(p: str, m: str, tm: str) -> str:
         tm_disp = tm.replace("think_", "") if tm else "?"
         m_disp = _short_openai_model(m) if p == "openai" else m
@@ -1456,9 +1273,9 @@ def _figure_rq_failure_modes_sat_unsat_asymmetry(
     targets_horn = [t for t in targets_all if int(t[3]) == 1]
     targets_nonhorn = [t for t in targets_all if int(t[3]) == 0]
 
-    # Stack panels vertically so the full model labels are readable (match RQ4-B's x-axis style).
+    # Stack panels vertically so the full model labels are readable.
     fig, axes = plt.subplots(2, 1, figsize=(13.8, 6.2), sharex=True, sharey=True)
-    meta: Dict[str, Any] = {"figure": "rq4_failure_modes_sat_unsat_asymmetry", "output": str(out_path)}
+    meta: Dict[str, Any] = {"figure": "supp_sat_unsat_asymmetry", "output": str(out_path)}
 
     # Use the same target order on both panels so labels align visually.
     targets_by_model: List[Tuple[str, str, str]] = sorted({(k[0], k[1], k[2]) for k in per_target.keys()}, key=lambda t: _target_sort_key((t[0], t[1], t[2], 0)))
@@ -1525,7 +1342,7 @@ def _figure_rq_failure_modes_sat_unsat_asymmetry(
         ax.set_title(title)
         ax.set_ylim(-0.05, 1.05)
         ax.set_xticks(xs)
-        # Match RQ4-B: show full model label along the bottom (only once, on the bottom panel).
+        # Show full model label along the bottom (only once, on the bottom panel).
         if ax is axes[1]:
             ax.set_xticklabels([_tlabel(p, m, tm) for (p, m, tm) in targets], rotation=0, ha="center", fontsize=9)
         else:
@@ -1534,14 +1351,10 @@ def _figure_rq_failure_modes_sat_unsat_asymmetry(
         ax.set_ylabel(f"Accuracy ({accuracy_mode})")
         ax.set_xlabel("target model" if ax is axes[1] else "")
 
-        # No extra per-target annotations (keep consistent with RQ4-B).
+        # No extra per-target annotations (keep consistent across supplementary figures).
 
-    # Two side legends, matching RQ4-B's style:
-    # - left: SAT vs UNSAT (color)
-    # - right: prompt type (hatch)
     from matplotlib.patches import Patch  # type: ignore
 
-    # Place legends in the top margin (avoid covering bars).
     sat_unsat_handles = [
         Patch(facecolor="#4a5568", edgecolor="#1a202c", label="satisfiable"),
         Patch(facecolor="#e53e3e", edgecolor="#1a202c", label="unsatisfiable"),
@@ -1550,19 +1363,21 @@ def _figure_rq_failure_modes_sat_unsat_asymmetry(
         Patch(facecolor="#ffffff", edgecolor="#1a202c", hatch="", label="examples-only"),
         Patch(facecolor="#ffffff", edgecolor="#1a202c", hatch="///", label="algorithmic"),
     ]
-    fig.legend(handles=sat_unsat_handles, loc="upper left", bbox_to_anchor=(0.01, 0.98), fontsize=9, frameon=False, title="label")
-    fig.legend(handles=prompt_handles, loc="upper right", bbox_to_anchor=(0.99, 0.98), fontsize=9, frameon=False, title="prompt")
+    legend_handles = sat_unsat_handles + prompt_handles
+    legend_labels = [h.get_label() for h in legend_handles]
+    for ax in axes:
+        _apply_legend(ax, legend_handles, legend_labels, ncol=1)
 
-    fig.suptitle("RQ4-A: satisfiable/unsatisfiable asymmetry (mean ± range; examples vs algorithmic)")
-    fig.tight_layout(rect=(0.0, 0.0, 1.0, 0.93))
-    fig.savefig(out_path, bbox_inches="tight")
+    fig.suptitle("Supplementary: satisfiable/unsatisfiable asymmetry (mean ± range; examples vs algorithmic)")
+    fig.tight_layout()
+    _save_paper_figure(fig, out_path)
     plt.close(fig)
     meta["targets_horn"] = len(targets_horn)
     meta["targets_nonhorn"] = len(targets_nonhorn)
     return meta
 
 
-def _figure_rq_failure_modes_semantic_alignment_brittleness(
+def _figure_supp_semantic_alignment_mismatch(
     groups: Sequence[Dict[str, Any]],
     *,
     out_path: Path,
@@ -1570,7 +1385,7 @@ def _figure_rq_failure_modes_semantic_alignment_brittleness(
     exclude_run_regex: str,
 ) -> Dict[str, Any]:
     """
-    RQ4-B: mismatch-control summary (Horn if--then rendering, aligned vs mismatched).
+    Supplementary: semantic alignment mismatch control (Horn if--then negative control).
     """
     base_rows = _filter_groups(
         groups,
@@ -1691,16 +1506,26 @@ def _figure_rq_failure_modes_semantic_alignment_brittleness(
         Patch(facecolor="#ffffff", edgecolor="#1a202c", hatch=hatches["horn_alg_from"], label="Horn alg (from)"),
         Patch(facecolor="#ffffff", edgecolor="#1a202c", hatch=hatches["horn_alg_linear"], label="Horn alg (linear)"),
     ]
-    leg1 = ax.legend(handles=subset_handles, loc="upper left", fontsize=8.8, frameon=False, title="subset")
-    ax.add_artist(leg1)
-    ax.legend(handles=prompt_handles, loc="upper right", fontsize=8.8, frameon=False, title="prompt")
+    legend_handles = subset_handles + prompt_handles
+    legend_labels = [h.get_label() for h in legend_handles]
+    _apply_legend(ax, legend_handles, legend_labels, ncol=1)
 
-    ax.set_title("RQ4-B: Semantic alignment and brittleness (Horn if–then mismatch control)")
+    ax.set_title("Supplementary: semantic alignment mismatch control (Horn if–then negative control)")
     fig.tight_layout()
-    fig.savefig(out_path, bbox_inches="tight")
+    _save_paper_figure(fig, out_path)
     plt.close(fig)
 
-    return {"figure": "rq4_failure_modes_semantic_alignment_brittleness", "output": str(out_path), "bars_plotted": int(n_plotted)}
+    return {"figure": "supp_semantic_alignment_mismatch", "output": str(out_path), "bars_plotted": int(n_plotted)}
+
+
+FigureFn = Callable[..., Dict[str, Any]]
+
+
+@dataclass(frozen=True)
+class FigureSpec:
+    id: str
+    filename: str
+    fn: FigureFn
 
 
 def generate_paper_figures(
@@ -1752,38 +1577,46 @@ def generate_paper_figures(
         "combined_metadata": combined.get("metadata"),
     }
 
-    rq_representation_path = out_dir / "fig_rq_representation.pdf"
-    rq_prompting_path = out_dir / "fig_rq_prompting.pdf"
-    rq_test_time_compute_path = out_dir / "fig_rq_test-time_compute.pdf"
-    rq_failure_modes_asym_path = out_dir / "fig_rq_failure_modes_sat_unsat_asymmetry.pdf"
-    rq_failure_modes_align_path = out_dir / "fig_rq_failure_modes_semantic_alignment_brittleness.pdf"
-    rq_cross_provider_path = out_dir / "fig_rq_cross-provider_consistency.pdf"
+    figure_specs: List[FigureSpec] = [
+        FigureSpec(
+            id="representation_effects",
+            filename="fig_representation_effects.pdf",
+            fn=_figure_representation_effects,
+        ),
+        FigureSpec(
+            id="prompting_effects",
+            filename="fig_prompting_effects.pdf",
+            fn=_figure_prompting_effects,
+        ),
+        FigureSpec(
+            id="test_time_compute",
+            filename="fig_test_time_compute.pdf",
+            fn=_figure_test_time_compute,
+        ),
+        FigureSpec(
+            id="model_comparison",
+            filename="fig_model_comparison.pdf",
+            fn=_figure_model_comparison,
+        ),
+        FigureSpec(
+            id="supp_sat_unsat_asymmetry",
+            filename="fig_supp_sat_unsat_asymmetry.pdf",
+            fn=_figure_supp_sat_unsat_asymmetry,
+        ),
+        FigureSpec(
+            id="supp_semantic_alignment_mismatch",
+            filename="fig_supp_semantic_alignment_mismatch.pdf",
+            fn=_figure_supp_semantic_alignment_mismatch,
+        ),
+    ]
 
-    meta["figures"].append(
-        _figure_rq1(groups, out_path=rq_representation_path, accuracy_mode=accuracy_mode, exclude_run_regex=exclude_run_regex)
-    )
-    meta["figures"].append(_figure_rq2(groups, out_path=rq_prompting_path, accuracy_mode=accuracy_mode, exclude_run_regex=exclude_run_regex))
-    meta["figures"].append(
-        _figure_rq3(
-            groups,
-            out_path=rq_test_time_compute_path,
-            accuracy_mode=accuracy_mode,
-            exclude_run_regex=exclude_run_regex,
-        )
-    )
-    meta["figures"].append(
-        _figure_rq_failure_modes_sat_unsat_asymmetry(
-            groups, out_path=rq_failure_modes_asym_path, accuracy_mode=accuracy_mode, exclude_run_regex=exclude_run_regex
-        )
-    )
-    meta["figures"].append(
-        _figure_rq_failure_modes_semantic_alignment_brittleness(
-            groups, out_path=rq_failure_modes_align_path, accuracy_mode=accuracy_mode, exclude_run_regex=exclude_run_regex
-        )
-    )
-    meta["figures"].append(
-        _figure_rq5(groups, out_path=rq_cross_provider_path, accuracy_mode=accuracy_mode, exclude_run_regex=exclude_run_regex)
-    )
+    for spec in figure_specs:
+        out_path = out_dir / spec.filename
+        fig_meta = spec.fn(groups, out_path=out_path, accuracy_mode=accuracy_mode, exclude_run_regex=exclude_run_regex)
+        # Normalize metadata keys for consistency.
+        fig_meta["figure"] = spec.id
+        fig_meta["output"] = str(out_path)
+        meta["figures"].append(fig_meta)
 
     (out_dir / "paper_figures.meta.json").write_text(json.dumps(meta, indent=2, sort_keys=True), encoding="utf-8")
     return meta
