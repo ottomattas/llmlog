@@ -20,6 +20,24 @@ def _bootstrap_import_path() -> tuple[Path, Path]:
     return repo_root, refactor_root
 
 
+def _load_run_selection(path: str) -> dict:
+    p = Path(path).expanduser().resolve()
+    if not p.exists():
+        raise FileNotFoundError(f"Run selection config not found: {p}")
+    suffix = p.suffix.lower()
+    if suffix in {".yaml", ".yml"}:
+        import yaml  # type: ignore
+
+        obj = yaml.safe_load(p.read_text(encoding="utf-8"))
+        return obj if isinstance(obj, dict) else {}
+    if suffix == ".json":
+        import json
+
+        obj = json.loads(p.read_text(encoding="utf-8"))
+        return obj if isinstance(obj, dict) else {}
+    raise ValueError(f"Unsupported run selection format: {p.suffix} (use .yaml/.yml/.json)")
+
+
 def main() -> int:
     repo_root, refactor_root = _bootstrap_import_path()
 
@@ -67,6 +85,11 @@ def main() -> int:
         help="Exclude runs whose run name matches this regex (default: 'smoke').",
     )
     ap.add_argument(
+        "--run-selection",
+        default=None,
+        help="Optional YAML/JSON file that controls which run(s) are used per model (written to paper_figures.selection.*).",
+    )
+    ap.add_argument(
         "--watch-seconds",
         type=int,
         default=None,
@@ -75,6 +98,7 @@ def main() -> int:
     args = ap.parse_args()
 
     def one_pass() -> None:
+        run_selection = _load_run_selection(args.run_selection) if args.run_selection else None
         meta = generate_paper_figures(
             runs_dir=str(Path(args.runs_dir).resolve()),
             output_dir=str(Path(args.output_dir).resolve()),
@@ -82,10 +106,12 @@ def main() -> int:
             include_suites=[s for s in (args.include_suite or []) if s],
             exclude_suites=[s for s in (args.exclude_suite or []) if s],
             exclude_run_regex=str(args.exclude_run_regex),
+            run_selection=run_selection,
         )
         out_dir = Path(meta.get("output_dir") or args.output_dir)
         print(f"Wrote paper figures to: {out_dir}")
         print(f"Metadata: {out_dir / 'paper_figures.meta.json'}")
+        print(f"Selection: {out_dir / 'paper_figures.selection.md'}")
 
     if args.watch_seconds is None:
         one_pass()

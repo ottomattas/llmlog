@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import math
 import re
 import time
@@ -62,11 +63,17 @@ LEGEND_KW = {
 # Stable, cross-figure target palette (match Figure 4 / cross-provider figure).
 # Keys are "{provider}/{model}/{thinking_mode}" (using full model ids, not shortened labels).
 TARGET_COLOR: Mapping[str, str] = {
-    "anthropic/claude-opus-4-5-20251101/think_none": "#1f77b4",  # tab10 blue
-    "google/gemini-3-flash-preview/think_minimal": "#ff7f0e",  # tab10 orange
-    "google/gemini-3-pro-preview/think_high": "#2ca02c",  # tab10 green
-    "openai/gpt-5.2-2025-12-11/think_none": "#d62728",  # tab10 red
-    "openai/gpt-5.2-pro/think_high": "#9467bd",  # tab10 purple
+    # Requested palette:
+    # - Claude: orange
+    # - Gemini Flash: yellow
+    # - Gemini Pro: green
+    # - GPT-5.2: red
+    # - GPT-5.2-pro: blue
+    "anthropic/claude-opus-4-5-20251101/think_none": "#ff7f0e",  # orange
+    "google/gemini-3-flash-preview/think_minimal": "#f1c40f",  # yellow (gold)
+    "google/gemini-3-pro-preview/think_high": "#2ca02c",  # green
+    "openai/gpt-5.2-2025-12-11/think_none": "#d62728",  # red
+    "openai/gpt-5.2-pro/think_high": "#1f77b4",  # blue
 }
 
 
@@ -303,6 +310,11 @@ def _plot_line_panel(
     min_trials: int = 1,
     show_ci95: bool = False,
     marker_size_by_trials: bool = False,
+    show_markers: bool = False,
+    show_chance_baseline: bool = True,
+    annotate_overlap_y_values: Optional[Sequence[float]] = (0.5, 1.0),
+    annotate_overlap_min_count: int = 2,
+    annotate_overlap_tol: float = 1e-9,
     show_legend: bool = True,
     show_empty_message: bool = True,
     line_style: str = "-",
@@ -344,6 +356,12 @@ def _plot_line_panel(
 
     series_map = _aggregate_series(rows, series_field=series_field, x_field=x_field, allowed_series=allowed_series)
     series_names = _series_order(list(series_map.keys()), preferred_series_order)
+
+    # Add a chance baseline for balanced binary decisions (accuracy only).
+    if show_chance_baseline and y_metric == "accuracy":
+        if not getattr(ax, "_llmlog_has_chance_baseline", False):
+            ax.axhline(0.5, color="#718096", lw=1.0, linestyle="--", alpha=0.35, zorder=0, label="_chance")
+            setattr(ax, "_llmlog_has_chance_baseline", True)
 
     # Marker shapes to help distinguish overlapping series.
     # (We keep SAT vs UNSAT distinguished by line style in the calling overlay helper.)
@@ -449,7 +467,7 @@ def _plot_line_panel(
                 alpha=0.55,
                 capsize=2,
             )
-        if y_metric == "accuracy":
+        if y_metric == "accuracy" and show_markers:
             marker = marker_map.get(s, "o")
             if marker_size_by_trials and max_trials > 0 and tsv and len(tsv) == len(xsv):
                 # Scale marker areas (s) so low-N points are visibly smaller.
@@ -483,6 +501,67 @@ def _plot_line_panel(
                     zorder=3,
                 )
         plotted += 1
+
+    # If many series sit exactly at the chance level, they will perfectly overlap.
+    # Add a small multiplicity annotation so the reader knows there are multiple coincident lines.
+    if (
+        y_metric == "accuracy"
+        and annotate_overlap_y_values
+        and series_names
+        and uniq_xs
+    ):
+        # Allow one overlap annotation per (metric,line_style) on a given axis.
+        key = f"{y_metric}:{line_style}"
+        annotated = getattr(ax, "_llmlog_overlap_annotated_keys", set())
+        if key not in annotated:
+            for y_target in [float(y) for y in (annotate_overlap_y_values or [])]:
+                best_x: Optional[float] = None
+                best_n = 0
+                for x in uniq_xs:
+                    n_at = 0
+                    for s in series_names:
+                        c = (series_map.get(s) or {}).get(float(x))
+                        if c is None:
+                            continue
+                        trials = trials_for_point(c)
+                        if trials is not None and int(trials) < int(min_trials):
+                            continue
+                        yv = c.accuracy(y_mode)
+                        if yv is None:
+                            continue
+                        if abs(float(yv) - float(y_target)) <= float(annotate_overlap_tol):
+                            n_at += 1
+                    # Prefer the rightmost x on ties so the annotation sits away from the y-axis.
+                    if n_at > best_n or (n_at == best_n and best_x is not None and float(x) > float(best_x)):
+                        best_n = int(n_at)
+                        best_x = float(x)
+
+                if best_x is None or best_n < int(annotate_overlap_min_count):
+                    continue
+
+                # Place label slightly offset from the overlapped value.
+                if y_target >= 0.95:
+                    y_annot = float(y_target) - 0.05
+                    va = "top"
+                else:
+                    y_annot = float(y_target) + 0.03
+                    va = "bottom"
+                x_annot = float(best_x) + float(x_step) * 0.15
+
+                ax.text(
+                    x_annot,
+                    y_annot,
+                    f"×{best_n}",
+                    ha="left",
+                    va=va,
+                    fontsize=9,
+                    color="#2d3748",
+                    bbox={"facecolor": "white", "alpha": 0.65, "edgecolor": "none", "pad": 0.25},
+                    zorder=6,
+                )
+
+            annotated.add(key)
+            setattr(ax, "_llmlog_overlap_annotated_keys", annotated)
 
     ax.set_title(title)
     ax.set_xlabel(x_label)
@@ -556,11 +635,31 @@ def _make_color_map(keys: Sequence[str]) -> Dict[str, Any]:
 
 def _make_target_color_map(keys: Sequence[str]) -> Dict[str, Any]:
     """Color-map for target series keys, stable across figures."""
-    out = _make_color_map(keys)
-    for k, v in TARGET_COLOR.items():
-        if k in out:
-            out[k] = v
+    uniq = list(dict.fromkeys([str(k) for k in keys if k is not None]))
+    if not uniq:
+        return {}
+
+    cmap = plt.get_cmap("tab20")
+
+    out: Dict[str, Any] = {}
+    for k in uniq:
+        if k in TARGET_COLOR:
+            out[k] = TARGET_COLOR[k]
+            continue
+        # Deterministic fallback (stable across runs / subsets of keys).
+        h = hashlib.md5(k.encode("utf-8")).hexdigest()
+        idx = int(h[:8], 16) % int(cmap.N)
+        out[k] = cmap(int(idx))
     return out
+
+
+def _tint(color: Any, t: float) -> Any:
+    """Blend a color toward white by factor t in [0,1]."""
+    from matplotlib.colors import to_rgb  # type: ignore
+
+    tt = max(0.0, min(1.0, float(t)))
+    r, g, b = to_rgb(color)
+    return (r + (1.0 - r) * tt, g + (1.0 - g) * tt, b + (1.0 - b) * tt)
 
 
 def _dedupe_legend(handles: Sequence[Any], labels: Sequence[str]) -> Tuple[List[Any], List[str]]:
@@ -630,6 +729,7 @@ def _plot_accuracy_subset_overlay(
     x_field: str,
     y_mode: str,
     exclude_run_regex: Optional[str],
+    series_color_map: Optional[Mapping[str, Any]] = None,
     allowed_series_horn: Optional[Sequence[str]] = None,
     allowed_series_nonhorn: Optional[Sequence[str]] = None,
     preferred_series_order: Optional[Sequence[str]] = None,
@@ -637,13 +737,16 @@ def _plot_accuracy_subset_overlay(
     show_ci95: bool = True,
     marker_size_by_trials: bool = True,
     show_legend: bool = False,
-    show_subset_style_legend: bool = False,
     label_map: Optional[Mapping[str, str]] = None,
     title: str = "",
     x_label: str = "# vars (n)",
     y_label: str = "Accuracy",
 ) -> Dict[str, Any]:
-    """Plot overall accuracy with Horn vs Non-Horn overlaid (line style encodes subset)."""
+    """Plot overall accuracy with Horn vs Non-Horn overlaid.
+
+    Legend labels are explicit (e.g., "Horn Compact CNF", "Non-Horn Compact CNF") so the reader does not have to
+    combine a separate subset key (line style) with a separate series key (color/marker).
+    """
     horn_rows = _filter_groups(
         groups,
         filters={**dict(base_filters), "horn": 1},
@@ -658,8 +761,18 @@ def _plot_accuracy_subset_overlay(
     # Colors are keyed only by the series field (e.g., representation or prompt_label).
     series_vals = sorted({str(r.get(series_field) or "unknown") for r in (horn_rows + nonhorn_rows)})
     color_map = _make_color_map(series_vals)
+    if series_color_map:
+        for k, v in series_color_map.items():
+            if k in color_map:
+                color_map[k] = v
 
     meta: Dict[str, Any] = {"horn_rows": len(horn_rows), "nonhorn_rows": len(nonhorn_rows)}
+
+    def base_label(s: str) -> str:
+        return (label_map or {}).get(s) if label_map and s in label_map else _pretty_series_label(series_field, s)
+
+    horn_label_map = {s: f"Horn {base_label(s)}" for s in series_vals}
+    nonhorn_label_map = {s: f"Non-Horn {base_label(s)}" for s in series_vals}
 
     meta["horn"] = _plot_line_panel(
         ax,
@@ -675,7 +788,7 @@ def _plot_accuracy_subset_overlay(
         show_empty_message=False,
         line_style="-",
         color_map=color_map,
-        label_map=label_map,
+        label_map=horn_label_map,
         allowed_series=allowed_series_horn,
         preferred_series_order=preferred_series_order,
         title=title,
@@ -698,7 +811,7 @@ def _plot_accuracy_subset_overlay(
         show_empty_message=False,
         line_style="--",
         color_map=color_map,
-        label_map=label_map,
+        label_map=nonhorn_label_map,
         allowed_series=allowed_series_nonhorn,
         preferred_series_order=preferred_series_order,
         title=title,
@@ -728,16 +841,19 @@ def _plot_accuracy_subset_overlay(
         msg = "Horn: not run" if len(horn_rows) == 0 else "Horn: filtered / metric undefined"
         ax.text(0.02, 0.98, msg, transform=ax.transAxes, ha="left", va="top", fontsize=9, color="#4a5568")
     if show_legend:
-        # One legend per subplot, consistent placement:
-        # - series entries (deduped across Horn/non-Horn overlays)
-        # - optional subset style key (Horn vs Non-Horn)
         handles, labels = ax.get_legend_handles_labels()
-        uniq_h, uniq_l = _dedupe_legend(handles, labels)
-        if show_subset_style_legend:
-            sh, sl = _subset_style_handles()
-            uniq_h = list(uniq_h) + list(sh)
-            uniq_l = list(uniq_l) + list(sl)
-        _apply_legend(ax, uniq_h, uniq_l, ncol=1)
+        label_to_handle = {l: h for h, l in zip(handles, labels) if l and not l.startswith("_")}
+
+        ordered: List[str] = []
+        for s in _series_order(series_vals, preferred_series_order):
+            hl = horn_label_map.get(s, f"Horn {base_label(s)}")
+            nl = nonhorn_label_map.get(s, f"Non-Horn {base_label(s)}")
+            if hl in label_to_handle:
+                ordered.append(hl)
+            if nl in label_to_handle:
+                ordered.append(nl)
+
+        _apply_legend(ax, [label_to_handle[l] for l in ordered], ordered, ncol=1)
     return meta
 
 
@@ -754,6 +870,11 @@ def _figure_representation_effects(
         # Include the baseline grid and (when present) extended-n slices.
         "maxvars": [10, 20, 30, 40, 50, 60, 80, 100],
     }
+    # Use the model's global base color, then create representation-specific tints.
+    base_key = f"{base['provider']}/{base['model']}/{base['thinking_mode']}"
+    base_color = _make_target_color_map([str(base_key)]).get(str(base_key), "#4a5568")
+    rep_tints = {"cnf_compact": 0.0, "cnf_nl": 0.45, "horn_if_then": 0.7}
+    rep_color_map = {k: _tint(base_color, t) for k, t in rep_tints.items()}
     # Paper simplification: show k=3 only (k=4/5 adds little given current coverage).
     lens = [3]
     fig, axes = plt.subplots(1, len(lens), figsize=(6.6, 3.6), sharex=True, sharey=True)
@@ -777,12 +898,12 @@ def _figure_representation_effects(
             x_field="maxvars",
             y_mode=accuracy_mode,
             exclude_run_regex=exclude_run_regex,
+            series_color_map=rep_color_map,
             preferred_series_order=["cnf_compact", "cnf_nl", "horn_if_then"],
             min_trials=3,
             show_ci95=False,
             marker_size_by_trials=False,
             show_legend=show_legend,
-            show_subset_style_legend=show_legend,
             title=title,
             x_label="# vars (n)",
             y_label=f"Accuracy ({accuracy_mode})" if j == 0 else "",
@@ -809,6 +930,17 @@ def _figure_prompting_effects(
         # Include the baseline grid and (when present) extended-n slices.
         "maxvars": [10, 20, 30, 40, 50, 60, 80, 100],
     }
+    # Use the model's global base color, then create prompt-type tints.
+    base_key = f"{base['provider']}/{base['model']}/{base['thinking_mode']}"
+    base_color = _make_target_color_map([str(base_key)]).get(str(base_key), "#4a5568")
+    prompt_tints = {
+        "examples_only": 0.0,
+        "horn_alg_linear": 0.35,
+        "dpll_alg_linear": 0.35,
+        "horn_alg_from": 0.65,
+        "dpll_alg_from": 0.65,
+    }
+    prompt_color_map = {k: _tint(base_color, t) for k, t in prompt_tints.items()}
     lens = [3, 4, 5]
     fig, axes = plt.subplots(1, len(lens), figsize=(13.8, 3.6), sharex=True, sharey=True)
     meta: Dict[str, Any] = {
@@ -830,6 +962,7 @@ def _figure_prompting_effects(
             x_field="maxvars",
             y_mode=accuracy_mode,
             exclude_run_regex=exclude_run_regex,
+            series_color_map=prompt_color_map,
             allowed_series_horn=["examples_only", "horn_alg_from", "horn_alg_linear"],
             allowed_series_nonhorn=["examples_only", "dpll_alg_from", "dpll_alg_linear"],
             preferred_series_order=["examples_only", "horn_alg_from", "horn_alg_linear", "dpll_alg_from", "dpll_alg_linear"],
@@ -837,13 +970,10 @@ def _figure_prompting_effects(
             show_ci95=False,
             marker_size_by_trials=False,
             show_legend=show_legend,
-            show_subset_style_legend=show_legend,
             title=title,
             x_label="# vars (n)",
             y_label=f"Accuracy ({accuracy_mode})" if j == 0 else "",
         )
-        # Chance baseline (balanced binary decision).
-        ax.axhline(0.5, color="#718096", lw=1.0, linestyle="--", alpha=0.5, zorder=0)
         meta[f"{maxlen}"] = m
 
     fig.suptitle("Prompting-policy effects (OpenAI · gpt-5.2-pro · think=high · Compact CNF)")
@@ -936,6 +1066,9 @@ def _figure_test_time_compute(
         horn_rows = _prep_slice(1)
         nonhorn_rows = _prep_slice(0)
 
+        horn_label_map = {k: f"Horn {label_map.get(k, k)}" for k in allowed_series}
+        nonhorn_label_map = {k: f"Non-Horn {label_map.get(k, k)}" for k in allowed_series}
+
         _plot_line_panel(
             ax_acc,
             rows=horn_rows,
@@ -949,7 +1082,7 @@ def _figure_test_time_compute(
             show_legend=False,
             line_style="-",
             color_map=color_map,
-            label_map=label_map,
+            label_map=horn_label_map,
             allowed_series=allowed_series,
             title="",
             x_label="",
@@ -970,7 +1103,7 @@ def _figure_test_time_compute(
             show_legend=False,
             line_style="--",
             color_map=color_map,
-            label_map=label_map,
+            label_map=nonhorn_label_map,
             allowed_series=allowed_series,
             title="",
             x_label="",
@@ -980,9 +1113,17 @@ def _figure_test_time_compute(
         )
         if show_legend:
             h, l = ax_acc.get_legend_handles_labels()
-            uh, ul = _dedupe_legend(h, l)
-            sh, sl = _subset_style_handles()
-            _apply_legend(ax_acc, list(uh) + list(sh), list(ul) + list(sl), ncol=1)
+            label_to_handle = {lbl: hh for hh, lbl in zip(h, l) if lbl and not lbl.startswith("_")}
+            ordered_keys = sorted(set(allowed_series), key=lambda k: str(label_map.get(k, k)))
+            ordered_labels: List[str] = []
+            for k in ordered_keys:
+                hl = horn_label_map.get(k)
+                nl = nonhorn_label_map.get(k)
+                if hl and hl in label_to_handle:
+                    ordered_labels.append(hl)
+                if nl and nl in label_to_handle:
+                    ordered_labels.append(nl)
+            _apply_legend(ax_acc, [label_to_handle[x] for x in ordered_labels], ordered_labels, ncol=1)
 
         if j == 0:
             ax_acc.set_ylabel(f"Accuracy ({accuracy_mode})")
@@ -1003,7 +1144,7 @@ def _figure_test_time_compute(
             show_legend=False,
             line_style="-",
             color_map=color_map,
-            label_map=label_map,
+            label_map=horn_label_map,
             allowed_series=allowed_series,
             title="",
             x_label="",
@@ -1024,7 +1165,7 @@ def _figure_test_time_compute(
             show_legend=False,
             line_style="--",
             color_map=color_map,
-            label_map=label_map,
+            label_map=nonhorn_label_map,
             allowed_series=allowed_series,
             title="",
             x_label="",
@@ -1039,9 +1180,17 @@ def _figure_test_time_compute(
         _apply_usd_axis_format(ax_cost)
         if show_legend:
             h2, l2 = ax_cost.get_legend_handles_labels()
-            uh2, ul2 = _dedupe_legend(h2, l2)
-            sh2, sl2 = _subset_style_handles()
-            _apply_legend(ax_cost, list(uh2) + list(sh2), list(ul2) + list(sl2), ncol=1)
+            label_to_handle2 = {lbl: hh for hh, lbl in zip(h2, l2) if lbl and not lbl.startswith("_")}
+            ordered_keys = sorted(set(allowed_series), key=lambda k: str(label_map.get(k, k)))
+            ordered_labels2: List[str] = []
+            for k in ordered_keys:
+                hl = horn_label_map.get(k)
+                nl = nonhorn_label_map.get(k)
+                if hl and hl in label_to_handle2:
+                    ordered_labels2.append(hl)
+                if nl and nl in label_to_handle2:
+                    ordered_labels2.append(nl)
+            _apply_legend(ax_cost, [label_to_handle2[x] for x in ordered_labels2], ordered_labels2, ncol=1)
 
     fig.suptitle("Test-time compute (OpenAI · Compact CNF · examples-only)")
     fig.tight_layout()
@@ -1294,9 +1443,9 @@ def _figure_supp_sat_unsat_asymmetry(
         base_offsets = [-1.5, -0.5, 0.5, 1.5]  # 4 bars
         offsets = [o * (w + gap) for o in base_offsets]
 
-        sat_color = "#4a5568"
-        unsat_color = "#e53e3e"
         hatch_map = {"examples": "", "algorithmic": "///"}
+        # Encode sat/unsat via opacity (unsat more opaque), and prompt group via hatch.
+        alpha_by_satflag = {1: 0.35, 0: 0.9}  # satisfiable, unsatisfiable
 
         # Collect per bar positions/values and ranges.
         bar_x: List[float] = []
@@ -1305,6 +1454,7 @@ def _figure_supp_sat_unsat_asymmetry(
         err_hi: List[float] = []
         bar_color: List[str] = []
         bar_hatch: List[str] = []
+        bar_alpha: List[float] = []
         n_cfgs: List[int] = []
 
         for i, (p, m, tm) in enumerate(targets):
@@ -1318,6 +1468,8 @@ def _figure_supp_sat_unsat_asymmetry(
 
             for bi, (gname, sf) in enumerate([(groups[0], 1), (groups[0], 0), (groups[1], 1), (groups[1], 0)]):
                 vals = per_target.get((p, m, tm, int(horn), gname, int(sf))) or []
+                target_key = f"{p}/{m}/{tm}"
+                target_color = _make_target_color_map([target_key]).get(target_key, "#4a5568")
                 if not vals:
                     # still reserve spacing
                     bar_x.append(float(i) + float(offsets[bi]))
@@ -1330,12 +1482,13 @@ def _figure_supp_sat_unsat_asymmetry(
                     bar_y.append(mean)
                     err_lo.append(mean - float(min(vals)))
                     err_hi.append(float(max(vals)) - mean)
-                bar_color.append(sat_color if int(sf) == 1 else unsat_color)
+                bar_color.append(str(target_color))
                 bar_hatch.append(hatch_map.get(gname, ""))
+                bar_alpha.append(float(alpha_by_satflag.get(int(sf), 0.85)))
 
         # Draw bars
-        for x, y, c, h in zip(bar_x, bar_y, bar_color, bar_hatch):
-            ax.bar([x], [y], width=w, color=c, alpha=0.85, edgecolor="#1a202c", linewidth=0.7, hatch=h, zorder=2)
+        for x, y, c, h, a in zip(bar_x, bar_y, bar_color, bar_hatch, bar_alpha):
+            ax.bar([x], [y], width=w, color=c, alpha=float(a), edgecolor="#1a202c", linewidth=0.7, hatch=h, zorder=2)
         # Draw min-max whiskers
         ax.errorbar(bar_x, bar_y, yerr=[err_lo, err_hi], fmt="none", ecolor="#2d3748", elinewidth=1.1, capsize=2, alpha=0.8, zorder=3)
 
@@ -1355,15 +1508,38 @@ def _figure_supp_sat_unsat_asymmetry(
 
     from matplotlib.patches import Patch  # type: ignore
 
-    sat_unsat_handles = [
-        Patch(facecolor="#4a5568", edgecolor="#1a202c", label="satisfiable"),
-        Patch(facecolor="#e53e3e", edgecolor="#1a202c", label="unsatisfiable"),
+    # Explicit legend entries (style only; colors in the bars are per-model).
+    legend_color = "#4a5568"
+    legend_handles = [
+        Patch(
+            facecolor=legend_color,
+            edgecolor="#1a202c",
+            hatch="",
+            alpha=float(alpha_by_satflag.get(1, 0.35)),
+            label="examples-only (satisfiable)",
+        ),
+        Patch(
+            facecolor=legend_color,
+            edgecolor="#1a202c",
+            hatch="",
+            alpha=float(alpha_by_satflag.get(0, 0.9)),
+            label="examples-only (unsatisfiable)",
+        ),
+        Patch(
+            facecolor=legend_color,
+            edgecolor="#1a202c",
+            hatch="///",
+            alpha=float(alpha_by_satflag.get(1, 0.35)),
+            label="algorithmic (satisfiable)",
+        ),
+        Patch(
+            facecolor=legend_color,
+            edgecolor="#1a202c",
+            hatch="///",
+            alpha=float(alpha_by_satflag.get(0, 0.9)),
+            label="algorithmic (unsatisfiable)",
+        ),
     ]
-    prompt_handles = [
-        Patch(facecolor="#ffffff", edgecolor="#1a202c", hatch="", label="examples-only"),
-        Patch(facecolor="#ffffff", edgecolor="#1a202c", hatch="///", label="algorithmic"),
-    ]
-    legend_handles = sat_unsat_handles + prompt_handles
     legend_labels = [h.get_label() for h in legend_handles]
     for ax in axes:
         _apply_legend(ax, legend_handles, legend_labels, ncol=1)
@@ -1456,11 +1632,15 @@ def _figure_supp_semantic_alignment_mismatch(
     fig, ax = plt.subplots(1, 1, figsize=(13.8, 4.2))
     ax.axhline(0.5, color="#718096", lw=1.2, alpha=0.8, linestyle="--")
 
-    colors = {1: "#3182ce", 0: "#dd6b20"}  # aligned(Horn)=blue, mismatched(Non-Horn)=orange
+    # Bars are colored by target model (global palette). Alignment/mismatch is encoded by opacity.
+    alpha_by_subset = {1: 0.95, 0: 0.35}  # aligned(Horn inputs), mismatched(Non-Horn inputs)
     hatches = {"examples_only": "", "horn_alg_from": "///", "horn_alg_linear": "xx"}
+    target_color_map = _make_target_color_map([f"{p}/{m}/{tm}" for (p, m, tm) in targets])
 
     n_plotted = 0
     for i, (provider, model, thinking_mode) in enumerate(targets):
+        target_key = f"{provider}/{model}/{thinking_mode}"
+        base_color = target_color_map.get(target_key, "#4a5568")
         for pi, prompt in enumerate(prompts):
             for si, horn in enumerate([1, 0]):  # aligned first, then mismatched
                 idx = pi * 2 + si
@@ -1479,11 +1659,11 @@ def _figure_supp_semantic_alignment_mismatch(
                     [x],
                     [float(acc)],
                     width=float(bar_w) * 0.92,
-                    color=colors[int(horn)],
+                    color=base_color,
                     edgecolor="#1a202c",
                     linewidth=0.8,
                     hatch=hatches.get(prompt, ""),
-                    alpha=0.95,
+                    alpha=float(alpha_by_subset.get(int(horn), 0.85)),
                 )
                 n_plotted += 1
 
@@ -1497,17 +1677,24 @@ def _figure_supp_semantic_alignment_mismatch(
     from matplotlib.lines import Line2D  # type: ignore
     from matplotlib.patches import Patch  # type: ignore
 
-    subset_handles = [
-        Line2D([0], [0], color=colors[1], lw=8, label="aligned (Horn inputs)"),
-        Line2D([0], [0], color=colors[0], lw=8, label="mismatched (Non-Horn inputs)"),
-    ]
-    prompt_handles = [
-        Patch(facecolor="#ffffff", edgecolor="#1a202c", hatch=hatches["examples_only"], label="examples-only"),
-        Patch(facecolor="#ffffff", edgecolor="#1a202c", hatch=hatches["horn_alg_from"], label="Horn alg (from)"),
-        Patch(facecolor="#ffffff", edgecolor="#1a202c", hatch=hatches["horn_alg_linear"], label="Horn alg (linear)"),
-    ]
-    legend_handles = subset_handles + prompt_handles
-    legend_labels = [h.get_label() for h in legend_handles]
+    # Explicit legend entries: (subset × prompt). Bar colors are per-model.
+    legend_handles: List[Any] = []
+    legend_labels: List[str] = []
+    for prompt in prompts:
+        p_label = PROMPT_LABEL.get(prompt, prompt)
+        hatch = hatches.get(prompt, "")
+        for horn in [1, 0]:  # aligned then mismatched
+            subset_label = "aligned" if int(horn) == 1 else "mismatched"
+            legend_handles.append(
+                Patch(
+                    facecolor="#4a5568",
+                    edgecolor="#1a202c",
+                    hatch=hatch,
+                    alpha=float(alpha_by_subset.get(int(horn), 0.85)),
+                    label="",
+                )
+            )
+            legend_labels.append(f"{subset_label} · {p_label}")
     _apply_legend(ax, legend_handles, legend_labels, ncol=1)
 
     ax.set_title("Supplementary: semantic alignment mismatch control (Horn if–then negative control)")
@@ -1536,6 +1723,7 @@ def generate_paper_figures(
     include_suites: Optional[Sequence[str]] = None,
     exclude_suites: Optional[Sequence[str]] = None,
     exclude_run_regex: str = r"smoke",
+    run_selection: Optional[Mapping[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Generate standalone paper figures as PDFs.
 
@@ -1555,6 +1743,156 @@ def generate_paper_figures(
     if not isinstance(groups, list):
         groups = []
 
+    # If multiple runs exist for the same suite cell, select a single "source of truth".
+    #
+    # Without this, `_aggregate_series()` will sum counts across runs for the same series+x pair,
+    # effectively double-counting when old runs remain in `_refactor/runs/`.
+    #
+    # Selection is policy-driven via `run_selection` (YAML/JSON loaded by the CLI). If omitted,
+    # we fall back to a sensible default: prefer newest run with usable data.
+
+    def _as_str(x: Any) -> str:
+        return str(x) if x is not None else ""
+
+    def _as_dict(x: Any) -> Dict[str, Any]:
+        return dict(x) if isinstance(x, Mapping) else {}
+
+    def _run_date_yyyymmdd(run: str) -> int:
+        m = re.search(r"(\d{8})(?!\d)", str(run))
+        if not m:
+            return 0
+        try:
+            return int(m.group(1))
+        except Exception:
+            return 0
+
+    def _denom_for_mode(counts: Mapping[str, Any], mode: str) -> int:
+        total = _safe_int(counts.get("total"))
+        pending = _safe_int(counts.get("pending"))
+        answered = _safe_int(counts.get("answered"))
+        unclear = _safe_int(counts.get("unclear"))
+        if mode == "answered":
+            return int(answered)
+        if mode == "nonpending":
+            return int(max(0, total - pending))
+        # default: completed
+        return int(answered + unclear)
+
+    def _glob_match(value: str, pat: Optional[str]) -> bool:
+        if pat is None or pat == "" or pat == "all":
+            return True
+        return fnmatch(str(value), str(pat))
+
+    def _select_rule(provider: str, model: str, thinking_mode: str) -> Dict[str, Any]:
+        cfg = _as_dict(run_selection)
+        rules = cfg.get("targets") or []
+        if not isinstance(rules, list):
+            rules = []
+        for r in rules:
+            if not isinstance(r, Mapping):
+                continue
+            match = _as_dict(r.get("match"))
+            if not _glob_match(provider, _as_str(match.get("provider")) or None):
+                continue
+            if not _glob_match(model, _as_str(match.get("model")) or None):
+                continue
+            if not _glob_match(thinking_mode, _as_str(match.get("thinking_mode")) or None):
+                continue
+            return dict(r)
+        return {}
+
+    def _default_strategy() -> str:
+        cfg = _as_dict(run_selection)
+        d = _as_dict(cfg.get("default"))
+        s = _as_str(d.get("strategy")) or ""
+        return s or "newest_with_data"
+
+    def _run_matches_substr(run: str, sub: Optional[str]) -> bool:
+        if not sub:
+            return False
+        return str(sub) in str(run)
+
+    def _run_matches_regex(run: str, pat: Optional[str]) -> bool:
+        if not pat:
+            return False
+        try:
+            return bool(re.search(str(pat), str(run)))
+        except Exception:
+            return False
+
+    selected_by_cell: Dict[
+        Tuple[str, str, str, str, str, str, int, int, int, int],
+        Tuple[Tuple[int, int, int, int, int, str], Dict[str, Any]],
+    ] = {}
+    filtered_out = 0
+    filtered_out_by_target: Dict[str, int] = {}
+    for g in groups:
+        if not isinstance(g, dict):
+            continue
+        suite = str(g.get("suite") or "")
+        provider = str(g.get("provider") or "")
+        model = str(g.get("model") or "")
+        thinking_mode = str(g.get("thinking_mode") or "")
+        rep = str(g.get("representation") or "")
+        prompt = str(g.get("prompt_label") or "")
+        horn = int(g.get("horn") or 0)
+        satflag = int(g.get("satflag") or 0)
+        maxvars = int(g.get("maxvars") or 0)
+        maxlen = int(g.get("maxlen") or 0)
+        run = str(g.get("run") or "")
+
+        target_key = f"{provider}/{model}/{thinking_mode}"
+        rule = _select_rule(provider, model, thinking_mode)
+        use_only_substr = _as_str(rule.get("use_only_run_substr")) or None
+        use_only_regex = _as_str(rule.get("use_only_run_regex")) or None
+        prefer_substr = _as_str(rule.get("prefer_run_substr")) or None
+        prefer_regex = _as_str(rule.get("prefer_run_regex")) or None
+        strategy = _as_str(rule.get("strategy")) or _default_strategy()
+
+        if use_only_substr and not _run_matches_substr(run, use_only_substr):
+            filtered_out += 1
+            filtered_out_by_target[target_key] = int(filtered_out_by_target.get(target_key, 0)) + 1
+            continue
+        if use_only_regex and not _run_matches_regex(run, use_only_regex):
+            filtered_out += 1
+            filtered_out_by_target[target_key] = int(filtered_out_by_target.get(target_key, 0)) + 1
+            continue
+
+        counts = g.get("counts") or {}
+        if not isinstance(counts, dict):
+            counts = {}
+        denom = _denom_for_mode(counts, str(accuracy_mode))
+        run_date = _run_date_yyyymmdd(run)
+        total = _safe_int(counts.get("total"))
+        has_data = 1 if int(denom) > 0 else 0
+        preferred = 1 if (_run_matches_substr(run, prefer_substr) or _run_matches_regex(run, prefer_regex)) else 0
+
+        cell_key = (suite, provider, model, thinking_mode, rep, prompt, horn, satflag, maxvars, maxlen)
+        # Default: prefer newest run with usable data; policy can flip to best-coverage.
+        if str(strategy) == "best_coverage":
+            score = (int(has_data), int(preferred), int(denom), int(run_date), int(total), str(run))
+        else:
+            # newest_with_data (default)
+            score = (int(has_data), int(preferred), int(run_date), int(denom), int(total), str(run))
+        prev = selected_by_cell.get(cell_key)
+        if prev is None or score > prev[0]:
+            selected_by_cell[cell_key] = (score, g)
+
+    groups_deduped = [v[1] for v in selected_by_cell.values()]
+
+    # Build a human- and machine-readable "source report": which runs were chosen per target model.
+    used_by_target: Dict[str, Dict[str, int]] = {}
+    for g in groups_deduped:
+        if not isinstance(g, dict):
+            continue
+        tk = f"{_as_str(g.get('provider'))}/{_as_str(g.get('model'))}/{_as_str(g.get('thinking_mode'))}"
+        run = _as_str(g.get("run"))
+        by_run = used_by_target.get(tk)
+        if by_run is None:
+            by_run = {}
+            used_by_target[tk] = by_run
+        by_run[run] = int(by_run.get(run, 0)) + 1
+
     # Global matplotlib style tuned for print.
     plt.rcParams.update(
         {
@@ -1573,8 +1911,16 @@ def generate_paper_figures(
         "output_dir": str(out_dir),
         "accuracy_mode": str(accuracy_mode),
         "exclude_run_regex": str(exclude_run_regex),
+        "groups_total": int(len(groups)),
+        "groups_deduped": int(len(groups_deduped)),
+        "run_selection": dict(run_selection) if isinstance(run_selection, Mapping) else None,
+        "groups_filtered_out_by_run_selection": int(filtered_out),
         "figures": [],
         "combined_metadata": combined.get("metadata"),
+        "selection": {
+            "filtered_out_by_target": dict(sorted(filtered_out_by_target.items(), key=lambda kv: kv[0])),
+            "used_by_target": dict(sorted(used_by_target.items(), key=lambda kv: kv[0])),
+        },
     }
 
     figure_specs: List[FigureSpec] = [
@@ -1612,12 +1958,49 @@ def generate_paper_figures(
 
     for spec in figure_specs:
         out_path = out_dir / spec.filename
-        fig_meta = spec.fn(groups, out_path=out_path, accuracy_mode=accuracy_mode, exclude_run_regex=exclude_run_regex)
+        fig_meta = spec.fn(
+            groups_deduped,
+            out_path=out_path,
+            accuracy_mode=accuracy_mode,
+            exclude_run_regex=exclude_run_regex,
+        )
         # Normalize metadata keys for consistency.
         fig_meta["figure"] = spec.id
         fig_meta["output"] = str(out_path)
         meta["figures"].append(fig_meta)
 
     (out_dir / "paper_figures.meta.json").write_text(json.dumps(meta, indent=2, sort_keys=True), encoding="utf-8")
+
+    # Also write a focused selection report for auditing figure provenance.
+    (out_dir / "paper_figures.selection.json").write_text(
+        json.dumps(meta.get("selection") or {}, indent=2, sort_keys=True),
+        encoding="utf-8",
+    )
+    # Markdown view for quick inspection.
+    lines: List[str] = []
+    lines.append("# Paper figure source report")
+    lines.append("")
+    lines.append(f"- generated_at: `{meta.get('generated_at')}`")
+    lines.append(f"- accuracy_mode: `{meta.get('accuracy_mode')}`")
+    lines.append(f"- runs_dir: `{meta.get('runs_dir')}`")
+    lines.append("")
+    rs = meta.get("run_selection")
+    if rs:
+        lines.append("## Run-selection policy")
+        lines.append("")
+        lines.append("```")
+        lines.append(json.dumps(rs, indent=2, sort_keys=True))
+        lines.append("```")
+        lines.append("")
+    lines.append("## Runs used per target model")
+    lines.append("")
+    for target in sorted(used_by_target.keys()):
+        lines.append(f"### `{target}`")
+        by_run = used_by_target.get(target) or {}
+        for run_name, n_cells in sorted(by_run.items(), key=lambda kv: (-int(kv[1]), kv[0])):
+            lines.append(f"- **{run_name}**: {int(n_cells)} cells")
+        lines.append("")
+    (out_dir / "paper_figures.selection.md").write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+
     return meta
 

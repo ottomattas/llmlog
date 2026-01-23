@@ -58,6 +58,18 @@ python scripts/export_provenance.py --provenance runs/sat__repr-cnf_compact__sub
 python scripts/export_validation_slices_md.py --runs-dir runs --out reports/validation_slices_vars40_all.md --maxvars 40
 ```
 
+8) (Optional) Generate paper figures (PDF) + a provenance report:
+```
+python scripts/generate_paper_figures.py \
+  --runs-dir runs \
+  --output-dir ../reports/paper_figures \
+  --run-selection ../reports/paper_figures/run_selection.yaml
+```
+
+This writes:
+- figure PDFs + thumbnails (for quick review)
+- `paper_figures.selection.md` / `.json` showing exactly which run(s) were used per model
+
 ### Documentation
 - **Documentation index**: [`docs/README.md`](docs/README.md)
 - **Problem generation**: [`docs/problem-generation.md`](docs/problem-generation.md)

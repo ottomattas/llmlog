@@ -53,5 +53,6 @@ reports/             # plots/tables/dashboards (gitignored by default)
 
 ### Conventions
 - **Code lives under `src/`**: avoids accidental imports from the repo root and makes packaging straightforward.
-- **Artifacts are not code**: treat most of `reports/` as generated outputs (keep it gitignored). Runs are committed when complete so paper figures can be reproduced from the repo state.
+- **Artifacts are not code**: treat most of `_refactor/reports/` as generated outputs (keep it gitignored). Runs are committed when complete so paper figures can be reproduced from the repo state.
+- **Paper-facing exports**: this repo may also contain a root-level `reports/` folder with committed paper artifacts (e.g., `reports/paper_figures/`) for review/traceability.
 - **Datasets are curated**: keep validation/production sets separated; record seed + generation command + checksum. Large datasets are tracked via Git LFS (see `.gitattributes`).

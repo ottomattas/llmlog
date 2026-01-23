@@ -7,6 +7,9 @@ Start here:
 - `_refactor/README.md`
 - `_refactor/docs/README.md`
 
+Paper-facing artifacts (committed for review/traceability) live under `reports/` (e.g. `reports/paper_figures/`), including a
+per-model “source report” (`paper_figures.selection.md`) describing which run outputs were used to render each figure set.
+
 ### Legacy note
 The remainder of this README documents older frameworks (notably `experiments/` and `_legacy/`) that are kept for reference.
 
