@@ -1,6 +1,6 @@
 # Paper figure source report
 
-- generated_at: `2026-01-23T11:35:44Z`
+- generated_at: `2026-01-23T23:56:43Z`
 - accuracy_mode: `completed`
 - runs_dir: `/Users/ottomattas/Downloads/repos/llmlog/_refactor/runs`
 

@@ -58,8 +58,8 @@ def main() -> int:
     ap.add_argument("--runs-dir", default=str(refactor_root / "runs"), help="Runs directory (default: _refactor/runs)")
     ap.add_argument(
         "--output-dir",
-        default=str(repo_root / "article1" / "figures"),
-        help="Output directory for figure PDFs (default: article1/figures)",
+        default=str(refactor_root / "reports" / "paper_figures"),
+        help="Output directory for figure PDFs (default: _refactor/reports/paper_figures)",
     )
     ap.add_argument(
         "--accuracy-mode",
@@ -87,7 +87,11 @@ def main() -> int:
     ap.add_argument(
         "--run-selection",
         default=None,
-        help="Optional YAML/JSON file that controls which run(s) are used per model (written to paper_figures.selection.*).",
+        help=(
+            "Optional YAML/JSON file that controls which run(s) are used per model.\n"
+            "If omitted, the script will auto-load `run_selection.yaml` from `--output-dir` when present.\n"
+            "A provenance report is written to paper_figures.selection.*"
+        ),
     )
     ap.add_argument(
         "--watch-seconds",
@@ -98,7 +102,13 @@ def main() -> int:
     args = ap.parse_args()
 
     def one_pass() -> None:
-        run_selection = _load_run_selection(args.run_selection) if args.run_selection else None
+        # Auto-load policy from the output folder if present.
+        run_selection_path = args.run_selection
+        if not run_selection_path:
+            candidate = Path(args.output_dir).expanduser().resolve() / "run_selection.yaml"
+            if candidate.exists():
+                run_selection_path = str(candidate)
+        run_selection = _load_run_selection(run_selection_path) if run_selection_path else None
         meta = generate_paper_figures(
             runs_dir=str(Path(args.runs_dir).resolve()),
             output_dir=str(Path(args.output_dir).resolve()),

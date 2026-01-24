@@ -1,0 +1,440 @@
+{
+  "accuracy_mode": "completed",
+  "combined_metadata": {
+    "generated_at": "2026-01-09T14:04:55Z",
+    "group_rows": 1115,
+    "results_files_scanned": 82,
+    "runs_dir": "/Users/ottomattas/Downloads/repos/llmlog/_refactor/runs"
+  },
+  "exclude_run_regex": "smoke",
+  "figures": [
+    {
+      "0_3": {
+        "sat": {
+          "plotted_series": 2,
+          "series": [
+            "cnf_compact",
+            "cnf_nl"
+          ],
+          "total_rows": 10
+        },
+        "sat_rows": 10,
+        "unsat": {
+          "plotted_series": 2,
+          "series": [
+            "cnf_compact",
+            "cnf_nl"
+          ],
+          "total_rows": 10
+        },
+        "unsat_rows": 10
+      },
+      "0_4": {
+        "sat": {
+          "plotted_series": 2,
+          "series": [
+            "cnf_compact",
+            "cnf_nl"
+          ],
+          "total_rows": 10
+        },
+        "sat_rows": 10,
+        "unsat": {
+          "plotted_series": 2,
+          "series": [
+            "cnf_compact",
+            "cnf_nl"
+          ],
+          "total_rows": 10
+        },
+        "unsat_rows": 10
+      },
+      "0_5": {
+        "sat": {
+          "plotted_series": 2,
+          "series": [
+            "cnf_compact",
+            "cnf_nl"
+          ],
+          "total_rows": 10
+        },
+        "sat_rows": 10,
+        "unsat": {
+          "plotted_series": 2,
+          "series": [
+            "cnf_compact",
+            "cnf_nl"
+          ],
+          "total_rows": 10
+        },
+        "unsat_rows": 10
+      },
+      "1_3": {
+        "sat": {
+          "plotted_series": 2,
+          "series": [
+            "cnf_compact",
+            "cnf_nl"
+          ],
+          "total_rows": 10
+        },
+        "sat_rows": 10,
+        "unsat": {
+          "plotted_series": 2,
+          "series": [
+            "cnf_compact",
+            "cnf_nl"
+          ],
+          "total_rows": 10
+        },
+        "unsat_rows": 10
+      },
+      "1_4": {
+        "sat": {
+          "plotted_series": 2,
+          "series": [
+            "cnf_compact",
+            "cnf_nl"
+          ],
+          "total_rows": 10
+        },
+        "sat_rows": 10,
+        "unsat": {
+          "plotted_series": 2,
+          "series": [
+            "cnf_compact",
+            "cnf_nl"
+          ],
+          "total_rows": 10
+        },
+        "unsat_rows": 10
+      },
+      "1_5": {
+        "sat": {
+          "plotted_series": 2,
+          "series": [
+            "cnf_compact",
+            "cnf_nl"
+          ],
+          "total_rows": 10
+        },
+        "sat_rows": 10,
+        "unsat": {
+          "plotted_series": 2,
+          "series": [
+            "cnf_compact",
+            "cnf_nl"
+          ],
+          "total_rows": 10
+        },
+        "unsat_rows": 10
+      },
+      "figure": "rq1",
+      "layout": {
+        "cols": "maxlen",
+        "rows": "subset"
+      },
+      "output": "/Users/ottomattas/Downloads/repos/llmlog/_refactor/reports/fig_rq1.pdf"
+    },
+    {
+      "0_3": {
+        "sat": {
+          "plotted_series": 3,
+          "series": [
+            "examples_only",
+            "dpll_alg_from",
+            "dpll_alg_linear"
+          ],
+          "total_rows": 15
+        },
+        "sat_rows": 15,
+        "unsat": {
+          "plotted_series": 3,
+          "series": [
+            "examples_only",
+            "dpll_alg_from",
+            "dpll_alg_linear"
+          ],
+          "total_rows": 15
+        },
+        "unsat_rows": 15
+      },
+      "0_4": {
+        "sat": {
+          "plotted_series": 3,
+          "series": [
+            "examples_only",
+            "dpll_alg_from",
+            "dpll_alg_linear"
+          ],
+          "total_rows": 15
+        },
+        "sat_rows": 15,
+        "unsat": {
+          "plotted_series": 3,
+          "series": [
+            "examples_only",
+            "dpll_alg_from",
+            "dpll_alg_linear"
+          ],
+          "total_rows": 15
+        },
+        "unsat_rows": 15
+      },
+      "0_5": {
+        "sat": {
+          "plotted_series": 3,
+          "series": [
+            "examples_only",
+            "dpll_alg_from",
+            "dpll_alg_linear"
+          ],
+          "total_rows": 15
+        },
+        "sat_rows": 15,
+        "unsat": {
+          "plotted_series": 3,
+          "series": [
+            "examples_only",
+            "dpll_alg_from",
+            "dpll_alg_linear"
+          ],
+          "total_rows": 15
+        },
+        "unsat_rows": 15
+      },
+      "1_3": {
+        "sat": {
+          "plotted_series": 3,
+          "series": [
+            "examples_only",
+            "horn_alg_from",
+            "horn_alg_linear"
+          ],
+          "total_rows": 15
+        },
+        "sat_rows": 15,
+        "unsat": {
+          "plotted_series": 3,
+          "series": [
+            "examples_only",
+            "horn_alg_from",
+            "horn_alg_linear"
+          ],
+          "total_rows": 15
+        },
+        "unsat_rows": 15
+      },
+      "1_4": {
+        "sat": {
+          "plotted_series": 3,
+          "series": [
+            "examples_only",
+            "horn_alg_from",
+            "horn_alg_linear"
+          ],
+          "total_rows": 15
+        },
+        "sat_rows": 15,
+        "unsat": {
+          "plotted_series": 3,
+          "series": [
+            "examples_only",
+            "horn_alg_from",
+            "horn_alg_linear"
+          ],
+          "total_rows": 15
+        },
+        "unsat_rows": 15
+      },
+      "1_5": {
+        "sat": {
+          "plotted_series": 3,
+          "series": [
+            "examples_only",
+            "horn_alg_from",
+            "horn_alg_linear"
+          ],
+          "total_rows": 15
+        },
+        "sat_rows": 15,
+        "unsat": {
+          "plotted_series": 3,
+          "series": [
+            "examples_only",
+            "horn_alg_from",
+            "horn_alg_linear"
+          ],
+          "total_rows": 15
+        },
+        "unsat_rows": 15
+      },
+      "figure": "rq2",
+      "layout": {
+        "cols": "maxlen",
+        "rows": "subset"
+      },
+      "output": "/Users/ottomattas/Downloads/repos/llmlog/_refactor/reports/fig_rq2.pdf"
+    },
+    {
+      "figure": "rq3",
+      "layout": {
+        "cols": "maxlen",
+        "rows": "subset\u00d7metric"
+      },
+      "note": "RQ3 focuses on UNSAT (satflag=0) to highlight marginal benefit of thinking/compute.",
+      "output": "/Users/ottomattas/Downloads/repos/llmlog/_refactor/reports/fig_rq3.pdf"
+    },
+    {
+      "figure": "rq4",
+      "note": "placeholder_no_ratio_runs",
+      "output": "/Users/ottomattas/Downloads/repos/llmlog/_refactor/reports/fig_rq4.pdf"
+    },
+    {
+      "0_3": {
+        "sat": {
+          "plotted_series": 3,
+          "series": [
+            "anthropic/claude-opus-4-5-20251101/think_none",
+            "openai/gpt-5.2-2025-12-11/think_none",
+            "openai/gpt-5.2-pro/think_high"
+          ],
+          "total_rows": 15
+        },
+        "sat_rows": 15,
+        "unsat": {
+          "plotted_series": 3,
+          "series": [
+            "anthropic/claude-opus-4-5-20251101/think_none",
+            "openai/gpt-5.2-2025-12-11/think_none",
+            "openai/gpt-5.2-pro/think_high"
+          ],
+          "total_rows": 15
+        },
+        "unsat_rows": 15
+      },
+      "0_4": {
+        "sat": {
+          "plotted_series": 2,
+          "series": [
+            "anthropic/claude-opus-4-5-20251101/think_none",
+            "openai/gpt-5.2-2025-12-11/think_none"
+          ],
+          "total_rows": 10
+        },
+        "sat_rows": 10,
+        "unsat": {
+          "plotted_series": 2,
+          "series": [
+            "anthropic/claude-opus-4-5-20251101/think_none",
+            "openai/gpt-5.2-2025-12-11/think_none"
+          ],
+          "total_rows": 10
+        },
+        "unsat_rows": 10
+      },
+      "0_5": {
+        "sat": {
+          "plotted_series": 2,
+          "series": [
+            "anthropic/claude-opus-4-5-20251101/think_none",
+            "openai/gpt-5.2-2025-12-11/think_none"
+          ],
+          "total_rows": 10
+        },
+        "sat_rows": 10,
+        "unsat": {
+          "plotted_series": 2,
+          "series": [
+            "anthropic/claude-opus-4-5-20251101/think_none",
+            "openai/gpt-5.2-2025-12-11/think_none"
+          ],
+          "total_rows": 10
+        },
+        "unsat_rows": 10
+      },
+      "1_3": {
+        "sat": {
+          "plotted_series": 4,
+          "series": [
+            "anthropic/claude-opus-4-5-20251101/think_none",
+            "google/gemini-3-pro-preview/think_none",
+            "openai/gpt-5.2-2025-12-11/think_none",
+            "openai/gpt-5.2-pro/think_high"
+          ],
+          "total_rows": 23
+        },
+        "sat_rows": 23,
+        "unsat": {
+          "plotted_series": 4,
+          "series": [
+            "anthropic/claude-opus-4-5-20251101/think_none",
+            "google/gemini-3-pro-preview/think_none",
+            "openai/gpt-5.2-2025-12-11/think_none",
+            "openai/gpt-5.2-pro/think_high"
+          ],
+          "total_rows": 23
+        },
+        "unsat_rows": 23
+      },
+      "1_4": {
+        "sat": {
+          "plotted_series": 4,
+          "series": [
+            "anthropic/claude-opus-4-5-20251101/think_none",
+            "google/gemini-3-pro-preview/think_none",
+            "openai/gpt-5.2-2025-12-11/think_none",
+            "openai/gpt-5.2-pro/think_high"
+          ],
+          "total_rows": 23
+        },
+        "sat_rows": 23,
+        "unsat": {
+          "plotted_series": 4,
+          "series": [
+            "anthropic/claude-opus-4-5-20251101/think_none",
+            "google/gemini-3-pro-preview/think_none",
+            "openai/gpt-5.2-2025-12-11/think_none",
+            "openai/gpt-5.2-pro/think_high"
+          ],
+          "total_rows": 23
+        },
+        "unsat_rows": 23
+      },
+      "1_5": {
+        "sat": {
+          "plotted_series": 4,
+          "series": [
+            "anthropic/claude-opus-4-5-20251101/think_none",
+            "google/gemini-3-pro-preview/think_none",
+            "openai/gpt-5.2-2025-12-11/think_none",
+            "openai/gpt-5.2-pro/think_high"
+          ],
+          "total_rows": 23
+        },
+        "sat_rows": 23,
+        "unsat": {
+          "plotted_series": 4,
+          "series": [
+            "anthropic/claude-opus-4-5-20251101/think_none",
+            "google/gemini-3-pro-preview/think_none",
+            "openai/gpt-5.2-2025-12-11/think_none",
+            "openai/gpt-5.2-pro/think_high"
+          ],
+          "total_rows": 23
+        },
+        "unsat_rows": 23
+      },
+      "figure": "rq5",
+      "layout": {
+        "cols": "maxlen",
+        "rows": "subset"
+      },
+      "note": "RQ5 uses nonpending accuracy (errors count against denom) and includes thinking_mode as separate series.",
+      "output": "/Users/ottomattas/Downloads/repos/llmlog/_refactor/reports/fig_rq5.pdf"
+    }
+  ],
+  "generated_at": "2026-01-09T14:04:55Z",
+  "output_dir": "/Users/ottomattas/Downloads/repos/llmlog/_refactor/reports",
+  "runs_dir": "/Users/ottomattas/Downloads/repos/llmlog/_refactor/runs"
+}

@@ -1,0 +1,18 @@
+# Run-selection policy for paper figure generation (refactor-local reports).
+#
+# This controls which `run` folders under `_refactor/runs/<suite>/<run>/...` are used when
+# multiple runs exist for the same suite cell.
+#
+# The selection outcome is written to:
+# - `_refactor/reports/paper_figures/paper_figures.selection.md`
+# - `_refactor/reports/paper_figures/paper_figures.selection.json`
+
+default:
+  strategy: newest_with_data
+
+targets:
+  - match:
+      provider: google
+      model: "gemini-*"
+    use_only_run_substr: "rerun_20260119"
+

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html><head><meta charset='utf-8'/>
+<title>llmlog dashboard</title>
+<style>body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;background:#f5f7fa;padding:20px}.card{background:#fff;border-radius:10px;padding:20px;margin-bottom:20px;box-shadow:0 2px 4px rgba(0,0,0,.06)}table{width:100%;border-collapse:collapse;font-size:13px}th,td{border:1px solid #e2e8f0;padding:8px;text-align:center}th{background:#f7fafc;position:sticky;top:0}.exp-name{text-align:left;font-weight:600;background:#f7fafc}.acc-100{background:#48bb78;color:#fff;font-weight:700}.acc-90{background:#68d391;color:#fff}.acc-75{background:#f6e05e}.acc-50{background:#fc8181;color:#fff}.acc-low{background:#f56565;color:#fff;font-weight:700}.muted{color:#718096}</style>
+</head><body>
+<div class='card'>
+<h2>llmlog dashboard</h2>
+<div class='muted'>run_id: <b>horn_ex_only_len3_vars10_50_case10</b> · suites: <b>1</b> · targets: <b>1</b></div>
+</div>
+<div class='card'>
+<h3>Accuracy matrix</h3>
+<div style='overflow:auto;max-height:70vh'>
+<table><thead><tr><th>suite</th>
+<th>openai/gpt-5.2-pro/think_high</th>
+</tr></thead><tbody>
+<tr><td class='exp-name'>sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2-pro__think-high</td>
+<td class='acc-100' title='n=50'>100.0%</td>
+</tr>
+</tbody></table></div></div>
+<div class='card'>
+<h3>Raw aggregated JSON</h3>
+<details><summary>Show data</summary>
+<pre style='white-space:pre-wrap'>
+{
+  "metadata": {
+    "run_id": "horn_ex_only_len3_vars10_50_case10",
+    "runs_dir": "/Users/ottomattas/Downloads/repos/llmlog/_refactor/runs",
+    "dataset": {
+      "min_vars": 10,
+      "max_vars": 50,
+      "min_len": 3,
+      "max_len": 3,
+      "total_problems": 50,
+      "horn_problems": 50,
+      "nonhorn_problems": 0,
+      "sat_problems": 25,
+      "unsat_problems": 25
+    }
+  },
+  "experiments": {
+    "sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2-pro__think-high": {
+      "name": "sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2-pro__think-high",
+      "models": {
+        "openai/gpt-5.2-pro/think_high": {
+          "provider": "openai",
+          "model": "gpt-5.2-pro",
+          "thinking_mode": "think_high",
+          "summary": {
+            "suite": "sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2-pro__think-high",
+            "run": "horn_ex_only_len3_vars10_50_case10",
+            "provider": "openai",
+            "model": "gpt-5.2-pro",
+            "thinking_mode": "think_high",
+            "dataset_selection": {
+              "only_maxvars": [
+                10,
+                20,
+                30,
+                40,
+                50
+              ],
+              "only_maxlen": [
+                3
+              ],
+              "only_ids": null,
+              "case_limit": 10
+            },
+            "pricing_table": "configs/pricing/openai_2025-12-18.yaml",
+            "pricing_rate": {
+              "provider": "openai",
+              "model_prefix": "gpt-5.2",
+              "input_per_million_usd": 1.75,
+              "output_per_million_usd": 14.0
+            },
+            "stats": {
+              "total": 50,
+              "answered": 50,
+              "correct": 50,
+              "unclear": 0,
+              "errors": 0,
+              "input_tokens": 41254,
+              "output_tokens": 120445,
+              "reasoning_tokens": 110967,
+              "cache_creation_input_tokens": 0,
+              "cache_read_input_tokens": 0,
+              "cost_total_usd": 1.7584245000000003,
+              "cost_input_usd": 0.07219449999999998,
+              "cost_output_usd": 1.68623,
+              "attempts_total": 82
+            },
+            "accuracy": 1.0
+          },
+          "complexity_breakdown": {
+            "10": {
+              "accuracy": 1.0,
+              "total": 10,
+              "correct": 10
+            },
+            "20": {
+              "accuracy": 1.0,
+              "total": 10,
+              "correct": 10
+            },
+            "30": {
+              "accuracy": 1.0,
+              "total": 10,
+              "correct": 10
+            },
+            "40": {
+              "accuracy": 1.0,
+              "total": 10,
+              "correct": 10
+            },
+            "50": {
+              "accuracy": 1.0,
+              "total": 10,
+              "correct": 10
+            }
+          }
+        }
+      },
+      "summary": {
+        "total_models": 1,
+        "avg_accuracy": 1.0
+      }
+    }
+  },
+  "models": {
+    "openai/gpt-5.2-pro/think_high": {
+      "provider": "openai",
+      "model": "gpt-5.2-pro",
+      "thinking_mode": "think_high",
+      "experiments": {
+        "sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2-pro__think-high": {
+          "accuracy": 1.0,
+          "total": 50,
+          "correct": 50,
+          "unclear": 0,
+          "input_tokens": 41254,
+          "output_tokens": 120445,
+          "reasoning_tokens": 110967,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 0,
+          "cost_total_usd": 1.7584245000000003,
+          "cost_input_usd": 0.07219449999999998,
+          "cost_output_usd": 1.68623
+        }
+      }
+    }
+  },
+  "summary": {
+    "total_experiments": 1,
+    "total_models": 1
+  }
+}
+</pre></details></div>
+</body></html>

@@ -1,7 +1,7 @@
 {
   "accuracy_mode": "completed",
   "combined_metadata": {
-    "generated_at": "2026-01-23T11:35:44Z",
+    "generated_at": "2026-01-23T23:56:43Z",
     "group_rows": 3446,
     "results_files_scanned": 167,
     "runs_dir": "/Users/ottomattas/Downloads/repos/llmlog/_refactor/runs"
@@ -33,7 +33,7 @@
         "cols": "maxlen",
         "rows": "combined subset"
       },
-      "output": "/Users/ottomattas/Downloads/repos/llmlog/reports/paper_figures/fig_representation_effects.pdf"
+      "output": "/Users/ottomattas/Downloads/repos/llmlog/_refactor/reports/paper_figures/fig_representation_effects.pdf"
     },
     {
       "3": {
@@ -99,7 +99,7 @@
         "cols": "maxlen",
         "rows": "combined subset"
       },
-      "output": "/Users/ottomattas/Downloads/repos/llmlog/reports/paper_figures/fig_prompting_effects.pdf"
+      "output": "/Users/ottomattas/Downloads/repos/llmlog/_refactor/reports/paper_figures/fig_prompting_effects.pdf"
     },
     {
       "figure": "test_time_compute",
@@ -108,7 +108,7 @@
         "rows": "accuracy; cost"
       },
       "note": "Overlays Horn vs Non-Horn (line style).",
-      "output": "/Users/ottomattas/Downloads/repos/llmlog/reports/paper_figures/fig_test_time_compute.pdf"
+      "output": "/Users/ottomattas/Downloads/repos/llmlog/_refactor/reports/paper_figures/fig_test_time_compute.pdf"
     },
     {
       "0_3": {
@@ -181,25 +181,25 @@
         "rows": "subset"
       },
       "note": "Includes thinking_mode as separate series (no averaging).",
-      "output": "/Users/ottomattas/Downloads/repos/llmlog/reports/paper_figures/fig_model_comparison.pdf"
+      "output": "/Users/ottomattas/Downloads/repos/llmlog/_refactor/reports/paper_figures/fig_model_comparison.pdf"
     },
     {
       "figure": "supp_sat_unsat_asymmetry",
-      "output": "/Users/ottomattas/Downloads/repos/llmlog/reports/paper_figures/fig_supp_sat_unsat_asymmetry.pdf",
+      "output": "/Users/ottomattas/Downloads/repos/llmlog/_refactor/reports/paper_figures/fig_supp_sat_unsat_asymmetry.pdf",
       "targets_horn": 5,
       "targets_nonhorn": 5
     },
     {
       "bars_plotted": 24,
       "figure": "supp_semantic_alignment_mismatch",
-      "output": "/Users/ottomattas/Downloads/repos/llmlog/reports/paper_figures/fig_supp_semantic_alignment_mismatch.pdf"
+      "output": "/Users/ottomattas/Downloads/repos/llmlog/_refactor/reports/paper_figures/fig_supp_semantic_alignment_mismatch.pdf"
     }
   ],
-  "generated_at": "2026-01-23T11:35:44Z",
+  "generated_at": "2026-01-23T23:56:43Z",
   "groups_deduped": 2366,
   "groups_filtered_out_by_run_selection": 1080,
   "groups_total": 3446,
-  "output_dir": "/Users/ottomattas/Downloads/repos/llmlog/reports/paper_figures",
+  "output_dir": "/Users/ottomattas/Downloads/repos/llmlog/_refactor/reports/paper_figures",
   "run_selection": {
     "default": {
       "strategy": "newest_with_data"

@@ -1,0 +1,23 @@
+{
+  "metadata": {
+    "run_id": "horn_ex_only_len5_vars10_50_case10",
+    "runs_dir": "/Users/ottomattas/Downloads/repos/llmlog/_refactor/runs",
+    "dataset": {
+      "min_vars": null,
+      "max_vars": null,
+      "min_len": null,
+      "max_len": null,
+      "total_problems": 0,
+      "horn_problems": 0,
+      "nonhorn_problems": 0,
+      "sat_problems": 0,
+      "unsat_problems": 0
+    }
+  },
+  "experiments": {},
+  "models": {},
+  "summary": {
+    "total_experiments": 0,
+    "total_models": 0
+  }
+}

@@ -18,9 +18,8 @@ build/
 .vscode/
 .idea/
 
-# Local scratch notes (keep working tree clean)
-/notes.txt
-
 # Paper draft (keep uncommitted for now)
 /article/
-/article1/
+
+# Matplotlib cache used during paper-figure generation
+/_refactor/.mplconfig/
