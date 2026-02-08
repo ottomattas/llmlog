@@ -99,6 +99,26 @@ def main() -> int:
         default=None,
         help="If set, regenerate figures every N seconds until interrupted.",
     )
+    ap.add_argument(
+        "--suffix",
+        default="",
+        help="Append suffix to generated figure/report filenames (e.g. '_new').",
+    )
+    ap.add_argument(
+        "--only-figure",
+        action="append",
+        default=[],
+        help=(
+            "Only generate this figure id (repeatable). "
+            "Example: --only-figure representation_effects"
+        ),
+    )
+    ap.add_argument("--no-header", action="store_true", help="Omit figure titles/subtitles inside the PDF.")
+    ap.add_argument(
+        "--write-descriptions",
+        action="store_true",
+        help="Write a .txt description next to each generated PDF.",
+    )
     args = ap.parse_args()
 
     def one_pass() -> None:
@@ -117,11 +137,17 @@ def main() -> int:
             exclude_suites=[s for s in (args.exclude_suite or []) if s],
             exclude_run_regex=str(args.exclude_run_regex),
             run_selection=run_selection,
+            only_figures=[s for s in (args.only_figure or []) if s],
+            filename_suffix=str(args.suffix or ""),
+            no_header=bool(args.no_header),
+            write_descriptions=bool(args.write_descriptions),
         )
         out_dir = Path(meta.get("output_dir") or args.output_dir)
+        suffix = str(args.suffix or "")
+        meta_base = f"paper_figures{suffix}" if suffix else "paper_figures"
         print(f"Wrote paper figures to: {out_dir}")
-        print(f"Metadata: {out_dir / 'paper_figures.meta.json'}")
-        print(f"Selection: {out_dir / 'paper_figures.selection.md'}")
+        print(f"Metadata: {out_dir / (meta_base + '.meta.json')}")
+        print(f"Selection: {out_dir / (meta_base + '.selection.md')}")
 
     if args.watch_seconds is None:
         one_pass()

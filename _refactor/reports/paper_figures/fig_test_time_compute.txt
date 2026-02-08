@@ -1,0 +1,146 @@
+llmlog paper figure description (sidecar; not for the article)
+
+figure_pdf: fig_test_time_compute.pdf
+figure_id: test_time_compute
+variant: new
+
+Header removed from PDF
+- title: Test-time compute
+- context: Subset: Horn / Non-Horn · Representation: Compact CNF · Prompt: examples-only · Targets: OpenAI gpt-5.2 (none) + OpenAI gpt-5.2-pro (high)
+
+Panel headers (now inside panels)
+- format: '<subset> · k=<k>' (style matches '# vars (n)' axis label)
+
+Selection / filters
+- provider: openai
+- representation: Compact CNF
+- prompt_label: examples-only
+- maxvars (n): [10, 20, 30, 40, 50, 60, 80, 100]
+- maxlen (k): [3, 4, 5]
+
+Metric definition
+- accuracy_mode (top row): completed
+- accuracy denominator: completed = answered + unclear (excludes pending + errors)
+- cost (bottom row): USD / segment (10 items) = aggregated cost_total_usd; log scale
+- point inclusion threshold (accuracy): completed >= 5
+
+Run sources used (suite/run)
+- sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2-pro__think-high / horn_ex_only_len3_vars10_50_case10
+- sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2-pro__think-high / horn_ex_only_len4_vars10_50_case10
+- sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2-pro__think-high / horn_ex_only_len5_vars10_50_case10
+- sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2-pro__think-high__extvars60_80_100 / horn_ex_only_len3_vars60_80_100_case10
+- sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2-pro__think-high__extvars60_80_100 / horn_ex_only_len4_vars60_80_100_case10
+- sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2-pro__think-high__extvars60_80_100 / horn_ex_only_len5_vars60_80_100_case10
+- sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2__think-none / horn_ex_only_cnf_compact_len3_vars10_50_case10
+- sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2__think-none / horn_ex_only_cnf_compact_len4_vars10_50_case10
+- sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2__think-none / horn_ex_only_cnf_compact_len5_vars10_50_case10
+- sat__repr-cnf_compact__subset-nonhornonly__prompt-examples_only__openai_gpt-5.2-pro__think-high / nonhorn_ex_only_cnf_compact_len3_vars10_50_case10
+- sat__repr-cnf_compact__subset-nonhornonly__prompt-examples_only__openai_gpt-5.2__think-none / nonhorn_ex_only_cnf_compact_len3_vars10_50_case10
+- sat__repr-cnf_compact__subset-nonhornonly__prompt-examples_only__openai_gpt-5.2__think-none / nonhorn_ex_only_cnf_compact_len4_vars10_50_case10
+- sat__repr-cnf_compact__subset-nonhornonly__prompt-examples_only__openai_gpt-5.2__think-none / nonhorn_ex_only_cnf_compact_len5_vars10_50_case10
+
+Numeric validation table: per (k, subset, target, n) segment (sat+unsat combined)
+k	subset	target	n	total	pending	errors	answered	unclear	completed	nonpending	correct	acc_completed	cost_total_usd	usd_per_item_nonpending	plotted_acc
+3	Horn	OpenAI gpt-5.2 (none)	10	10	0	0	10	0	10	10	10	1.000	0.0435	0.0043	yes
+3	Horn	OpenAI gpt-5.2 (none)	20	10	0	0	10	0	10	10	9	0.900	0.0674	0.0067	yes
+3	Horn	OpenAI gpt-5.2 (none)	30	10	0	0	10	0	10	10	8	0.800	0.0677	0.0068	yes
+3	Horn	OpenAI gpt-5.2 (none)	40	10	0	0	10	0	10	10	8	0.800	0.0726	0.0073	yes
+3	Horn	OpenAI gpt-5.2 (none)	50	10	0	0	10	0	10	10	10	1.000	0.1202	0.0120	yes
+3	Horn	OpenAI gpt-5.2 (none)	60	-	-	-	-	-	-	-	-	-	-	-	no_data
+3	Horn	OpenAI gpt-5.2 (none)	80	-	-	-	-	-	-	-	-	-	-	-	no_data
+3	Horn	OpenAI gpt-5.2 (none)	100	-	-	-	-	-	-	-	-	-	-	-	no_data
+3	Horn	OpenAI gpt-5.2-pro (high)	10	10	0	0	10	0	10	10	10	1.000	2.0101	0.2010	yes
+3	Horn	OpenAI gpt-5.2-pro (high)	20	10	0	0	10	0	10	10	10	1.000	3.2220	0.3222	yes
+3	Horn	OpenAI gpt-5.2-pro (high)	30	10	0	0	10	0	10	10	10	1.000	4.8322	0.4832	yes
+3	Horn	OpenAI gpt-5.2-pro (high)	40	10	0	0	10	0	10	10	10	1.000	4.9763	0.4976	yes
+3	Horn	OpenAI gpt-5.2-pro (high)	50	10	0	0	10	0	10	10	10	1.000	6.0605	0.6060	yes
+3	Horn	OpenAI gpt-5.2-pro (high)	60	10	0	0	10	0	10	10	10	1.000	6.4229	0.6423	yes
+3	Horn	OpenAI gpt-5.2-pro (high)	80	10	0	0	10	0	10	10	10	1.000	10.3177	1.0318	yes
+3	Horn	OpenAI gpt-5.2-pro (high)	100	10	0	0	10	0	10	10	10	1.000	11.7443	1.1744	yes
+3	Non-Horn	OpenAI gpt-5.2 (none)	10	10	0	0	10	0	10	10	5	0.500	0.0205	0.0021	yes
+3	Non-Horn	OpenAI gpt-5.2 (none)	20	10	0	0	10	0	10	10	5	0.500	0.0210	0.0021	yes
+3	Non-Horn	OpenAI gpt-5.2 (none)	30	10	0	0	10	0	10	10	5	0.500	0.0293	0.0029	yes
+3	Non-Horn	OpenAI gpt-5.2 (none)	40	10	0	0	10	0	10	10	5	0.500	0.0475	0.0048	yes
+3	Non-Horn	OpenAI gpt-5.2 (none)	50	10	0	0	10	0	10	10	5	0.500	0.0458	0.0046	yes
+3	Non-Horn	OpenAI gpt-5.2 (none)	60	-	-	-	-	-	-	-	-	-	-	-	no_data
+3	Non-Horn	OpenAI gpt-5.2 (none)	80	-	-	-	-	-	-	-	-	-	-	-	no_data
+3	Non-Horn	OpenAI gpt-5.2 (none)	100	-	-	-	-	-	-	-	-	-	-	-	no_data
+3	Non-Horn	OpenAI gpt-5.2-pro (high)	10	10	0	0	10	0	10	10	10	1.000	6.3351	0.6335	yes
+3	Non-Horn	OpenAI gpt-5.2-pro (high)	20	10	0	0	10	0	10	10	10	1.000	29.7111	2.9711	yes
+3	Non-Horn	OpenAI gpt-5.2-pro (high)	30	10	0	1	9	0	9	10	7	0.778	71.3130	7.1313	yes
+3	Non-Horn	OpenAI gpt-5.2-pro (high)	40	10	0	1	9	0	9	10	5	0.556	68.6960	6.8696	yes
+3	Non-Horn	OpenAI gpt-5.2-pro (high)	50	10	0	2	8	0	8	10	5	0.625	92.8136	9.2814	yes
+3	Non-Horn	OpenAI gpt-5.2-pro (high)	60	-	-	-	-	-	-	-	-	-	-	-	no_data
+3	Non-Horn	OpenAI gpt-5.2-pro (high)	80	-	-	-	-	-	-	-	-	-	-	-	no_data
+3	Non-Horn	OpenAI gpt-5.2-pro (high)	100	-	-	-	-	-	-	-	-	-	-	-	no_data
+4	Horn	OpenAI gpt-5.2 (none)	10	10	0	0	10	0	10	10	9	0.900	0.0602	0.0060	yes
+4	Horn	OpenAI gpt-5.2 (none)	20	10	0	0	10	0	10	10	6	0.600	0.0898	0.0090	yes
+4	Horn	OpenAI gpt-5.2 (none)	30	10	0	0	10	0	10	10	6	0.600	0.0394	0.0039	yes
+4	Horn	OpenAI gpt-5.2 (none)	40	10	0	0	10	0	10	10	7	0.700	0.0745	0.0074	yes
+4	Horn	OpenAI gpt-5.2 (none)	50	10	0	0	10	0	10	10	6	0.600	0.0776	0.0078	yes
+4	Horn	OpenAI gpt-5.2 (none)	60	-	-	-	-	-	-	-	-	-	-	-	no_data
+4	Horn	OpenAI gpt-5.2 (none)	80	-	-	-	-	-	-	-	-	-	-	-	no_data
+4	Horn	OpenAI gpt-5.2 (none)	100	-	-	-	-	-	-	-	-	-	-	-	no_data
+4	Horn	OpenAI gpt-5.2-pro (high)	10	10	0	0	10	0	10	10	10	1.000	2.9088	0.2909	yes
+4	Horn	OpenAI gpt-5.2-pro (high)	20	10	0	0	10	0	10	10	10	1.000	4.9380	0.4938	yes
+4	Horn	OpenAI gpt-5.2-pro (high)	30	10	0	0	10	0	10	10	10	1.000	5.8129	0.5813	yes
+4	Horn	OpenAI gpt-5.2-pro (high)	40	10	0	0	10	0	10	10	10	1.000	9.0221	0.9022	yes
+4	Horn	OpenAI gpt-5.2-pro (high)	50	10	0	0	10	0	10	10	10	1.000	9.7490	0.9749	yes
+4	Horn	OpenAI gpt-5.2-pro (high)	60	10	0	0	10	0	10	10	10	1.000	13.6435	1.3644	yes
+4	Horn	OpenAI gpt-5.2-pro (high)	80	10	0	0	10	0	10	10	10	1.000	18.4451	1.8445	yes
+4	Horn	OpenAI gpt-5.2-pro (high)	100	10	0	0	10	0	10	10	10	1.000	23.5628	2.3563	yes
+4	Non-Horn	OpenAI gpt-5.2 (none)	10	10	0	0	10	0	10	10	5	0.500	0.0255	0.0026	yes
+4	Non-Horn	OpenAI gpt-5.2 (none)	20	10	0	0	10	0	10	10	5	0.500	0.0571	0.0057	yes
+4	Non-Horn	OpenAI gpt-5.2 (none)	30	10	0	0	10	0	10	10	5	0.500	0.0723	0.0072	yes
+4	Non-Horn	OpenAI gpt-5.2 (none)	40	10	0	0	10	0	10	10	5	0.500	0.0989	0.0099	yes
+4	Non-Horn	OpenAI gpt-5.2 (none)	50	10	0	0	10	0	10	10	5	0.500	0.1272	0.0127	yes
+4	Non-Horn	OpenAI gpt-5.2 (none)	60	-	-	-	-	-	-	-	-	-	-	-	no_data
+4	Non-Horn	OpenAI gpt-5.2 (none)	80	-	-	-	-	-	-	-	-	-	-	-	no_data
+4	Non-Horn	OpenAI gpt-5.2 (none)	100	-	-	-	-	-	-	-	-	-	-	-	no_data
+4	Non-Horn	OpenAI gpt-5.2-pro (high)	10	-	-	-	-	-	-	-	-	-	-	-	no_data
+4	Non-Horn	OpenAI gpt-5.2-pro (high)	20	-	-	-	-	-	-	-	-	-	-	-	no_data
+4	Non-Horn	OpenAI gpt-5.2-pro (high)	30	-	-	-	-	-	-	-	-	-	-	-	no_data
+4	Non-Horn	OpenAI gpt-5.2-pro (high)	40	-	-	-	-	-	-	-	-	-	-	-	no_data
+4	Non-Horn	OpenAI gpt-5.2-pro (high)	50	-	-	-	-	-	-	-	-	-	-	-	no_data
+4	Non-Horn	OpenAI gpt-5.2-pro (high)	60	-	-	-	-	-	-	-	-	-	-	-	no_data
+4	Non-Horn	OpenAI gpt-5.2-pro (high)	80	-	-	-	-	-	-	-	-	-	-	-	no_data
+4	Non-Horn	OpenAI gpt-5.2-pro (high)	100	-	-	-	-	-	-	-	-	-	-	-	no_data
+5	Horn	OpenAI gpt-5.2 (none)	10	10	0	0	10	0	10	10	7	0.700	0.0703	0.0070	yes
+5	Horn	OpenAI gpt-5.2 (none)	20	10	0	0	10	0	10	10	6	0.600	0.0743	0.0074	yes
+5	Horn	OpenAI gpt-5.2 (none)	30	10	0	0	10	0	10	10	5	0.500	0.0801	0.0080	yes
+5	Horn	OpenAI gpt-5.2 (none)	40	10	0	0	10	0	10	10	6	0.600	0.0835	0.0083	yes
+5	Horn	OpenAI gpt-5.2 (none)	50	10	0	0	10	0	10	10	5	0.500	0.0722	0.0072	yes
+5	Horn	OpenAI gpt-5.2 (none)	60	-	-	-	-	-	-	-	-	-	-	-	no_data
+5	Horn	OpenAI gpt-5.2 (none)	80	-	-	-	-	-	-	-	-	-	-	-	no_data
+5	Horn	OpenAI gpt-5.2 (none)	100	-	-	-	-	-	-	-	-	-	-	-	no_data
+5	Horn	OpenAI gpt-5.2-pro (high)	10	10	0	0	10	0	10	10	10	1.000	3.0260	0.3026	yes
+5	Horn	OpenAI gpt-5.2-pro (high)	20	10	0	0	10	0	10	10	10	1.000	5.2394	0.5239	yes
+5	Horn	OpenAI gpt-5.2-pro (high)	30	10	0	0	10	0	10	10	10	1.000	7.5921	0.7592	yes
+5	Horn	OpenAI gpt-5.2-pro (high)	40	10	0	0	10	0	10	10	10	1.000	13.3806	1.3381	yes
+5	Horn	OpenAI gpt-5.2-pro (high)	50	10	0	0	10	0	10	10	10	1.000	14.0357	1.4036	yes
+5	Horn	OpenAI gpt-5.2-pro (high)	60	10	0	0	10	0	10	10	10	1.000	16.0680	1.6068	yes
+5	Horn	OpenAI gpt-5.2-pro (high)	80	10	0	0	10	0	10	10	10	1.000	16.5494	1.6549	yes
+5	Horn	OpenAI gpt-5.2-pro (high)	100	10	0	0	10	0	10	10	10	1.000	16.9787	1.6979	yes
+5	Non-Horn	OpenAI gpt-5.2 (none)	10	10	0	0	10	0	10	10	5	0.500	0.0447	0.0045	yes
+5	Non-Horn	OpenAI gpt-5.2 (none)	20	10	0	0	10	0	10	10	5	0.500	0.1047	0.0105	yes
+5	Non-Horn	OpenAI gpt-5.2 (none)	30	10	0	0	10	0	10	10	5	0.500	0.1705	0.0170	yes
+5	Non-Horn	OpenAI gpt-5.2 (none)	40	10	0	0	10	0	10	10	5	0.500	0.2459	0.0246	yes
+5	Non-Horn	OpenAI gpt-5.2 (none)	50	10	0	0	10	0	10	10	5	0.500	0.3300	0.0330	yes
+5	Non-Horn	OpenAI gpt-5.2 (none)	60	-	-	-	-	-	-	-	-	-	-	-	no_data
+5	Non-Horn	OpenAI gpt-5.2 (none)	80	-	-	-	-	-	-	-	-	-	-	-	no_data
+5	Non-Horn	OpenAI gpt-5.2 (none)	100	-	-	-	-	-	-	-	-	-	-	-	no_data
+5	Non-Horn	OpenAI gpt-5.2-pro (high)	10	-	-	-	-	-	-	-	-	-	-	-	no_data
+5	Non-Horn	OpenAI gpt-5.2-pro (high)	20	-	-	-	-	-	-	-	-	-	-	-	no_data
+5	Non-Horn	OpenAI gpt-5.2-pro (high)	30	-	-	-	-	-	-	-	-	-	-	-	no_data
+5	Non-Horn	OpenAI gpt-5.2-pro (high)	40	-	-	-	-	-	-	-	-	-	-	-	no_data
+5	Non-Horn	OpenAI gpt-5.2-pro (high)	50	-	-	-	-	-	-	-	-	-	-	-	no_data
+5	Non-Horn	OpenAI gpt-5.2-pro (high)	60	-	-	-	-	-	-	-	-	-	-	-	no_data
+5	Non-Horn	OpenAI gpt-5.2-pro (high)	80	-	-	-	-	-	-	-	-	-	-	-	no_data
+5	Non-Horn	OpenAI gpt-5.2-pro (high)	100	-	-	-	-	-	-	-	-	-	-	-	no_data
+
+Paper text check (RQ3 example): Non-Horn, k=3, UNSAT only (USD/item uses nonpending denominator)
+- OpenAI gpt-5.2 (none): unsat_acc=0.00 ; USD/item=0.0036 ; N_unsat_nonpending=25
+- OpenAI gpt-5.2-pro (high): unsat_acc=0.59 ; USD/item=7.5174 ; N_unsat_nonpending=25
+
+Notes
+- This file replaces the in-figure title/subtitle: contextual detail is here and in the LaTeX caption.

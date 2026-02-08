@@ -34,11 +34,14 @@ REP_LABEL: Mapping[str, str] = {
 }
 
 PROMPT_LABEL: Mapping[str, str] = {
-    "examples_only": "examples-only",
-    "horn_alg_from": "Horn algorithm (from)",
-    "horn_alg_linear": "Horn algorithm (linear)",
-    "dpll_alg_from": "DPLL algorithm (from)",
-    "dpll_alg_linear": "DPLL algorithm (linear)",
+    "examples_only": "Examples-only",
+    # Reader-facing labels follow the paper: algorithm family + (direct vs with line citations).
+    # NOTE: internal template IDs use *_alg_linear / *_alg_from for traceability; we avoid the word
+    # "linear" in reader-facing labels because of potential confusion with time complexity.
+    "horn_alg_from": "Forward chaining (with line citations)",
+    "horn_alg_linear": "Forward chaining (direct)",
+    "dpll_alg_from": "DPLL-style (with line citations)",
+    "dpll_alg_linear": "DPLL-style (direct)",
 }
 
 SUBSET_LABEL: Mapping[int, str] = {
@@ -208,9 +211,8 @@ def _set_figure_header(fig: Any, *, title: str, context: Optional[str] = None) -
         )
 
 
-def _tight_layout_standard(fig: Any, *, footer_in: float = 0.0) -> None:
+def _tight_layout_standard(fig: Any, *, footer_in: float = 0.0, header_in: float = 0.3) -> None:
     """Standardize spacing between header/plot/footer using inches."""
-    header_in = 0.3  # reserved band for title + context
     h_in = float(fig.get_size_inches()[1] if hasattr(fig, "get_size_inches") else 0.0) or 6.0
 
     top = 1.0 - (float(header_in) / float(h_in))
@@ -1468,7 +1470,7 @@ def _figure_representation_effects(
         fig,
         title="Representation effects",
         context=(
-            "Subset: Horn + Non-Horn · Representation: Compact CNF vs Natural Language CNF · "
+            "Subset: Horn / Non-Horn · Representation: Compact CNF vs Natural Language CNF · "
             f"Prompt: examples-only · Targets: {target}"
         ),
     )
@@ -1488,6 +1490,374 @@ def _figure_representation_effects(
     _tight_layout_standard(fig)
     _save_paper_figure(fig, out_path)
     plt.close(fig)
+    return meta
+
+
+def _figure_representation_effects_new(
+    groups: Sequence[Dict[str, Any]], *, out_path: Path, accuracy_mode: str, exclude_run_regex: str
+) -> Dict[str, Any]:
+    """Representation effects (new variant for paper): no header; two panels and condensed x-spacing to show Horn up to n=100."""
+    # Panel (a): Controlled target: OpenAI gpt-5.2-pro (think_high), examples-only, k=3.
+    base_a = {
+        "provider": "openai",
+        "model": "gpt-5.2-pro",
+        "thinking_mode": "think_high",
+        "prompt_label": "examples_only",
+        # Include the baseline grid and (when present) extended-n slices.
+        "maxvars": [10, 20, 30, 40, 50, 60, 80, 100],
+        "maxlen": 3,
+    }
+
+    # Condense the high-n tail (60/80/100) so the Non-Horn comparison (<=50) occupies most of the width.
+    # NOTE: this treats n as a discrete axis for readability; spacing is intentionally not linear in n.
+    n_vals = [10, 20, 30, 40, 50, 60, 80, 100]
+    # Condense spacing so the accuracy differences are visually clearer:
+    # - slightly compress the baseline region (10..50)
+    # - keep the high-n tail (60/80/100) tightly grouped
+    xpos_by_n = {10: 0.0, 20: 0.7, 30: 1.4, 40: 2.1, 50: 2.8, 60: 3.3, 80: 3.7, 100: 4.0}
+    n_vals_10_50 = [10, 20, 30, 40, 50]
+    xpos_by_n_10_50 = {int(n): float(xpos_by_n[int(n)]) for n in n_vals_10_50}
+    # Use the same scale (px per x-unit) in both panels over 10..50 by matching width ratios to x spans.
+    # Panel (a) has additional x-range (60/80/100), which then reads as a visible "extension" on that panel.
+    # Match the typical Matplotlib default x-padding (~5% of x-span) used by the
+    # other line figures (which rely on autoscaling). Using a fixed 0.4 here makes
+    # the first/last points look more "inset" than in the rest of the paper.
+    pad_frac = 0.05
+    x_min_a = float(min(xpos_by_n.values()))
+    x_max_a = float(max(xpos_by_n.values()))
+    x_min_b = float(min(xpos_by_n_10_50.values()))
+    x_max_b = float(max(xpos_by_n_10_50.values()))
+    pad_a = float(pad_frac) * float(x_max_a - x_min_a)
+    pad_b = float(pad_frac) * float(x_max_b - x_min_b)
+    span_a = (x_max_a - x_min_a) + 2.0 * float(pad_a)
+    span_b = (x_max_b - x_min_b) + 2.0 * float(pad_b)
+
+    rows_a = _filter_groups(groups, filters=base_a, exclude_run_regex=exclude_run_regex)
+    rows_a_mapped: List[Dict[str, Any]] = []
+    for r in rows_a:
+        try:
+            n = int(r.get("maxvars") or 0)
+        except Exception:
+            continue
+        if n not in xpos_by_n:
+            continue
+        rr = dict(r)
+        rr["xpos"] = float(xpos_by_n[int(n)])
+        rows_a_mapped.append(rr)
+
+    # Use each model's global base color, then create representation-specific tints
+    # (this matches the existing Figure 1 palette logic).
+    base_key_a = f"{base_a['provider']}/{base_a['model']}/{base_a['thinking_mode']}"
+    base_color_a = _make_target_color_map([str(base_key_a)]).get(str(base_key_a), "#4a5568")
+    rep_tints = {"cnf_compact": 0.0, "cnf_nl": 0.45, "horn_if_then": 0.7}
+    rep_color_map_a = {k: _tint(base_color_a, t) for k, t in rep_tints.items()}
+
+    # Panel (b): OpenAI gpt-5.2 (think_none), examples-only, k=3.
+    # We overlay Horn vs Non-Horn (solid vs dashed) for Compact/NL, and include If-then on Horn only.
+    # NOTE: the full model id is used (stable palette key + exact run match).
+    base_b = {
+        "provider": "openai",
+        "model": "gpt-5.2-2025-12-11",
+        "thinking_mode": "think_none",
+        "prompt_label": "examples_only",
+        "maxvars": [10, 20, 30, 40, 50],
+        "maxlen": 3,
+    }
+    # For panel (b), only include the representations we actually plot:
+    # - Compact + NL on both subsets
+    # - If-then on Horn only (Non-Horn If-then is treated as the semantic-mismatch control elsewhere)
+    rows_b_compact_nl = _filter_groups(
+        groups,
+        filters={**base_b, "representation": ["cnf_compact", "cnf_nl"]},
+        exclude_run_regex=exclude_run_regex,
+    )
+    rows_b_if_then_horn = _filter_groups(
+        groups,
+        filters={**base_b, "representation": "horn_if_then", "horn": 1},
+        exclude_run_regex=exclude_run_regex,
+    )
+    rows_b = list(rows_b_compact_nl) + list(rows_b_if_then_horn)
+    rows_b_mapped: List[Dict[str, Any]] = []
+    for r in rows_b:
+        try:
+            n = int(r.get("maxvars") or 0)
+        except Exception:
+            continue
+        if n not in xpos_by_n_10_50:
+            continue
+        rr = dict(r)
+        rr["xpos"] = float(xpos_by_n_10_50[int(n)])
+        rows_b_mapped.append(rr)
+    base_key_b = f"{base_b['provider']}/{base_b['model']}/{base_b['thinking_mode']}"
+    base_color_b = _make_target_color_map([str(base_key_b)]).get(str(base_key_b), "#4a5568")
+    rep_color_map_b = {k: _tint(base_color_b, t) for k, t in rep_tints.items()}
+
+    fig, axes = plt.subplots(
+        1,
+        2,
+        figsize=(13.8, 3.2),
+        sharey=True,
+        gridspec_kw={"width_ratios": [float(span_a), float(span_b)]},
+    )
+    ax_a, ax_b = axes
+    meta: Dict[str, Any] = {
+        "figure": "representation_effects",
+        "output": str(out_path),
+        "variant": "new",
+        "layout": {"rows": "panels", "cols": "left gpt-5.2-pro (high) + right gpt-5.2 (none)"},
+    }
+
+    # (a) Plot Horn + Non-Horn overlay; representation is the series key.
+    show_legend = False  # we'll draw a concise in-panel legend
+    panel_a_meta = _plot_accuracy_subset_overlay(
+        ax_a,
+        groups=rows_a_mapped,
+        base_filters=base_a,
+        series_field="representation",
+        x_field="xpos",
+        y_mode=str(accuracy_mode),
+        exclude_run_regex=None,  # already filtered above
+        series_color_map=rep_color_map_a,
+        preferred_series_order=["cnf_compact", "cnf_nl", "horn_if_then"],
+        min_trials=DEFAULT_MIN_TRIALS,
+        show_ci95=False,
+        marker_size_by_trials=False,
+        show_markers=True,
+        marker_override="s",  # match the controlled-target paper style (avoid implying multiple providers)
+        marker_x_jitter_frac=0.0,
+        marker_stack_y=True,
+        show_legend=show_legend,
+        title="",
+        x_label="# vars (n)",
+        y_label=f"Accuracy ({accuracy_mode})",
+    )
+    meta["panel_a_k3_overlay"] = panel_a_meta
+
+    # Discrete tick labels for n; spacing is condensed in the tail by xpos_by_n.
+    ax_a.set_xticks([float(xpos_by_n[n]) for n in n_vals])
+    ax_a.set_xticklabels([str(n) for n in n_vals])
+    # Extra padding compresses the x-scale a bit (makes accuracy differences more prominent)
+    # without changing the underlying data.
+    ax_a.set_xlim(float(x_min_a) - float(pad_a), float(x_max_a) + float(pad_a))
+
+    # In-panel legend: fully specified (subset × representation), filtered to what is actually present.
+    rep_series_keys = ["cnf_compact", "cnf_nl"]
+    series = [(s, _pretty_series_label("representation", str(s)), rep_color_map_a.get(str(s), "#4a5568")) for s in rep_series_keys]
+    _handles_present, _labels_present = ax_a.get_legend_handles_labels()
+    present = {str(lbl) for lbl in _labels_present if lbl and not str(lbl).startswith("_")}
+    h, l = _combined_subset_series_legend(series=series, marker="s")
+    keep = [(hh, ll) for hh, ll in zip(h, l) if ll in present]
+    if keep:
+        _apply_legend(ax_a, [hh for hh, _ll in keep], [ll for _hh, ll in keep], ncol=1)
+
+    # Keep the most relevant panel info (subset + k) on top, even with no figure header.
+    ax_a.set_title("Horn / Non-Horn · k=3")
+
+    # (b) Overlay Horn vs Non-Horn for Compact/NL (solid vs dashed), and include If-then on Horn only.
+    # Use the same overlap-handling style as the multi-provider figure (marker stacking + overlap bundling).
+    panel_b_meta = _plot_accuracy_subset_overlay(
+        ax_b,
+        groups=rows_b_mapped,
+        base_filters=base_b,
+        series_field="representation",
+        x_field="xpos",
+        y_mode=str(accuracy_mode),
+        exclude_run_regex=None,  # already filtered above
+        series_color_map=rep_color_map_b,
+        allowed_series_horn=["cnf_compact", "cnf_nl", "horn_if_then"],
+        allowed_series_nonhorn=["cnf_compact", "cnf_nl"],
+        preferred_series_order=["cnf_compact", "cnf_nl", "horn_if_then"],
+        min_trials=DEFAULT_MIN_TRIALS,
+        show_ci95=False,
+        marker_size_by_trials=False,
+        show_markers=True,
+        marker_override="s",  # OpenAI only
+        marker_x_jitter_frac=0.0,
+        marker_stack_y=True,
+        show_legend=False,
+        title="",
+        x_label="# vars (n)",
+        y_label="",
+    )
+    meta["panel_b_overlay"] = panel_b_meta
+    # In-panel legend: fully specified (subset × representation), filtered to what is actually present.
+    rep_series_keys_b = ["cnf_compact", "cnf_nl", "horn_if_then"]
+    series_b = [
+        (s, _pretty_series_label("representation", str(s)), rep_color_map_b.get(str(s), "#4a5568")) for s in rep_series_keys_b
+    ]
+    _handles_present_b, _labels_present_b = ax_b.get_legend_handles_labels()
+    present_b = {str(lbl) for lbl in _labels_present_b if lbl and not str(lbl).startswith("_")}
+    hb, lb = _combined_subset_series_legend(series=series_b, marker="s")
+    keep_b = [(hh, ll) for hh, ll in zip(hb, lb) if ll in present_b]
+    if keep_b:
+        _apply_legend(ax_b, [hh for hh, _ll in keep_b], [ll for _hh, ll in keep_b], ncol=1)
+    ax_b.set_xticks([float(xpos_by_n_10_50[n]) for n in n_vals_10_50])
+    ax_b.set_xticklabels([str(n) for n in n_vals_10_50])
+    ax_b.set_xlim(float(x_min_b) - float(pad_b), float(x_max_b) + float(pad_b))
+    ax_b.set_title("Horn / Non-Horn · k=3")
+
+    # Save without the title/context header band.
+    _tight_layout_standard(fig, header_in=0.0)
+    _save_paper_figure(fig, out_path)
+    plt.close(fig)
+
+    # Sidecar: plain-text description + numeric validation tables for this figure.
+    desc_path = out_path.with_suffix(".txt")
+
+    # Validation tables computed from the same (unmapped) group rows.
+    nonhorn_filters_a = {**base_a, "horn": 0, "maxvars": [10, 20, 30, 40, 50]}
+    horn_filters_a = {
+        **base_a,
+        "horn": 1,
+        "representation": "cnf_compact",
+        "maxvars": [10, 20, 30, 40, 50, 60, 80, 100],
+    }
+    nonhorn_rows_a = _filter_groups(rows_a, filters=nonhorn_filters_a)
+    horn_rows_a = _filter_groups(rows_a, filters=horn_filters_a)
+
+    nonhorn_series_map_a = _aggregate_series(
+        nonhorn_rows_a, series_field="representation", x_field="maxvars", allowed_series=["cnf_compact", "cnf_nl"]
+    )
+    horn_series_map_a = _aggregate_series(
+        horn_rows_a, series_field="representation", x_field="maxvars", allowed_series=["cnf_compact"]
+    )
+    horn_rows_b = _filter_groups(rows_b, filters={**base_b, "horn": 1})
+    nonhorn_rows_b = _filter_groups(rows_b, filters={**base_b, "horn": 0})
+    horn_series_map_b = _aggregate_series(
+        horn_rows_b,
+        series_field="representation",
+        x_field="maxvars",
+        allowed_series=["cnf_compact", "cnf_nl", "horn_if_then"],
+    )
+    nonhorn_series_map_b = _aggregate_series(
+        nonhorn_rows_b,
+        series_field="representation",
+        x_field="maxvars",
+        allowed_series=["cnf_compact", "cnf_nl"],
+    )
+    suites_runs = sorted(
+        {(str(r.get("suite") or ""), str(r.get("run") or "")) for r in (nonhorn_rows_a + horn_rows_a + rows_b)}
+    )
+
+    lines: List[str] = []
+    lines.append("llmlog paper figure description (sidecar; not for the article)")
+    lines.append("")
+    lines.append(f"figure_pdf: {out_path.name}")
+    lines.append("figure_id: representation_effects")
+    lines.append("variant: new")
+    lines.append("")
+    lines.append("What this figure shows")
+    lines.append("- Overall SAT-decision accuracy vs number of variables (n) under examples-only prompting (k=3).")
+    lines.append("- Two panels (left/right in the PDF):")
+    lines.append("  left: OpenAI gpt-5.2-pro (think=high): Non-Horn compares Compact CNF vs Natural Language CNF (n<=50),")
+    lines.append("        while Horn Compact CNF is included and remains at 1.00 through n=100.")
+    lines.append("  right: OpenAI gpt-5.2 (think=none): Horn vs Non-Horn overlay for Compact CNF and Natural Language CNF (n<=50),")
+    lines.append("         with If-then CNF shown on Horn only.")
+    lines.append("")
+    lines.append("Axis spacing note (important)")
+    lines.append("- The x-axis is treated as a discrete set of n values for readability (spacing is not linear in n).")
+    lines.append("- Tick layout: " + ", ".join([f"{n}->{xpos_by_n[n]:g}" for n in n_vals]))
+    lines.append(
+        "- x-scale unification: panels share the same x-position mapping for n=10..50; "
+        "left panel additionally shows n in {60,80,100}."
+    )
+    lines.append(
+        f"- xlim: left panel [{(x_min_a - pad_a):g},{(x_max_a + pad_a):g}] ; "
+        f"right panel [{(x_min_b - pad_b):g},{(x_max_b + pad_b):g}] (x-position units)"
+    )
+    lines.append("")
+    lines.append("Selection / filters: left panel")
+    lines.append(f"- provider: {base_a['provider']}")
+    lines.append(f"- model: {base_a['model']}")
+    lines.append(f"- thinking_mode: {base_a['thinking_mode']}")
+    lines.append(f"- prompt_label: {base_a['prompt_label']}")
+    lines.append(f"- maxlen (k): {base_a['maxlen']}")
+    lines.append(f"- Non-Horn maxvars (n): {nonhorn_filters_a['maxvars']}")
+    lines.append(f"- Horn maxvars (n): {horn_filters_a['maxvars']}")
+    lines.append("- Note: Horn Natural Language CNF is not available for this target under examples-only, so Horn shows Compact CNF only.")
+    lines.append("")
+    lines.append("Selection / filters: right panel")
+    lines.append(f"- provider: {base_b['provider']}")
+    lines.append(f"- model: {base_b['model']}")
+    lines.append(f"- thinking_mode: {base_b['thinking_mode']}")
+    lines.append(f"- prompt_label: {base_b['prompt_label']}")
+    lines.append(f"- maxlen (k): {base_b['maxlen']}")
+    lines.append("- subset: Horn / Non-Horn (overlay)")
+    lines.append(f"- maxvars (n): {base_b['maxvars']}")
+    lines.append("- representations: Compact CNF, Natural Language CNF (both subsets); If-then CNF (Horn only)")
+    lines.append("")
+    lines.append("Metric definition")
+    lines.append(f"- accuracy_mode: {accuracy_mode}")
+    lines.append("- completed denominator: answered + unclear (excludes pending + errors)")
+    lines.append(f"- point inclusion threshold: completed >= {DEFAULT_MIN_TRIALS}")
+    lines.append("")
+    lines.append("Run sources used (suite/run)")
+    if suites_runs:
+        for suite, run in suites_runs:
+            lines.append(f"- {suite} / {run}")
+    else:
+        lines.append("- (none; no rows matched filters)")
+    lines.append("")
+    lines.append("Numeric validation table: left panel Non-Horn (aggregated over sat+unsat)")
+    lines.append("subset\trepresentation\tn\ttotal\tpending\terrors\tanswered\tunclear\tcompleted\tcorrect\tacc_completed\tplotted")
+    for series in ["cnf_compact", "cnf_nl"]:
+        pts = nonhorn_series_map_a.get(series) or {}
+        for n in sorted(pts.keys()):
+            c = pts[n]
+            completed = int(c.denom_completed)
+            acc = c.accuracy("completed")
+            plotted = "yes" if completed >= int(DEFAULT_MIN_TRIALS) and acc is not None else "no"
+            acc_s = "-" if acc is None else f"{float(acc):.3f}"
+            lines.append(
+                f"Non-Horn\t{REP_LABEL.get(series, series)}\t{int(n)}\t{int(c.total)}\t{int(c.pending)}\t{int(c.errors)}\t{int(c.answered)}\t{int(c.unclear)}\t{completed}\t{int(c.correct)}\t{acc_s}\t{plotted}"
+            )
+    lines.append("")
+    lines.append("Numeric validation table: left panel Horn (Compact CNF only; aggregated over sat+unsat)")
+    series = "cnf_compact"
+    pts = horn_series_map_a.get(series) or {}
+    for n in sorted(pts.keys()):
+        c = pts[n]
+        completed = int(c.denom_completed)
+        acc = c.accuracy("completed")
+        plotted = "yes" if completed >= int(DEFAULT_MIN_TRIALS) and acc is not None else "no"
+        acc_s = "-" if acc is None else f"{float(acc):.3f}"
+        lines.append(
+            f"Horn\t{REP_LABEL.get(series, series)}\t{int(n)}\t{int(c.total)}\t{int(c.pending)}\t{int(c.errors)}\t{int(c.answered)}\t{int(c.unclear)}\t{completed}\t{int(c.correct)}\t{acc_s}\t{plotted}"
+        )
+    lines.append("")
+    lines.append("Numeric validation table: right panel Horn (aggregated over sat+unsat)")
+    lines.append("subset\trepresentation\tn\ttotal\tpending\terrors\tanswered\tunclear\tcompleted\tcorrect\tacc_completed\tplotted")
+    for series in ["cnf_compact", "cnf_nl", "horn_if_then"]:
+        pts = horn_series_map_b.get(series) or {}
+        for n in sorted(pts.keys()):
+            c = pts[n]
+            completed = int(c.denom_completed)
+            acc = c.accuracy("completed")
+            plotted = "yes" if completed >= int(DEFAULT_MIN_TRIALS) and acc is not None else "no"
+            acc_s = "-" if acc is None else f"{float(acc):.3f}"
+            lines.append(
+                f"Horn\t{REP_LABEL.get(series, series)}\t{int(n)}\t{int(c.total)}\t{int(c.pending)}\t{int(c.errors)}\t{int(c.answered)}\t{int(c.unclear)}\t{completed}\t{int(c.correct)}\t{acc_s}\t{plotted}"
+            )
+    lines.append("")
+    lines.append("Numeric validation table: right panel Non-Horn (aggregated over sat+unsat)")
+    lines.append("subset\trepresentation\tn\ttotal\tpending\terrors\tanswered\tunclear\tcompleted\tcorrect\tacc_completed\tplotted")
+    for series in ["cnf_compact", "cnf_nl"]:
+        pts = nonhorn_series_map_b.get(series) or {}
+        for n in sorted(pts.keys()):
+            c = pts[n]
+            completed = int(c.denom_completed)
+            acc = c.accuracy("completed")
+            plotted = "yes" if completed >= int(DEFAULT_MIN_TRIALS) and acc is not None else "no"
+            acc_s = "-" if acc is None else f"{float(acc):.3f}"
+            lines.append(
+                f"Non-Horn\t{REP_LABEL.get(series, series)}\t{int(n)}\t{int(c.total)}\t{int(c.pending)}\t{int(c.errors)}\t{int(c.answered)}\t{int(c.unclear)}\t{completed}\t{int(c.correct)}\t{acc_s}\t{plotted}"
+            )
+    lines.append("")
+    lines.append("Notes")
+    lines.append("- This file replaces the in-figure title/subtitle: all contextual detail is here and in the LaTeX caption.")
+    desc_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    meta["description_txt"] = str(desc_path)
+
     return meta
 
 
@@ -1559,7 +1929,7 @@ def _figure_prompting_effects(
         fig,
         title="Prompting-policy effects",
         context=(
-            "Subset: Horn + Non-Horn · Representation: Compact CNF · "
+            "Subset: Horn / Non-Horn · Representation: Compact CNF · "
             f"Prompt: examples-only + algorithmic variants · Targets: {target}"
         ),
     )
@@ -1624,6 +1994,594 @@ def _figure_prompting_effects(
     return meta
 
 
+def _figure_prompting_effects_new(
+    groups: Sequence[Dict[str, Any]], *, out_path: Path, accuracy_mode: str, exclude_run_regex: str
+) -> Dict[str, Any]:
+    """Prompting-policy effects (new variant for paper): no header; add SAT/UNSAT split overlays; write sidecar validation."""
+    # Controlled target: OpenAI gpt-5.2-pro (think_high). Representation fixed to cnf_compact to isolate prompting.
+    # Keep the baseline grid (n<=50) so the Non-Horn comparisons don't get visually de-emphasized by Horn-only extended-n slices.
+    base = {
+        "provider": "openai",
+        "model": "gpt-5.2-pro",
+        "thinking_mode": "think_high",
+        "representation": "cnf_compact",
+        "maxvars": [10, 20, 30, 40, 50],
+        # Keep this figure minimal: baseline vs direct algorithmic prompts only.
+        "prompt_label": ["examples_only", "horn_alg_linear", "dpll_alg_linear"],
+    }
+
+    # Use the model's global base color, then create prompt-type tints.
+    base_key = f"{base['provider']}/{base['model']}/{base['thinking_mode']}"
+    base_color = _make_target_color_map([str(base_key)]).get(str(base_key), "#4a5568")
+    prompt_tints = {
+        "examples_only": 0.0,
+        "horn_alg_linear": 0.35,
+        "dpll_alg_linear": 0.35,
+    }
+    prompt_color_map = {k: _tint(base_color, t) for k, t in prompt_tints.items()}
+
+    # Reader-facing labels.
+    prompt_label_map = {
+        "examples_only": "Examples-only",
+        # *_alg_linear variants are the "direct" algorithmic prompts (no line-citation requirement).
+        "horn_alg_linear": "Algorithmic (direct)",
+        "dpll_alg_linear": "Algorithmic (direct)",
+    }
+
+    lens = [3, 4, 5]
+    fig, axes = plt.subplots(1, len(lens), figsize=(13.8, 3.2), sharex=True, sharey=True)
+    if len(lens) == 1:
+        axes = [axes]
+    meta: Dict[str, Any] = {
+        "figure": "prompting_effects",
+        "output": str(out_path),
+        "variant": "new",
+        "layout": {"rows": "combined subset", "cols": "maxlen"},
+        "note": "Overall accuracy vs n with SAT/UNSAT split overlays (triangles).",
+    }
+
+    # Prefilter once for sidecar / run provenance.
+    rows_all = _filter_groups(groups, filters=base, exclude_run_regex=exclude_run_regex)
+
+    from matplotlib.lines import Line2D  # type: ignore
+    from matplotlib.ticker import FixedLocator, NullLocator  # type: ignore
+
+    # Split overlays: SAT vs UNSAT have small denominators (~5 per point). Use a slightly lower threshold
+    # for split overlays so they don't disappear due to a single pending/error.
+    min_trials_split = max(1, int(DEFAULT_MIN_TRIALS) - 1)
+    split_alpha = 0.55
+    split_lw = 1.35
+
+    def _plot_split_overlay(*, ax: Any, maxlen: int, satflag: int, marker: str, marker_jitter: float) -> None:
+        """Overlay SAT/UNSAT split curves (hidden labels; lighter styling)."""
+        sf = int(satflag)
+        if sf not in {0, 1}:
+            return
+        # Horn overlay
+        for horn, ls, allowed in [
+            (1, "-", ["examples_only", "horn_alg_linear"]),
+            (0, "--", ["examples_only", "dpll_alg_linear"]),
+        ]:
+            rows = _filter_groups(
+                rows_all,
+                filters={**base, "maxlen": int(maxlen), "horn": int(horn), "satflag": int(sf)},
+                exclude_run_regex=None,
+            )
+            if not rows:
+                continue
+            # Hide these from the main legend (we add a small SAT/UNSAT key separately).
+            hidden = {s: f"_split_{'sat' if sf == 1 else 'unsat'}" for s in allowed}
+            n_lines0 = len(getattr(ax, "lines", []))
+            n_cols0 = len(getattr(ax, "collections", []))
+            _plot_line_panel(
+                ax,
+                rows=rows,
+                series_field="prompt_label",
+                x_field="maxvars",
+                y_metric="accuracy",
+                y_mode=accuracy_mode,
+                min_trials=int(min_trials_split),
+                show_ci95=False,
+                marker_size_by_trials=True,
+                show_markers=True,
+                marker_override=str(marker),
+                marker_stack_y=False,
+                marker_x_jitter_frac=float(marker_jitter),
+                show_chance_baseline=False,
+                stripe_overlaps=False,
+                show_legend=False,
+                show_empty_message=False,
+                line_style=str(ls),
+                color_map=prompt_color_map,
+                label_map=hidden,
+                allowed_series=allowed,
+                preferred_series_order=["examples_only"] + [s for s in allowed if s != "examples_only"],
+                direct_labels=False,
+                direct_label_values=False,
+                title="",
+                x_label="# vars (n)",
+                y_label="",
+                y_lim=(-0.05, 1.05),
+                y_scale="linear",
+            )
+            # Restyle the newly added artists (lighter, thinner).
+            for ln in getattr(ax, "lines", [])[n_lines0:]:
+                try:
+                    ln.set_alpha(float(split_alpha))
+                    ln.set_linewidth(float(split_lw))
+                except Exception:
+                    pass
+            for col in getattr(ax, "collections", [])[n_cols0:]:
+                try:
+                    col.set_alpha(float(split_alpha))
+                except Exception:
+                    pass
+
+    # Legend: prompt/subset entries + SAT/UNSAT marker key.
+    def _make_prompt_legend() -> Tuple[List[Any], List[str]]:
+        entries = [
+            ("Horn", "-", "examples_only", "s"),
+            ("Horn", "-", "horn_alg_linear", "s"),
+            ("Non-Horn", "--", "examples_only", "s"),
+            ("Non-Horn", "--", "dpll_alg_linear", "s"),
+        ]
+        handles: List[Any] = []
+        labels: List[str] = []
+        for subset_label, linestyle, prompt, marker in entries:
+            color = prompt_color_map.get(str(prompt), "#4a5568")
+            disp = prompt_label_map.get(str(prompt), _pretty_series_label("prompt_label", str(prompt)))
+            handles.append(
+                Line2D(
+                    [0],
+                    [0],
+                    color=color,
+                    lw=2.4,
+                    linestyle=str(linestyle),
+                    marker=str(marker),
+                    markersize=6.0,
+                    markerfacecolor="none",
+                    markeredgecolor=color,
+                )
+            )
+            labels.append(f"{subset_label} · {disp}")
+        # SAT/UNSAT key (marker shapes used in the overlays).
+        for lbl, mkr in [("SAT split", "^"), ("UNSAT split", "v")]:
+            handles.append(
+                Line2D(
+                    [0],
+                    [0],
+                    color="#4a5568",
+                    lw=0.0,
+                    linestyle="None",
+                    marker=str(mkr),
+                    markersize=6.0,
+                    markerfacecolor="none",
+                    markeredgecolor="#4a5568",
+                    alpha=float(split_alpha),
+                )
+            )
+            labels.append(lbl)
+        return handles, labels
+
+    for j, maxlen in enumerate(lens):
+        ax = axes[j]
+        # Filter to just this panel, then plot without further regex filtering.
+        rows_slice = _filter_groups(rows_all, filters={**base, "maxlen": int(maxlen)}, exclude_run_regex=None)
+
+        m = _plot_accuracy_subset_overlay(
+            ax,
+            groups=rows_slice,
+            base_filters={**base, "maxlen": int(maxlen)},
+            series_field="prompt_label",
+            x_field="maxvars",
+            y_mode=accuracy_mode,
+            exclude_run_regex=None,  # already filtered
+            series_color_map=prompt_color_map,
+            allowed_series_horn=["examples_only", "horn_alg_linear"],
+            allowed_series_nonhorn=["examples_only", "dpll_alg_linear"],
+            preferred_series_order=["examples_only", "horn_alg_linear", "dpll_alg_linear"],
+            min_trials=DEFAULT_MIN_TRIALS,
+            show_ci95=False,
+            marker_size_by_trials=False,
+            show_markers=True,
+            marker_override="s",  # controlled target (OpenAI only)
+            marker_x_jitter_frac=0.0,
+            marker_stack_y=True,
+            show_legend=False,  # add our own legend
+            label_map=prompt_label_map,
+            title="",
+            x_label="# vars (n)",
+            y_label=f"Accuracy ({accuracy_mode})" if j == 0 else "",
+        )
+        meta[f"{maxlen}"] = m
+
+        # Split overlays: SAT (triangle up) and UNSAT (triangle down).
+        _plot_split_overlay(ax=ax, maxlen=int(maxlen), satflag=1, marker="^", marker_jitter=-0.10)
+        _plot_split_overlay(ax=ax, maxlen=int(maxlen), satflag=0, marker="v", marker_jitter=+0.10)
+
+        # Panel header: keep subset+ k on top (no figure header band).
+        ax.set_title(f"Horn / Non-Horn · k={maxlen}")
+
+        # Missingness note: Non-Horn examples-only wasn't run for k=4/5 in this slice.
+        _handles_present, _labels_present = ax.get_legend_handles_labels()
+        present = {str(lbl) for lbl in _labels_present if lbl and not str(lbl).startswith("_")}
+        if int(maxlen) in {4, 5} and "Non-Horn · examples-only" not in present:
+            ax.text(
+                0.02,
+                0.86,
+                "Non-Horn\nexamples-only:\nnot run",
+                transform=ax.transAxes,
+                ha="left",
+                va="top",
+                fontsize=8,
+                color="#4a5568",
+            )
+
+        # Legend: only list entries actually present in this panel (avoid ghost entries).
+        h, l = _make_prompt_legend()
+        keep = [(hh, ll) for hh, ll in zip(h, l) if (ll in present) or (ll in {"SAT split", "UNSAT split"})]
+        if keep:
+            _apply_legend(ax, [hh for hh, _ll in keep], [ll for _hh, ll in keep], ncol=1)
+
+        # Only show ticks for evaluated n values.
+        xs = [int(x) for x in (base.get("maxvars") or [])]
+        ax.xaxis.set_major_locator(FixedLocator(xs))
+        ax.xaxis.set_minor_locator(NullLocator())
+        ax.set_xticks([float(x) for x in xs])
+        ax.set_xticklabels([str(x) for x in xs])
+
+    # Tight layout without header band (titles/subtitles removed).
+    _tight_layout_standard(fig, header_in=0.0)
+    _save_paper_figure(fig, out_path)
+    plt.close(fig)
+
+    # Sidecar: plain-text description + numeric validation tables for this figure.
+    desc_path = out_path.with_suffix(".txt")
+    suites_runs = sorted({(str(r.get("suite") or ""), str(r.get("run") or "")) for r in rows_all})
+
+    lines: List[str] = []
+    lines.append("llmlog paper figure description (sidecar; not for the article)")
+    lines.append("")
+    lines.append(f"figure_pdf: {out_path.name}")
+    lines.append("figure_id: prompting_effects")
+    lines.append("variant: new")
+    lines.append("")
+    lines.append("What this figure shows")
+    lines.append("- Overall SAT-decision accuracy vs number of variables (n) under examples-only vs algorithmic prompting.")
+    lines.append("- Controlled target: OpenAI gpt-5.2-pro (think=high); representation: Compact CNF.")
+    lines.append("- Panels: k in {3,4,5}; Horn vs Non-Horn are overlaid (line style).")
+    lines.append("- Overlays: additional SAT (▲) and UNSAT (▼) split curves are drawn for each prompting policy.")
+    lines.append(
+        f"- Split overlays use a slightly lower per-point threshold (completed >= {int(min_trials_split)}) to reduce censoring when per-split N≈5."
+    )
+    lines.append("")
+    lines.append("Selection / filters")
+    lines.append(f"- provider: {base['provider']}")
+    lines.append(f"- model: {base['model']}")
+    lines.append(f"- thinking_mode: {base['thinking_mode']}")
+    lines.append(f"- representation: {base['representation']}")
+    lines.append(f"- maxvars (n): {base['maxvars']}")
+    lines.append(f"- maxlen (k): {lens}")
+    lines.append("- prompts: examples-only; direct algorithmic prompts (Horn forward chaining; Non-Horn DPLL-style)")
+    lines.append("")
+    lines.append("Metric definition")
+    lines.append(f"- accuracy_mode: {accuracy_mode}")
+    lines.append("- completed denominator: answered + unclear (excludes pending + errors)")
+    lines.append(f"- overall curve inclusion threshold: completed >= {DEFAULT_MIN_TRIALS}")
+    lines.append(f"- split overlay inclusion threshold: completed >= {int(min_trials_split)}")
+    lines.append("")
+    lines.append("Run sources used (suite/run)")
+    if suites_runs:
+        for suite, run in suites_runs:
+            lines.append(f"- {suite} / {run}")
+    else:
+        lines.append("- (none; no rows matched filters)")
+    lines.append("")
+    lines.append("Numeric validation table")
+    lines.append("subset\tk\tprompt\tprompt_impl\tsatflag\tn\tcompleted\tcorrect\tacc_completed\tplotted")
+
+    def emit_table(*, horn: int, k: int, satflag: Optional[int], prompt_impls: Mapping[str, str]) -> None:
+        subset = "Horn" if int(horn) == 1 else "Non-Horn"
+        filters = {**base, "horn": int(horn), "maxlen": int(k)}
+        if satflag is not None:
+            filters = {**filters, "satflag": int(satflag)}
+        rows = _filter_groups(rows_all, filters=filters, exclude_run_regex=None)
+        allowed = list(prompt_impls.keys())
+        series_map = _aggregate_series(rows, series_field="prompt_label", x_field="maxvars", allowed_series=allowed)
+        for prompt in allowed:
+            pts = series_map.get(str(prompt)) or {}
+            for n in sorted(pts.keys()):
+                c = pts[n]
+                completed = int(c.denom_completed)
+                acc = c.accuracy("completed")
+                thr = int(DEFAULT_MIN_TRIALS) if satflag is None else int(min_trials_split)
+                plotted = "yes" if completed >= thr and acc is not None else "no"
+                acc_s = "-" if acc is None else f"{float(acc):.3f}"
+                disp = prompt_label_map.get(str(prompt), _pretty_series_label("prompt_label", str(prompt)))
+                impl = prompt_impls.get(str(prompt), str(prompt))
+                sf = "overall" if satflag is None else ("sat" if int(satflag) == 1 else "unsat")
+                lines.append(f"{subset}\t{k}\t{disp}\t{impl}\t{sf}\t{int(n)}\t{completed}\t{int(c.correct)}\t{acc_s}\t{plotted}")
+
+    for k in lens:
+        emit_table(
+            horn=1,
+            k=int(k),
+            satflag=None,
+            prompt_impls={"examples_only": "examples_only", "horn_alg_linear": "horn_alg_linear"},
+        )
+        emit_table(
+            horn=1,
+            k=int(k),
+            satflag=1,
+            prompt_impls={"examples_only": "examples_only", "horn_alg_linear": "horn_alg_linear"},
+        )
+        emit_table(
+            horn=1,
+            k=int(k),
+            satflag=0,
+            prompt_impls={"examples_only": "examples_only", "horn_alg_linear": "horn_alg_linear"},
+        )
+        emit_table(
+            horn=0,
+            k=int(k),
+            satflag=None,
+            prompt_impls={"examples_only": "examples_only", "dpll_alg_linear": "dpll_alg_linear"},
+        )
+        emit_table(
+            horn=0,
+            k=int(k),
+            satflag=1,
+            prompt_impls={"examples_only": "examples_only", "dpll_alg_linear": "dpll_alg_linear"},
+        )
+        emit_table(
+            horn=0,
+            k=int(k),
+            satflag=0,
+            prompt_impls={"examples_only": "examples_only", "dpll_alg_linear": "dpll_alg_linear"},
+        )
+
+    lines.append("")
+    lines.append("Notes")
+    lines.append("- This file replaces the in-figure title/subtitle: all contextual detail is here and in the LaTeX caption.")
+    desc_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    meta["description_txt"] = str(desc_path)
+
+    return meta
+
+
+def _figure_prompting_effects_openai52_new(
+    groups: Sequence[Dict[str, Any]], *, out_path: Path, accuracy_mode: str, exclude_run_regex: str
+) -> Dict[str, Any]:
+    """Prompting-policy effects (exploration): OpenAI gpt-5.2 (think=none) with 3 prompt variants per subset.
+
+    This is a candidate alternative to the main RQ2 figure to evaluate which target makes prompting effects
+    most visually apparent, while keeping the standard Horn/Non-Horn overlay layout.
+    """
+    # Controlled target: OpenAI gpt-5.2 (think_none). Representation fixed to cnf_compact to isolate prompting.
+    # Keep the baseline grid (n<=50) for a compact 1×3 figure.
+    base = {
+        "provider": "openai",
+        "model": "gpt-5.2-2025-12-11",
+        "thinking_mode": "think_none",
+        "representation": "cnf_compact",
+        "maxvars": [10, 20, 30, 40, 50],
+        # Union of the prompt variants we want to show.
+        "prompt_label": ["examples_only", "horn_alg_linear", "horn_alg_from", "dpll_alg_linear", "dpll_alg_from"],
+    }
+
+    # Use the model's global base color, then create prompt-type tints.
+    base_key = f"{base['provider']}/{base['model']}/{base['thinking_mode']}"
+    base_color = _make_target_color_map([str(base_key)]).get(str(base_key), "#4a5568")
+    prompt_tints = {
+        "examples_only": 0.0,
+        "horn_alg_linear": 0.35,
+        "dpll_alg_linear": 0.35,
+        "horn_alg_from": 0.65,
+        "dpll_alg_from": 0.65,
+    }
+    prompt_color_map = {k: _tint(base_color, t) for k, t in prompt_tints.items()}
+
+    # Reader-facing labels (we rely on the Horn/Non-Horn prefix to disambiguate the algorithm family).
+    prompt_label_map = {
+        "examples_only": "Examples-only",
+        # Paper labels: direct vs with line citations (template IDs: *_alg_linear vs *_alg_from).
+        "horn_alg_linear": "Algorithmic (direct)",
+        "dpll_alg_linear": "Algorithmic (direct)",
+        "horn_alg_from": "Algorithmic (with line citations)",
+        "dpll_alg_from": "Algorithmic (with line citations)",
+    }
+
+    lens = [3, 4, 5]
+    fig, axes = plt.subplots(1, len(lens), figsize=(13.8, 3.2), sharex=True, sharey=True)
+    if len(lens) == 1:
+        axes = [axes]
+    meta: Dict[str, Any] = {
+        "figure": "prompting_effects_openai52",
+        "output": str(out_path),
+        "variant": "new",
+        "layout": {"rows": "combined subset", "cols": "maxlen"},
+        "note": "Exploratory: OpenAI gpt-5.2 (think=none); 3 prompt variants per subset (examples/direct/with line citations).",
+    }
+
+    # Prefilter once for sidecar / run provenance.
+    rows_all = _filter_groups(groups, filters=base, exclude_run_regex=exclude_run_regex)
+
+    from matplotlib.lines import Line2D  # type: ignore
+    from matplotlib.ticker import FixedLocator, NullLocator  # type: ignore
+
+    horn_series = ["examples_only", "horn_alg_linear", "horn_alg_from"]
+    nonhorn_series = ["examples_only", "dpll_alg_linear", "dpll_alg_from"]
+
+    def _make_prompt_legend() -> Tuple[List[Any], List[str]]:
+        hh: List[Any] = []
+        ll: List[str] = []
+        for s in horn_series:
+            color = prompt_color_map.get(str(s), "#4a5568")
+            disp = prompt_label_map.get(str(s), _pretty_series_label("prompt_label", str(s)))
+            hh.append(
+                Line2D(
+                    [0],
+                    [0],
+                    color=color,
+                    lw=2.4,
+                    linestyle="-",
+                    marker="s",
+                    markersize=6.0,
+                    markerfacecolor="none",
+                    markeredgecolor=color,
+                )
+            )
+            ll.append(f"Horn · {disp}")
+        for s in nonhorn_series:
+            color = prompt_color_map.get(str(s), "#4a5568")
+            disp = prompt_label_map.get(str(s), _pretty_series_label("prompt_label", str(s)))
+            hh.append(
+                Line2D(
+                    [0],
+                    [0],
+                    color=color,
+                    lw=2.4,
+                    linestyle="--",
+                    marker="s",
+                    markersize=6.0,
+                    markerfacecolor="none",
+                    markeredgecolor=color,
+                )
+            )
+            ll.append(f"Non-Horn · {disp}")
+        return hh, ll
+
+    for j, maxlen in enumerate(lens):
+        ax = axes[j]
+        # Filter to just this panel, then plot without further regex filtering.
+        rows_slice = _filter_groups(rows_all, filters={**base, "maxlen": int(maxlen)}, exclude_run_regex=None)
+
+        m = _plot_accuracy_subset_overlay(
+            ax,
+            groups=rows_slice,
+            base_filters={**base, "maxlen": int(maxlen)},
+            series_field="prompt_label",
+            x_field="maxvars",
+            y_mode=accuracy_mode,
+            exclude_run_regex=None,  # already filtered
+            series_color_map=prompt_color_map,
+            allowed_series_horn=horn_series,
+            allowed_series_nonhorn=nonhorn_series,
+            preferred_series_order=[
+                "examples_only",
+                "horn_alg_linear",
+                "horn_alg_from",
+                "dpll_alg_linear",
+                "dpll_alg_from",
+            ],
+            min_trials=DEFAULT_MIN_TRIALS,
+            show_ci95=False,
+            marker_size_by_trials=False,
+            show_markers=True,
+            marker_override="s",  # controlled target (OpenAI only)
+            marker_x_jitter_frac=0.0,
+            marker_stack_y=True,
+            show_legend=False,  # add our own legend
+            label_map=prompt_label_map,
+            title="",
+            x_label="# vars (n)",
+            y_label=f"Accuracy ({accuracy_mode})" if j == 0 else "",
+        )
+        meta[f"{maxlen}"] = m
+
+        # Panel header: keep subset + k on top (no figure header band).
+        ax.set_title(f"Horn / Non-Horn · k={maxlen}")
+
+        # In-panel legend: only list series actually present in this panel (avoid ghost entries).
+        _handles_present, _labels_present = ax.get_legend_handles_labels()
+        present = {str(lbl) for lbl in _labels_present if lbl and not str(lbl).startswith("_")}
+        h, l = _make_prompt_legend()
+        keep = [(hh, ll) for hh, ll in zip(h, l) if ll in present]
+        if keep:
+            _apply_legend(ax, [hh for hh, _ll in keep], [ll for _hh, ll in keep], ncol=1)
+
+        # Only show ticks for evaluated n values.
+        xs = [int(x) for x in (base.get("maxvars") or [])]
+        ax.xaxis.set_major_locator(FixedLocator(xs))
+        ax.xaxis.set_minor_locator(NullLocator())
+        ax.set_xticks([float(x) for x in xs])
+        ax.set_xticklabels([str(x) for x in xs])
+
+    # Tight layout without header band (titles/subtitles removed).
+    _tight_layout_standard(fig, header_in=0.0)
+    _save_paper_figure(fig, out_path)
+    plt.close(fig)
+
+    # Sidecar: plain-text description + numeric validation tables for this figure.
+    desc_path = out_path.with_suffix(".txt")
+    suites_runs = sorted({(str(r.get("suite") or ""), str(r.get("run") or "")) for r in rows_all})
+
+    lines: List[str] = []
+    lines.append("llmlog paper figure description (sidecar; not for the article)")
+    lines.append("")
+    lines.append(f"figure_pdf: {out_path.name}")
+    lines.append("figure_id: prompting_effects_openai52")
+    lines.append("variant: new")
+    lines.append("")
+    lines.append("What this figure shows")
+    lines.append("- Overall SAT-decision accuracy vs number of variables (n) under three prompting variants.")
+    lines.append("- Controlled target: OpenAI gpt-5.2 (think=none); representation: Compact CNF.")
+    lines.append("- Panels: k in {3,4,5}; Horn vs Non-Horn are overlaid (line style).")
+    lines.append("- Prompt variants: examples-only; algorithmic (direct); algorithmic (with line citations).")
+    lines.append("")
+    lines.append("Selection / filters")
+    lines.append(f"- provider: {base['provider']}")
+    lines.append(f"- model: {base['model']}")
+    lines.append(f"- thinking_mode: {base['thinking_mode']}")
+    lines.append(f"- representation: {base['representation']}")
+    lines.append(f"- maxvars (n): {base['maxvars']}")
+    lines.append(f"- maxlen (k): {lens}")
+    lines.append("")
+    lines.append("Metric definition")
+    lines.append(f"- accuracy_mode: {accuracy_mode}")
+    lines.append("- completed denominator: answered + unclear (excludes pending + errors)")
+    lines.append(f"- point inclusion threshold: completed >= {DEFAULT_MIN_TRIALS}")
+    lines.append("")
+    lines.append("Run sources used (suite/run)")
+    if suites_runs:
+        for suite, run in suites_runs:
+            lines.append(f"- {suite} / {run}")
+    else:
+        lines.append("- (none; no rows matched filters)")
+    lines.append("")
+    lines.append("Numeric validation table (aggregated over sat+unsat)")
+    lines.append("subset\tk\tprompt\tn\ttotal\tpending\terrors\tanswered\tunclear\tcompleted\tcorrect\tacc_completed\tplotted")
+
+    def emit_table(*, horn: int, k: int, prompt_allow: Sequence[str]) -> None:
+        subset = "Horn" if int(horn) == 1 else "Non-Horn"
+        rows = _filter_groups(rows_all, filters={**base, "horn": int(horn), "maxlen": int(k)}, exclude_run_regex=None)
+        series_map = _aggregate_series(rows, series_field="prompt_label", x_field="maxvars", allowed_series=prompt_allow)
+        for prompt in prompt_allow:
+            pts = series_map.get(str(prompt)) or {}
+            for n in sorted(pts.keys()):
+                c = pts[n]
+                completed = int(c.denom_completed)
+                acc = c.accuracy("completed")
+                plotted = "yes" if completed >= int(DEFAULT_MIN_TRIALS) and acc is not None else "no"
+                acc_s = "-" if acc is None else f"{float(acc):.3f}"
+                disp = prompt_label_map.get(str(prompt), _pretty_series_label("prompt_label", str(prompt)))
+                lines.append(
+                    f"{subset}\t{k}\t{disp}\t{int(n)}\t{int(c.total)}\t{int(c.pending)}\t{int(c.errors)}\t{int(c.answered)}\t{int(c.unclear)}\t{completed}\t{int(c.correct)}\t{acc_s}\t{plotted}"
+                )
+
+    for k in lens:
+        emit_table(horn=1, k=int(k), prompt_allow=horn_series)
+        emit_table(horn=0, k=int(k), prompt_allow=nonhorn_series)
+
+    lines.append("")
+    lines.append("Notes")
+    lines.append("- This file replaces the in-figure title/subtitle: all contextual detail is here.")
+    desc_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    meta["description_txt"] = str(desc_path)
+
+    return meta
+
+
 def _figure_test_time_compute(
     groups: Sequence[Dict[str, Any]],
     *,
@@ -1671,7 +2629,9 @@ def _figure_test_time_compute(
     nrows = 2
     ncols = len(lens)
     fig_h = 2.0 * nrows + 1.6
-    fig, axes = plt.subplots(nrows, ncols, figsize=(13.8, fig_h), sharex=True)
+    # Share y within each row so only the leftmost column shows y tick labels
+    # (matching the styling of the other multi-panel line figures).
+    fig, axes = plt.subplots(nrows, ncols, figsize=(13.8, fig_h), sharex=True, sharey="row")
     meta: Dict[str, Any] = {
         "figure": "test_time_compute",
         "output": str(out_path),
@@ -1759,10 +2719,14 @@ def _figure_test_time_compute(
         )
 
         # Set panel title *after* plotting; `_plot_line_panel(..., title="")` clears titles.
-        ax_acc.set_title(f"k={maxlen}")
+        ax_acc.set_title(f"Horn / Non-Horn · k={maxlen}")
 
         if j == 0:
             ax_acc.set_ylabel(f"Accuracy ({accuracy_mode})")
+        else:
+            # Keep y tick labels only on the leftmost column (match Figure 1/2 style).
+            ax_acc.tick_params(axis="y", which="both", labelleft=False)
+            ax_acc.set_ylabel("")
 
         # Cost row
         ax_cost = axes[1][j]
@@ -1814,10 +2778,13 @@ def _figure_test_time_compute(
 
         # Match the model-comparison figure: show k labels on both rows.
         # Set title after plotting; `_plot_line_panel(..., title="")` clears titles.
-        ax_cost.set_title(f"k={maxlen}")
+        ax_cost.set_title(f"Horn / Non-Horn · k={maxlen}")
 
         if j == 0:
-            ax_cost.set_ylabel("USD / slice (10 items; log)")
+            ax_cost.set_ylabel("USD / segment (10 items; log)")
+        else:
+            ax_cost.tick_params(axis="y", which="both", labelleft=False)
+            ax_cost.set_ylabel("")
         ax_cost.set_xlabel("# vars (n)")
         _apply_usd_axis_format(ax_cost)
 
@@ -1826,7 +2793,7 @@ def _figure_test_time_compute(
     _set_figure_header(
         fig,
         title="Test-time compute",
-        context=f"Subset: Horn + Non-Horn · Representation: Compact CNF · Prompt: examples-only · Targets: {target_disp}",
+        context=f"Subset: Horn / Non-Horn · Representation: Compact CNF · Prompt: examples-only · Targets: {target_disp}",
     )
     # In-panel legends (bottom-right): show the combined subset×model legend inside each subplot.
     from matplotlib.lines import Line2D  # type: ignore
@@ -1867,6 +2834,388 @@ def _figure_test_time_compute(
     _tight_layout_standard(fig)
     _save_paper_figure(fig, out_path)
     plt.close(fig)
+    return meta
+
+
+def _figure_test_time_compute_new(
+    groups: Sequence[Dict[str, Any]],
+    *,
+    out_path: Path,
+    accuracy_mode: str,
+    exclude_run_regex: str,
+) -> Dict[str, Any]:
+    """Test-time compute vs accuracy and cost (new variant): no in-figure title/subtitle; write a sidecar description."""
+    # This is intentionally a minimal-diff variant of `_figure_test_time_compute`:
+    # - the plotted content is unchanged
+    # - we remove the figure-level header band and rely on panel titles + caption + sidecar text
+    # - panel title formatting is standardized across figures
+
+    base = {
+        "provider": "openai",
+        "representation": "cnf_compact",
+        "prompt_label": "examples_only",
+        # Include the baseline grid and (when present) extended-n slices.
+        "maxvars": [10, 20, 30, 40, 50, 60, 80, 100],
+    }
+    lens = [3, 4, 5]
+    subsets = [1, 0]  # Horn, Non-Horn
+
+    # Build stable series keys and labels for all OpenAI targets in this slice.
+    label_map: Dict[str, str] = {}
+    series_keys: List[str] = []
+    for r in groups:
+        if r.get("provider") != "openai":
+            continue
+        if r.get("representation") != "cnf_compact":
+            continue
+        if r.get("prompt_label") != "examples_only":
+            continue
+        model = str(r.get("model") or "")
+        thinking_mode = str(r.get("thinking_mode") or "")
+        # Keep the compute figure focused on the paired low/high compute variants.
+        if _short_openai_model(model) not in {"gpt-5.2", "gpt-5.2-pro"}:
+            continue
+        key = f"openai/{model}/{thinking_mode}"
+        series_keys.append(key)
+        label_map[key] = _format_target_label("openai", str(model), str(thinking_mode), multiline=False)
+    color_map = _make_target_color_map(sorted(set(series_keys)))
+    allowed_series = sorted(set(series_keys))
+
+    nrows = 2
+    ncols = len(lens)
+    fig_h = 2.0 * nrows + 1.6
+    # Share y within each row so only the leftmost column shows y tick labels
+    # (matching the styling of the other multi-panel line figures).
+    fig, axes = plt.subplots(nrows, ncols, figsize=(13.8, fig_h), sharex=True, sharey="row")
+    meta: Dict[str, Any] = {
+        "figure": "test_time_compute",
+        "output": str(out_path),
+        "variant": "new",
+        "layout": {"rows": "accuracy; cost", "cols": "maxlen"},
+        "note": "Overlays Horn vs Non-Horn (line style).",
+    }
+
+    # Normalize axes indexing when nrows/ncols == 1
+    if nrows == 1:
+        axes = [axes]
+    if ncols == 1:
+        axes = [[ax] for ax in axes]
+
+    # Track provenance rows used across all panels for the sidecar.
+    rows_used: List[Dict[str, Any]] = []
+
+    for j, maxlen in enumerate(lens):
+        # Accuracy row
+        ax_acc = axes[0][j]
+
+        def _prep_slice(horn: int) -> List[Dict[str, Any]]:
+            rs = _filter_groups(
+                groups,
+                filters={**base, "horn": int(horn), "maxlen": int(maxlen)},
+                exclude_run_regex=exclude_run_regex,
+            )
+            for rr in rs:
+                model = str(rr.get("model") or "")
+                thinking_mode = str(rr.get("thinking_mode") or "")
+                rr["_series_target_key"] = f"openai/{model}/{thinking_mode}"
+            return rs
+
+        horn_rows = _prep_slice(1)
+        nonhorn_rows = _prep_slice(0)
+        rows_used.extend(horn_rows)
+        rows_used.extend(nonhorn_rows)
+
+        horn_label_map = {k: f"Horn · {label_map.get(k, k)}" for k in allowed_series}
+        nonhorn_label_map = {k: f"Non-Horn · {label_map.get(k, k)}" for k in allowed_series}
+
+        _plot_line_panel(
+            ax_acc,
+            rows=horn_rows,
+            series_field="_series_target_key",
+            x_field="maxvars",
+            y_metric="accuracy",
+            y_mode=str(accuracy_mode),
+            min_trials=DEFAULT_MIN_TRIALS,
+            show_ci95=False,
+            marker_size_by_trials=False,
+            show_markers=True,
+            marker_x_jitter_frac=0.0,
+            marker_stack_y=True,
+            stripe_overlaps=True,
+            show_legend=False,
+            line_style="-",
+            color_map=color_map,
+            label_map=horn_label_map,
+            allowed_series=allowed_series,
+            title="",
+            x_label="",
+            y_label="",
+            y_lim=(-0.05, 1.05),
+            y_scale="linear",
+        )
+        _plot_line_panel(
+            ax_acc,
+            rows=nonhorn_rows,
+            series_field="_series_target_key",
+            x_field="maxvars",
+            y_metric="accuracy",
+            y_mode=str(accuracy_mode),
+            min_trials=DEFAULT_MIN_TRIALS,
+            show_ci95=False,
+            marker_size_by_trials=False,
+            show_markers=True,
+            marker_x_jitter_frac=0.0,
+            marker_stack_y=True,
+            stripe_overlaps=True,
+            show_legend=False,
+            line_style="--",
+            color_map=color_map,
+            label_map=nonhorn_label_map,
+            allowed_series=allowed_series,
+            title="",
+            x_label="",
+            y_label="",
+            y_lim=(-0.05, 1.05),
+            y_scale="linear",
+        )
+
+        # Set panel title *after* plotting; `_plot_line_panel(..., title="")` clears titles.
+        ax_acc.set_title(f"Horn / Non-Horn · k={maxlen}")
+
+        if j == 0:
+            ax_acc.set_ylabel(f"Accuracy ({accuracy_mode})")
+        else:
+            ax_acc.tick_params(axis="y", which="both", labelleft=False)
+            ax_acc.set_ylabel("")
+
+        # Cost row
+        ax_cost = axes[1][j]
+
+        _plot_line_panel(
+            ax_cost,
+            rows=horn_rows,
+            series_field="_series_target_key",
+            x_field="maxvars",
+            y_metric="cost_total_usd",
+            y_mode="nonpending",
+            min_trials=DEFAULT_MIN_TRIALS,
+            show_ci95=False,
+            marker_size_by_trials=False,
+            show_markers=False,
+            show_legend=False,
+            line_style="-",
+            color_map=color_map,
+            label_map=horn_label_map,
+            allowed_series=allowed_series,
+            title="",
+            x_label="",
+            y_label="",
+            y_lim=None,
+            y_scale="log",
+        )
+        _plot_line_panel(
+            ax_cost,
+            rows=nonhorn_rows,
+            series_field="_series_target_key",
+            x_field="maxvars",
+            y_metric="cost_total_usd",
+            y_mode="nonpending",
+            min_trials=DEFAULT_MIN_TRIALS,
+            show_ci95=False,
+            marker_size_by_trials=False,
+            show_markers=False,
+            show_legend=False,
+            line_style="--",
+            color_map=color_map,
+            label_map=nonhorn_label_map,
+            allowed_series=allowed_series,
+            title="",
+            x_label="",
+            y_label="",
+            y_lim=None,
+            y_scale="log",
+        )
+
+        # Match the model-comparison figure: show k labels on both rows.
+        ax_cost.set_title(f"Horn / Non-Horn · k={maxlen}")
+
+        if j == 0:
+            ax_cost.set_ylabel("USD / segment (10 items; log)")
+        else:
+            ax_cost.tick_params(axis="y", which="both", labelleft=False)
+            ax_cost.set_ylabel("")
+        ax_cost.set_xlabel("# vars (n)")
+        _apply_usd_axis_format(ax_cost)
+
+    ordered_keys = sorted(set(allowed_series), key=lambda k: str(label_map.get(k, k)))
+    target_disp = " + ".join([str(label_map.get(k, k)) for k in ordered_keys]) if ordered_keys else "see legend"
+
+    # In-panel legends (bottom-right): show the combined subset×model legend inside each subplot.
+    from matplotlib.lines import Line2D  # type: ignore
+
+    marker_map = _make_target_marker_map(ordered_keys)
+
+    def _make_compute_legend() -> Tuple[List[Any], List[str]]:
+        hh: List[Any] = []
+        ll: List[str] = []
+        for subset_label, linestyle in (("Horn", "-"), ("Non-Horn", "--")):
+            for k in ordered_keys:
+                color = color_map.get(k, "#4a5568")
+                hh.append(
+                    Line2D(
+                        [0],
+                        [0],
+                        color=color,
+                        lw=2.4,
+                        linestyle=str(linestyle),
+                        marker=marker_map.get(k, "s"),
+                        markersize=6.0,
+                        markerfacecolor="none",
+                        markeredgecolor=color,
+                    )
+                )
+                ll.append(f"{subset_label} · {label_map.get(k, k)}")
+        return hh, ll
+
+    for row in axes:
+        for ax in row:
+            # Only list series actually present in this panel (avoid "ghost" legend entries).
+            _handles_present, _labels_present = ax.get_legend_handles_labels()
+            present = {str(lbl) for lbl in _labels_present if lbl and not str(lbl).startswith("_")}
+            h, l = _make_compute_legend()
+            keep = [(hh, ll) for hh, ll in zip(h, l) if ll in present]
+            if keep:
+                _apply_legend(ax, [hh for hh, _ll in keep], [ll for _hh, ll in keep], ncol=1)
+
+    # No figure header band: reclaim the space.
+    _tight_layout_standard(fig, header_in=0.0)
+    _save_paper_figure(fig, out_path)
+    plt.close(fig)
+
+    # Sidecar description: capture the removed header info + basic provenance.
+    desc_path = out_path.with_suffix(".txt")
+    suites_runs = sorted({(str(r.get("suite") or ""), str(r.get("run") or "")) for r in rows_used})
+
+    lines: List[str] = []
+    lines.append("llmlog paper figure description (sidecar; not for the article)")
+    lines.append("")
+    lines.append(f"figure_pdf: {out_path.name}")
+    lines.append("figure_id: test_time_compute")
+    lines.append("variant: new")
+    lines.append("")
+    lines.append("Header removed from PDF")
+    lines.append("- title: Test-time compute")
+    lines.append(
+        "- context: Subset: Horn / Non-Horn · Representation: Compact CNF · Prompt: examples-only · "
+        f"Targets: {target_disp}"
+    )
+    lines.append("")
+    lines.append("Panel headers (now inside panels)")
+    lines.append("- format: '<subset> · k=<k>' (style matches '# vars (n)' axis label)")
+    lines.append("")
+    lines.append("Selection / filters")
+    lines.append("- provider: openai")
+    lines.append("- representation: Compact CNF")
+    lines.append("- prompt_label: examples-only")
+    lines.append(f"- maxvars (n): {base.get('maxvars')}")
+    lines.append(f"- maxlen (k): {lens}")
+    lines.append("")
+    lines.append("Metric definition")
+    lines.append(f"- accuracy_mode (top row): {accuracy_mode}")
+    lines.append("- accuracy denominator: completed = answered + unclear (excludes pending + errors)")
+    lines.append("- cost (bottom row): USD / segment (10 items) = aggregated cost_total_usd; log scale")
+    lines.append(f"- point inclusion threshold (accuracy): completed >= {DEFAULT_MIN_TRIALS}")
+    lines.append("")
+    lines.append("Run sources used (suite/run)")
+    if suites_runs:
+        for suite, run in suites_runs:
+            lines.append(f"- {suite} / {run}")
+    else:
+        lines.append("- (none; no rows matched filters)")
+    lines.append("")
+
+    # Numeric validation: per-segment values as plotted (sat+unsat combined).
+    lines.append("Numeric validation table: per (k, subset, target, n) segment (sat+unsat combined)")
+    lines.append(
+        "k\tsubset\ttarget\tn\ttotal\tpending\terrors\tanswered\tunclear\tcompleted\tnonpending\tcorrect\tacc_completed\tcost_total_usd\tusd_per_item_nonpending\tplotted_acc"
+    )
+    n_vals = [int(x) for x in (base.get("maxvars") or [])]
+    for maxlen in lens:
+        for horn, subset_label in [(1, "Horn"), (0, "Non-Horn")]:
+            rows_slice = [
+                r
+                for r in rows_used
+                if int(r.get("horn") or 0) == int(horn) and int(r.get("maxlen") or 0) == int(maxlen)
+            ]
+            # Keep only the plotted target series keys (avoid "ghost" rows in validation).
+            rows_slice = [r for r in rows_slice if str(r.get("_series_target_key") or "") in set(allowed_series)]
+            series_map = _aggregate_series(
+                rows_slice, series_field="_series_target_key", x_field="maxvars", allowed_series=allowed_series
+            )
+            for key in ordered_keys:
+                pts = series_map.get(str(key)) or {}
+                for n in n_vals:
+                    c = pts.get(float(n))
+                    if c is None:
+                        lines.append(f"{int(maxlen)}\t{subset_label}\t{label_map.get(str(key), str(key))}\t{int(n)}\t-\t-\t-\t-\t-\t-\t-\t-\t-\t-\t-\tno_data")
+                        continue
+                    completed = int(c.denom_completed)
+                    nonpending = int(c.denom_nonpending)
+                    acc = c.accuracy(str(accuracy_mode))
+                    acc_s = "-" if acc is None else f"{float(acc):.3f}"
+                    cost_total = float(c.cost_total_usd)
+                    usd_item = c.cost_per_item_usd("nonpending")
+                    usd_item_s = "-" if usd_item is None else f"{float(usd_item):.4f}"
+                    plotted_acc = "yes" if (acc is not None and completed >= int(DEFAULT_MIN_TRIALS)) else "no"
+                    lines.append(
+                        f"{int(maxlen)}\t{subset_label}\t{label_map.get(str(key), str(key))}\t{int(n)}\t"
+                        f"{int(c.total)}\t{int(c.pending)}\t{int(c.errors)}\t{int(c.answered)}\t{int(c.unclear)}\t"
+                        f"{completed}\t{nonpending}\t{int(c.correct)}\t{acc_s}\t{cost_total:.4f}\t{usd_item_s}\t{plotted_acc}"
+                    )
+    lines.append("")
+
+    # Validate the concrete numeric example used in the RQ3 paragraph of the paper.
+    lines.append("Paper text check (RQ3 example): Non-Horn, k=3, UNSAT only (USD/item uses nonpending denominator)")
+
+    def _agg_counts(rows: Sequence[Dict[str, Any]]) -> AggCounts:
+        agg = AggCounts()
+        for rr in rows:
+            cd = rr.get("counts") or {}
+            if isinstance(cd, dict):
+                agg.add_counts(cd)
+        return agg
+
+    check_base = {
+        "provider": "openai",
+        "representation": "cnf_compact",
+        "prompt_label": "examples_only",
+        "horn": 0,
+        "satflag": 0,
+        "maxlen": 3,
+        "maxvars": [10, 20, 30, 40, 50],
+    }
+    for model, thinking_mode in [("gpt-5.2-2025-12-11", "think_none"), ("gpt-5.2-pro", "think_high")]:
+        rs = _filter_groups(
+            groups,
+            filters={**check_base, "model": str(model), "thinking_mode": str(thinking_mode)},
+            exclude_run_regex=exclude_run_regex,
+        )
+        agg = _agg_counts(rs)
+        acc_u = agg.accuracy(str(accuracy_mode))
+        usd_item_u = agg.cost_per_item_usd("nonpending")
+        acc_s = "-" if acc_u is None else f"{float(acc_u):.2f}"
+        usd_s = "-" if usd_item_u is None else f"{float(usd_item_u):.4f}"
+        lines.append(
+            f"- { _format_target_label('openai', str(model), str(thinking_mode), multiline=False) }: "
+            f"unsat_acc={acc_s} ; USD/item={usd_s} ; N_unsat_nonpending={int(agg.denom_nonpending)}"
+        )
+    lines.append("")
+
+    lines.append("Notes")
+    lines.append("- This file replaces the in-figure title/subtitle: contextual detail is here and in the LaTeX caption.")
+    desc_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    meta["description_txt"] = str(desc_path)
+
     return meta
 
 
@@ -1944,7 +3293,7 @@ def _figure_model_comparison(groups: Sequence[Dict[str, Any]], *, out_path: Path
                 label_map=label_map,
                 title=title,
                 x_label="# vars (n)",
-                y_label=f"Accuracy ({accuracy_mode})",
+                y_label=f"Accuracy ({accuracy_mode})" if j == 0 else "",
                 y_lim=(-0.05, 1.05),
                 y_scale="linear",
             )
@@ -1958,11 +3307,243 @@ def _figure_model_comparison(groups: Sequence[Dict[str, Any]], *, out_path: Path
     _set_figure_header(
         fig,
         title="Model comparison under a fixed task setting",
-        context="Subset: Horn + Non-Horn · Representation: Compact CNF · Prompt: examples-only · Targets: see legend",
+        context="Subset: Horn / Non-Horn · Representation: Compact CNF · Prompt: examples-only · Targets: see legend",
     )
     _tight_layout_standard(fig)
     _save_paper_figure(fig, out_path)
     plt.close(fig)
+    return meta
+
+
+def _figure_model_comparison_new(
+    groups: Sequence[Dict[str, Any]],
+    *,
+    out_path: Path,
+    accuracy_mode: str,
+    exclude_run_regex: str,
+) -> Dict[str, Any]:
+    """Model comparison (new variant): remove figure header; keep subset·k panel titles; write a sidecar description."""
+    # Minimal-diff wrapper around `_figure_model_comparison`:
+    # - plotted content unchanged
+    # - no figure-level header band
+    # - context moved to a .txt sidecar
+    base = {
+        "representation": "cnf_compact",
+        "prompt_label": "examples_only",
+        "maxvars": [10, 20, 30, 40, 50],
+    }
+    lens = [3, 4, 5]
+    subsets = [1, 0]
+
+    # Precompute label map for all targets seen in this slice so legend labels are readable.
+    label_map: Dict[str, str] = {}
+    for r in groups:
+        if r.get("representation") != "cnf_compact":
+            continue
+        if r.get("prompt_label") != "examples_only":
+            continue
+        provider = str(r.get("provider") or "")
+        model = str(r.get("model") or "")
+        thinking_mode = str(r.get("thinking_mode") or "")
+        key = f"{provider}/{model}/{thinking_mode}"
+        label_map[key] = _format_target_label(provider, model, thinking_mode, multiline=False)
+    color_map = _make_target_color_map(sorted(label_map.keys()))
+
+    fig, axes = plt.subplots(len(subsets), len(lens), figsize=(13.8, 6.6), sharex=True, sharey=True)
+    meta: Dict[str, Any] = {
+        "figure": "model_comparison",
+        "output": str(out_path),
+        "variant": "new",
+        "layout": {"rows": "subset", "cols": "maxlen"},
+        "note": "Includes thinking_mode as separate series (no averaging).",
+    }
+
+    rows_used: List[Dict[str, Any]] = []
+
+    for i, horn in enumerate(subsets):
+        for j, maxlen in enumerate(lens):
+            ax = axes[i][j]
+            title = f"{SUBSET_LABEL.get(int(horn), str(horn))} · k={maxlen}"
+
+            rows_slice = _filter_groups(
+                groups,
+                filters={**base, "horn": int(horn), "maxlen": int(maxlen)},
+                exclude_run_regex=exclude_run_regex,
+            )
+            rows_used.extend(rows_slice)
+            for rr in rows_slice:
+                provider = str(rr.get("provider") or "")
+                model = str(rr.get("model") or "")
+                thinking_mode = str(rr.get("thinking_mode") or "")
+                rr["_series_target_key"] = f"{provider}/{model}/{thinking_mode}"
+
+            m = _plot_line_panel(
+                ax,
+                rows=rows_slice,
+                series_field="_series_target_key",
+                x_field="maxvars",
+                y_metric="accuracy",
+                y_mode=str(accuracy_mode),
+                min_trials=DEFAULT_MIN_TRIALS,
+                show_ci95=False,
+                marker_size_by_trials=False,
+                show_markers=True,
+                marker_x_jitter_frac=0.0,
+                marker_stack_y=True,
+                stripe_overlaps=True,
+                show_legend=True,
+                line_style="-",
+                color_map=color_map,
+                label_map=label_map,
+                title=title,
+                x_label="# vars (n)",
+                y_label=f"Accuracy ({accuracy_mode})" if j == 0 else "",
+                y_lim=(-0.05, 1.05),
+                y_scale="linear",
+            )
+            try:
+                ax.set_xticks([float(x) for x in (base.get("maxvars") or [])])
+            except Exception:
+                pass
+            meta[f"{horn}_{maxlen}"] = m
+
+    _tight_layout_standard(fig, header_in=0.0)
+    _save_paper_figure(fig, out_path)
+    plt.close(fig)
+
+    # Sidecar description: capture the removed header info + basic provenance.
+    desc_path = out_path.with_suffix(".txt")
+    suites_runs = sorted({(str(r.get("suite") or ""), str(r.get("run") or "")) for r in rows_used})
+
+    lines: List[str] = []
+    lines.append("llmlog paper figure description (sidecar; not for the article)")
+    lines.append("")
+    lines.append(f"figure_pdf: {out_path.name}")
+    lines.append("figure_id: model_comparison")
+    lines.append("variant: new")
+    lines.append("")
+    lines.append("Header removed from PDF")
+    lines.append("- title: Model comparison under a fixed task setting")
+    lines.append("- context: Subset: Horn / Non-Horn · Representation: Compact CNF · Prompt: examples-only · Targets: see legend")
+    lines.append("")
+    lines.append("Panel headers (now inside panels)")
+    lines.append("- format: '<subset> · k=<k>' (style matches '# vars (n)' axis label)")
+    lines.append("")
+    lines.append("Selection / filters")
+    lines.append("- representation: Compact CNF")
+    lines.append("- prompt_label: examples-only")
+    lines.append(f"- maxvars (n): {base.get('maxvars')}")
+    lines.append(f"- maxlen (k): {lens}")
+    lines.append("- subsets: Horn; Non-Horn")
+    lines.append("")
+    lines.append("Metric definition")
+    lines.append(f"- accuracy_mode: {accuracy_mode}")
+    lines.append("- completed denominator: answered + unclear (excludes pending + errors)")
+    lines.append(f"- point inclusion threshold: completed >= {DEFAULT_MIN_TRIALS}")
+    lines.append("")
+    lines.append("Run sources used (suite/run)")
+    if suites_runs:
+        for suite, run in suites_runs:
+            lines.append(f"- {suite} / {run}")
+    else:
+        lines.append("- (none; no rows matched filters)")
+    lines.append("")
+    # Numeric validation: per-segment accuracy values as plotted (sat+unsat combined).
+    n_vals = [int(x) for x in (base.get("maxvars") or [])]
+    for horn in subsets:
+        for maxlen in lens:
+            subset_label = SUBSET_LABEL.get(int(horn), str(horn))
+            lines.append(f"Numeric validation table: {subset_label} · k={int(maxlen)} (sat+unsat combined)")
+            lines.append("target\tn\ttotal\tpending\terrors\tanswered\tunclear\tcompleted\tcorrect\tacc_completed\tplotted")
+            rows_panel = [
+                r
+                for r in rows_used
+                if int(r.get('horn') or 0) == int(horn) and int(r.get('maxlen') or 0) == int(maxlen)
+            ]
+            series_map = _aggregate_series(rows_panel, series_field="_series_target_key", x_field="maxvars")
+            ordered_series = sorted(set(series_map.keys()), key=lambda k: str(label_map.get(str(k), str(k))))
+            for key in ordered_series:
+                pts = series_map.get(str(key)) or {}
+                for n in n_vals:
+                    c = pts.get(float(n))
+                    if c is None:
+                        lines.append(f"{label_map.get(str(key), str(key))}\t{int(n)}\t-\t-\t-\t-\t-\t-\t-\t-\tno_data")
+                        continue
+                    completed = int(c.denom_completed)
+                    acc = c.accuracy(str(accuracy_mode))
+                    acc_s = "-" if acc is None else f"{float(acc):.3f}"
+                    plotted = "yes" if (acc is not None and completed >= int(DEFAULT_MIN_TRIALS)) else "no"
+                    lines.append(
+                        f"{label_map.get(str(key), str(key))}\t{int(n)}\t{int(c.total)}\t{int(c.pending)}\t{int(c.errors)}\t"
+                        f"{int(c.answered)}\t{int(c.unclear)}\t{completed}\t{int(c.correct)}\t{acc_s}\t{plotted}"
+                    )
+            lines.append("")
+
+    # Validate the concrete numeric example used in the RQ4 paragraph of the paper.
+    lines.append("Paper text check (RQ4 example): Non-Horn, k=3, SAT vs UNSAT (completed denominator)")
+
+    def _agg_counts(rows: Sequence[Dict[str, Any]]) -> AggCounts:
+        agg = AggCounts()
+        for rr in rows:
+            cd = rr.get("counts") or {}
+            if isinstance(cd, dict):
+                agg.add_counts(cd)
+        return agg
+
+    # Pick the Google Gemini 3 Pro (high) model key present in this slice (if any).
+    google_candidates = sorted(
+        [
+            k
+            for k in label_map.keys()
+            if str(k).startswith("google/") and str(k).endswith("/think_high") and ("gemini-3-pro" in str(k))
+        ]
+    )
+    google_key = str(google_candidates[0]) if google_candidates else ""
+    g_provider = "google"
+    g_model = google_key.split("/")[1] if google_key else ""
+    g_thinking = google_key.split("/")[2] if google_key else "think_high"
+
+    check_base = {
+        "representation": "cnf_compact",
+        "prompt_label": "examples_only",
+        "horn": 0,
+        "maxlen": 3,
+        "maxvars": [10, 20, 30, 40, 50],
+    }
+
+    def _report_target(provider: str, model: str, thinking_mode: str) -> None:
+        for satflag, name in [(1, "sat"), (0, "unsat")]:
+            rs = _filter_groups(
+                groups,
+                filters={
+                    **check_base,
+                    "provider": str(provider),
+                    "model": str(model),
+                    "thinking_mode": str(thinking_mode),
+                    "satflag": int(satflag),
+                },
+                exclude_run_regex=exclude_run_regex,
+            )
+            agg = _agg_counts(rs)
+            acc = agg.accuracy(str(accuracy_mode))
+            acc_s = "-" if acc is None else f"{float(acc):.2f}"
+            lines.append(
+                f"- { _format_target_label(str(provider), str(model), str(thinking_mode), multiline=False) } "
+                f"{name}_acc={acc_s} ; N_{name}_completed={int(agg.denom_completed)}"
+            )
+
+    _report_target("openai", "gpt-5.2-2025-12-11", "think_none")
+    if g_model:
+        _report_target(g_provider, g_model, g_thinking)
+    else:
+        lines.append("- (No google/gemini-3-pro (high) rows found in groups; cannot validate that comparison.)")
+    lines.append("")
+
+    lines.append("Notes")
+    lines.append("- This file replaces the in-figure title/subtitle: contextual detail is here and in the LaTeX caption.")
+    desc_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    meta["description_txt"] = str(desc_path)
+
     return meta
 
 
@@ -2200,10 +3781,10 @@ def _figure_supp_sat_unsat_asymmetry(
         # Filter to only styles actually present in this panel (avoid "ghost" legend entries).
         legend_color = "#4a5568"
         legend_entries: List[Tuple[Tuple[str, int], str, str]] = [
-            (("examples", 1), "examples-only · satisfiable", ""),
-            (("examples", 0), "examples-only · unsatisfiable", ""),
-            (("algorithmic", 1), "algorithmic · satisfiable", "///"),
-            (("algorithmic", 0), "algorithmic · unsatisfiable", "///"),
+            (("examples", 1), "Examples-only · Satisfiable", ""),
+            (("examples", 0), "Examples-only · Unsatisfiable", ""),
+            (("algorithmic", 1), "Algorithmic · Satisfiable", "///"),
+            (("algorithmic", 0), "Algorithmic · Unsatisfiable", "///"),
         ]
         legend_handles: List[Any] = []
         legend_labels: List[str] = []
@@ -2227,7 +3808,7 @@ def _figure_supp_sat_unsat_asymmetry(
         fig,
         title="Supplementary: satisfiable/unsatisfiable asymmetry",
         context=(
-            "Subset: Horn + Non-Horn · Representation: Compact CNF + Natural Language CNF"
+            "Subset: Horn / Non-Horn · Representation: Compact CNF + Natural Language CNF"
             " (+ If-then CNF on Horn only) · Prompt: examples-only vs algorithmic · Targets: see x-axis"
         ),
     )
@@ -2236,6 +3817,221 @@ def _figure_supp_sat_unsat_asymmetry(
     plt.close(fig)
     meta["targets_horn"] = len(targets_horn)
     meta["targets_nonhorn"] = len(targets_nonhorn)
+    return meta
+
+
+def _figure_supp_sat_unsat_asymmetry_new(
+    groups: Sequence[Dict[str, Any]],
+    *,
+    out_path: Path,
+    accuracy_mode: str,
+    exclude_run_regex: str,
+) -> Dict[str, Any]:
+    """Supplementary sat/unsat asymmetry (new variant): remove figure header; write a sidecar description."""
+    # Wrapper around `_figure_supp_sat_unsat_asymmetry` that suppresses the figure-level header band.
+    # We do this without duplicating the (long) plotting logic.
+    orig_header = _set_figure_header
+    orig_tight = _tight_layout_standard
+
+    def _noop_header(_fig: Any, *, title: str, context: Optional[str] = None) -> None:  # noqa: ARG001
+        return
+
+    def _tight0(fig: Any, *, footer_in: float = 0.0, header_in: float = 0.3) -> None:  # noqa: ARG001
+        return orig_tight(fig, footer_in=float(footer_in), header_in=0.0)
+
+    try:
+        globals()["_set_figure_header"] = _noop_header  # type: ignore[misc]
+        globals()["_tight_layout_standard"] = _tight0  # type: ignore[misc]
+        meta = _figure_supp_sat_unsat_asymmetry(
+            groups,
+            out_path=out_path,
+            accuracy_mode=accuracy_mode,
+            exclude_run_regex=exclude_run_regex,
+        )
+    finally:
+        globals()["_set_figure_header"] = orig_header  # type: ignore[misc]
+        globals()["_tight_layout_standard"] = orig_tight  # type: ignore[misc]
+
+    meta = dict(meta or {})
+    meta["variant"] = "new"
+
+    # Sidecar description: capture the removed header info + basic provenance.
+    desc_path = out_path.with_suffix(".txt")
+    lines: List[str] = []
+    lines.append("llmlog paper figure description (sidecar; not for the article)")
+    lines.append("")
+    lines.append(f"figure_pdf: {out_path.name}")
+    lines.append("figure_id: supp_sat_unsat_asymmetry")
+    lines.append("variant: new")
+    lines.append("")
+    lines.append("Header removed from PDF")
+    lines.append("- title: Supplementary: satisfiable/unsatisfiable asymmetry")
+    lines.append(
+        "- context: Subset: Horn / Non-Horn · Representation: Compact CNF + Natural Language CNF"
+        " (+ If-then CNF on Horn only) · Prompt: examples-only vs algorithmic · Targets: see x-axis"
+    )
+    lines.append("")
+    lines.append("Metric definition")
+    lines.append(f"- accuracy_mode: {accuracy_mode}")
+    lines.append("- completed denominator: answered + unclear (excludes pending + errors)")
+    lines.append(f"- point inclusion threshold: completed >= {DEFAULT_MIN_TRIALS}")
+    lines.append("")
+    # Numeric validation: reconstruct the configuration-level accuracies used for the bars,
+    # and the resulting per-bar mean/min/max (whiskers).
+    base_rows = _filter_groups(
+        groups,
+        filters={"maxvars": [10, 20, 30, 40, 50], "maxlen": [3, 4, 5]},
+        exclude_run_regex=exclude_run_regex,
+    )
+    suites_runs = sorted({(str(r.get("suite") or ""), str(r.get("run") or "")) for r in base_rows})
+
+    # Aggregate counts per (config, maxlen, suite+run) so we can combine either:
+    # - one run that covers all maxlen values (len3_5), or
+    # - three runs split by length (len3, len4, len5),
+    # without double-counting if multiple runs exist.
+    per_run_len: Dict[
+        Tuple[str, str, str, str, str, int, int, str, str],
+        Dict[int, AggCounts],
+    ] = {}
+    for r in base_rows:
+        provider = str(r.get("provider") or "")
+        model = str(r.get("model") or "")
+        thinking_mode = str(r.get("thinking_mode") or "")
+        rep = str(r.get("representation") or "")
+        prompt = str(r.get("prompt_label") or "")
+        horn = int(r.get("horn") or 0)
+        maxlen = int(r.get("maxlen") or 0)
+        suite = str(r.get("suite") or "")
+        run = str(r.get("run") or "")
+        satflag = int(r.get("satflag") or 0)
+        cd = r.get("counts") or {}
+        if not isinstance(cd, dict):
+            continue
+        k = (provider, model, thinking_mode, rep, prompt, horn, maxlen, suite, run)
+        by_sat = per_run_len.get(k)
+        if by_sat is None:
+            by_sat = {}
+            per_run_len[k] = by_sat
+        agg = by_sat.get(satflag)
+        if agg is None:
+            agg = AggCounts()
+            by_sat[satflag] = agg
+        agg.add_counts(cd)
+
+    # For each (config,maxlen), keep only the single best-covered run (typically total=50).
+    best_len: Dict[
+        Tuple[str, str, str, str, str, int, int],
+        Tuple[int, AggCounts, AggCounts],
+    ] = {}
+    for (provider, model, thinking_mode, rep, prompt, horn, maxlen, _suite, _run), by_sat in per_run_len.items():
+        sat = by_sat.get(1)
+        unsat = by_sat.get(0)
+        if sat is None or unsat is None:
+            continue
+        total = int(sat.total + unsat.total)
+        key = (provider, model, thinking_mode, rep, prompt, horn, int(maxlen))
+        prev = best_len.get(key)
+        if prev is None or total > int(prev[0]):
+            best_len[key] = (total, sat, unsat)
+
+    # Combine maxlen slices (3/4/5) to get the baseline N=150 aggregate per config.
+    from collections import defaultdict
+
+    combined_sat: Dict[Tuple[str, str, str, str, str, int], AggCounts] = defaultdict(AggCounts)
+    combined_unsat: Dict[Tuple[str, str, str, str, str, int], AggCounts] = defaultdict(AggCounts)
+    present_maxlen: Dict[Tuple[str, str, str, str, str, int], set[int]] = defaultdict(set)
+    for (provider, model, thinking_mode, rep, prompt, horn, maxlen), (_total, sat, unsat) in best_len.items():
+        key = (provider, model, thinking_mode, rep, prompt, horn)
+        combined_sat[key].add_counts(sat.__dict__)
+        combined_unsat[key].add_counts(unsat.__dict__)
+        present_maxlen[key].add(int(maxlen))
+
+    # Detailed rows per configuration (rep×prompt), split by sat/unsat.
+    rows_detail: List[Tuple[str, str, str, str, str, str, AggCounts, float]] = []
+    # Bar aggregation buckets: (target, subset, prompt_group, split) -> list[acc]
+    per_bar: Dict[Tuple[str, str, str, str], List[float]] = defaultdict(list)
+
+    def _target_label(provider: str, model: str, thinking_mode: str) -> str:
+        return _format_target_label(provider, model, thinking_mode, multiline=False)
+
+    for (provider, model, thinking_mode, rep, prompt, horn), sat in combined_sat.items():
+        unsat = combined_unsat.get((provider, model, thinking_mode, rep, prompt, horn))
+        if unsat is None:
+            continue
+        if present_maxlen.get((provider, model, thinking_mode, rep, prompt, horn), set()) != {3, 4, 5}:
+            continue
+        if int(sat.total + unsat.total) != 150:
+            continue
+        if int(horn) == 0 and str(rep) == "horn_if_then":
+            # Exclude the deliberate mismatch rendering from the Non-Horn panel.
+            continue
+
+        prompt_s = str(prompt or "")
+        if prompt_s == "examples_only":
+            prompt_group = "examples"
+        else:
+            if int(horn) == 1 and prompt_s in {"horn_alg_from", "horn_alg_linear"}:
+                prompt_group = "algorithmic"
+            elif int(horn) == 0 and prompt_s in {"dpll_alg_from", "dpll_alg_linear"}:
+                prompt_group = "algorithmic"
+            else:
+                continue
+
+        subset_label = "Horn" if int(horn) == 1 else "Non-Horn"
+        tlabel = _target_label(str(provider), str(model), str(thinking_mode))
+        rep_label = REP_LABEL.get(str(rep), str(rep))
+        prompt_label = PROMPT_LABEL.get(str(prompt_s), str(prompt_s))
+
+        sat_acc = sat.accuracy(str(accuracy_mode))
+        unsat_acc = unsat.accuracy(str(accuracy_mode))
+        if sat_acc is None or unsat_acc is None:
+            continue
+
+        rows_detail.append((tlabel, subset_label, rep_label, str(prompt_group), prompt_label, "Satisfiable", sat, float(sat_acc)))
+        rows_detail.append((tlabel, subset_label, rep_label, str(prompt_group), prompt_label, "Unsatisfiable", unsat, float(unsat_acc)))
+
+        per_bar[(tlabel, subset_label, str(prompt_group), "Satisfiable")].append(float(sat_acc))
+        per_bar[(tlabel, subset_label, str(prompt_group), "Unsatisfiable")].append(float(unsat_acc))
+
+    lines.append("Numeric validation table: configuration-level accuracies (rep×prompt; aggregated over n,k)")
+    lines.append(
+        "target\tsubset\trepresentation\tprompt_group\tprompt_label\tsplit\ttotal\tpending\terrors\tanswered\tunclear\tcompleted\tcorrect\tacc_completed"
+    )
+    for tlabel, subset_label, rep_label, prompt_group, prompt_label, split, agg, acc in sorted(
+        rows_detail, key=lambda r: (r[0], r[1], r[3], r[2], r[4], r[5])
+    ):
+        lines.append(
+            f"{tlabel}\t{subset_label}\t{rep_label}\t{prompt_group}\t{prompt_label}\t{split}\t"
+            f"{int(agg.total)}\t{int(agg.pending)}\t{int(agg.errors)}\t{int(agg.answered)}\t{int(agg.unclear)}\t"
+            f"{int(agg.denom_completed)}\t{int(agg.correct)}\t{float(acc):.3f}"
+        )
+    lines.append("")
+
+    lines.append("Numeric validation table: bar aggregation (mean with min/max whiskers across configurations)")
+    lines.append("target\tsubset\tprompt_group\tsplit\tn_configs\tmean\tmin\tmax")
+    for (tlabel, subset_label, prompt_group, split), vals in sorted(
+        per_bar.items(), key=lambda kv: (kv[0][1], kv[0][0], kv[0][2], kv[0][3])
+    ):
+        if not vals:
+            continue
+        mean = float(sum(vals) / float(len(vals)))
+        lines.append(
+            f"{tlabel}\t{subset_label}\t{prompt_group}\t{split}\t{int(len(vals))}\t{mean:.3f}\t{float(min(vals)):.3f}\t{float(max(vals)):.3f}"
+        )
+    lines.append("")
+
+    lines.append("Run sources used (suite/run)")
+    if suites_runs:
+        for suite, run in suites_runs:
+            lines.append(f"- {suite} / {run}")
+    else:
+        lines.append("- (none; no rows matched filters)")
+    lines.append("")
+    lines.append("Notes")
+    lines.append("- This file replaces the in-figure title/subtitle: contextual detail is here and in the LaTeX caption.")
+    desc_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    meta["description_txt"] = str(desc_path)
+
     return meta
 
 
@@ -2302,7 +4098,8 @@ def _figure_supp_semantic_alignment_mismatch(
 
     # Targets present in the data (sorted stably by provider then model label).
     targets: List[Tuple[str, str, str]] = sorted({(k[0], k[1], k[2]) for k in combined.keys()})
-    prompts = ["examples_only", "horn_alg_from", "horn_alg_linear"]
+    # Legend/order: baseline first, then direct, then with line citations (matches paper terminology).
+    prompts = ["examples_only", "horn_alg_linear", "horn_alg_from"]
 
     def tlabel(p: str, m: str, tm: str) -> str:
         return _format_target_label(p, m, tm, multiline=True)
@@ -2374,7 +4171,7 @@ def _figure_supp_semantic_alignment_mismatch(
         p_label = PROMPT_LABEL.get(prompt, prompt)
         hatch = hatches.get(prompt, "")
         for horn in [1, 0]:  # aligned then mismatched
-            subset_label = "aligned" if int(horn) == 1 else "mismatched"
+            subset_label = "Aligned" if int(horn) == 1 else "Mismatched"
             if int(n_plotted_by_combo.get((str(prompt), int(horn)), 0)) <= 0:
                 continue
             legend_handles.append(
@@ -2390,16 +4187,172 @@ def _figure_supp_semantic_alignment_mismatch(
             legend_labels.append(f"{p_label} · {subset_label}")
     _apply_legend(ax, legend_handles, legend_labels, ncol=1)
 
+    # With the figure-level header removed in the _new variant, keep a minimal in-plot header.
+    ax.set_title("Aligned / Mismatched")
+
     _set_figure_header(
         fig,
         title="Supplementary: semantic alignment mismatch control",
-        context="Subset: aligned vs mismatched · Representation: If-then CNF · Prompt: examples-only + Horn algorithm variants · Targets: see x-axis",
+        context="Subset: aligned vs mismatched · Representation: If-then CNF · Prompt: examples-only + forward chaining variants · Targets: see x-axis",
     )
     _tight_layout_standard(fig)
     _save_paper_figure(fig, out_path)
     plt.close(fig)
 
     return {"figure": "supp_semantic_alignment_mismatch", "output": str(out_path), "bars_plotted": int(n_plotted)}
+
+
+def _figure_supp_semantic_alignment_mismatch_new(
+    groups: Sequence[Dict[str, Any]],
+    *,
+    out_path: Path,
+    accuracy_mode: str,
+    exclude_run_regex: str,
+) -> Dict[str, Any]:
+    """Supplementary semantic mismatch control (new variant): remove figure header; write a sidecar description."""
+    # Wrapper around `_figure_supp_semantic_alignment_mismatch` that suppresses the figure-level header band.
+    orig_header = _set_figure_header
+    orig_tight = _tight_layout_standard
+
+    def _noop_header(_fig: Any, *, title: str, context: Optional[str] = None) -> None:  # noqa: ARG001
+        return
+
+    def _tight0(fig: Any, *, footer_in: float = 0.0, header_in: float = 0.3) -> None:  # noqa: ARG001
+        return orig_tight(fig, footer_in=float(footer_in), header_in=0.0)
+
+    try:
+        globals()["_set_figure_header"] = _noop_header  # type: ignore[misc]
+        globals()["_tight_layout_standard"] = _tight0  # type: ignore[misc]
+        meta = _figure_supp_semantic_alignment_mismatch(
+            groups,
+            out_path=out_path,
+            accuracy_mode=accuracy_mode,
+            exclude_run_regex=exclude_run_regex,
+        )
+    finally:
+        globals()["_set_figure_header"] = orig_header  # type: ignore[misc]
+        globals()["_tight_layout_standard"] = orig_tight  # type: ignore[misc]
+
+    meta = dict(meta or {})
+    meta["variant"] = "new"
+
+    desc_path = out_path.with_suffix(".txt")
+    lines: List[str] = []
+    lines.append("llmlog paper figure description (sidecar; not for the article)")
+    lines.append("")
+    lines.append(f"figure_pdf: {out_path.name}")
+    lines.append("figure_id: supp_semantic_alignment_mismatch")
+    lines.append("variant: new")
+    lines.append("")
+    lines.append("Header removed from PDF")
+    lines.append("- title: Supplementary: semantic alignment mismatch control")
+    lines.append(
+        "- context: Subset: aligned vs mismatched · Representation: If-then CNF · "
+        "Prompt: examples-only + forward chaining variants · Targets: see x-axis"
+    )
+    lines.append("")
+    lines.append("Metric definition")
+    lines.append(f"- accuracy_mode: {accuracy_mode}")
+    lines.append("- completed denominator: answered + unclear (excludes pending + errors)")
+    lines.append(f"- point inclusion threshold: completed >= {DEFAULT_MIN_TRIALS}")
+    lines.append("")
+    # Numeric validation: reconstruct the aggregated bars shown in the figure.
+    base_rows = _filter_groups(
+        groups,
+        filters={
+            "representation": "horn_if_then",
+            "prompt_label": ["examples_only", "horn_alg_from", "horn_alg_linear"],
+            "maxvars": [10, 20, 30, 40, 50],
+            "maxlen": [3, 4, 5],
+        },
+        exclude_run_regex=exclude_run_regex,
+    )
+    suites_runs = sorted({(str(r.get("suite") or ""), str(r.get("run") or "")) for r in base_rows})
+
+    # Aggregate per (config,maxlen,suite+run) so we can combine either a single len3_5 run
+    # or three separate len3/len4/len5 runs without double-counting.
+    per_run_len: Dict[Tuple[str, str, str, str, int, int, str, str], AggCounts] = {}
+    for r in base_rows:
+        provider = str(r.get("provider") or "")
+        model = str(r.get("model") or "")
+        thinking_mode = str(r.get("thinking_mode") or "")
+        prompt = str(r.get("prompt_label") or "")
+        horn = int(r.get("horn") or 0)
+        maxlen = int(r.get("maxlen") or 0)
+        suite = str(r.get("suite") or "")
+        run = str(r.get("run") or "")
+        cd = r.get("counts") or {}
+        if not isinstance(cd, dict):
+            continue
+        k = (provider, model, thinking_mode, prompt, horn, maxlen, suite, run)
+        agg = per_run_len.get(k)
+        if agg is None:
+            agg = AggCounts()
+            per_run_len[k] = agg
+        agg.add_counts(cd)
+
+    # Select the best-coverage run for each (config,maxlen) slice (typically total=50).
+    best_len: Dict[Tuple[str, str, str, str, int, int], AggCounts] = {}
+    for (provider, model, thinking_mode, prompt, horn, maxlen, _suite, _run), agg in per_run_len.items():
+        k = (provider, model, thinking_mode, prompt, horn, int(maxlen))
+        prev = best_len.get(k)
+        if prev is None or int(agg.total) > int(prev.total):
+            best_len[k] = agg
+
+    # Combine maxlen slices (3/4/5) to match the baseline N=150 aggregate.
+    from collections import defaultdict
+
+    combined: Dict[Tuple[str, str, str, str, int], AggCounts] = defaultdict(AggCounts)
+    present_maxlen: Dict[Tuple[str, str, str, str, int], set[int]] = defaultdict(set)
+    for (provider, model, thinking_mode, prompt, horn, maxlen), agg in best_len.items():
+        k = (provider, model, thinking_mode, prompt, horn)
+        combined[k].add_counts(agg.__dict__)
+        present_maxlen[k].add(int(maxlen))
+
+    targets: List[Tuple[str, str, str]] = sorted({(k[0], k[1], k[2]) for k in combined.keys()})
+    prompts = ["examples_only", "horn_alg_linear", "horn_alg_from"]
+
+    def _tlabel(p: str, m: str, tm: str) -> str:
+        return _format_target_label(p, m, tm, multiline=False)
+
+    lines.append("Numeric validation table: aligned/mismatched bars (aggregated over n,k; completed denominator)")
+    lines.append(
+        "target\tprompt\tcondition\ttotal\tpending\terrors\tanswered\tunclear\tcompleted\tcorrect\tacc_completed\tplotted"
+    )
+    for provider, model, thinking_mode in targets:
+        for prompt in prompts:
+            for horn in [1, 0]:  # aligned then mismatched
+                key = (provider, model, thinking_mode, prompt, int(horn))
+                agg = combined.get(key)
+                condition = "Aligned" if int(horn) == 1 else "Mismatched"
+                if agg is None:
+                    lines.append(f"{_tlabel(provider, model, thinking_mode)}\t{PROMPT_LABEL.get(prompt, prompt)}\t{condition}\t-\t-\t-\t-\t-\t-\t-\t-\tno_data")
+                    continue
+                ok_cov = present_maxlen.get(key, set()) == {3, 4, 5}
+                ok_n = int(agg.total) == 150
+                acc = agg.accuracy(str(accuracy_mode))
+                plotted = "yes" if (ok_cov and ok_n and acc is not None and int(agg.denom_completed) >= int(DEFAULT_MIN_TRIALS)) else "no"
+                acc_s = "-" if acc is None else f"{float(acc):.3f}"
+                lines.append(
+                    f"{_tlabel(provider, model, thinking_mode)}\t{PROMPT_LABEL.get(prompt, prompt)}\t{condition}\t"
+                    f"{int(agg.total)}\t{int(agg.pending)}\t{int(agg.errors)}\t{int(agg.answered)}\t{int(agg.unclear)}\t"
+                    f"{int(agg.denom_completed)}\t{int(agg.correct)}\t{acc_s}\t{plotted}"
+                )
+    lines.append("")
+
+    lines.append("Run sources used (suite/run)")
+    if suites_runs:
+        for suite, run in suites_runs:
+            lines.append(f"- {suite} / {run}")
+    else:
+        lines.append("- (none; no rows matched filters)")
+    lines.append("")
+    lines.append("Notes")
+    lines.append("- This file replaces the in-figure title/subtitle: contextual detail is here and in the LaTeX caption.")
+    desc_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    meta["description_txt"] = str(desc_path)
+
+    return meta
 
 
 FigureFn = Callable[..., Dict[str, Any]]
@@ -2421,6 +4374,10 @@ def generate_paper_figures(
     exclude_suites: Optional[Sequence[str]] = None,
     exclude_run_regex: str = r"smoke",
     run_selection: Optional[Mapping[str, Any]] = None,
+    only_figures: Optional[Sequence[str]] = None,
+    filename_suffix: str = "",
+    no_header: bool = False,
+    write_descriptions: bool = False,
 ) -> Dict[str, Any]:
     """Generate standalone paper figures as PDFs.
 
@@ -2430,6 +4387,13 @@ def generate_paper_figures(
     runs_path = Path(runs_dir).resolve()
     out_dir = Path(output_dir).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
+    suffix = str(filename_suffix or "")
+
+    def _with_suffix(filename: str) -> str:
+        if not suffix:
+            return filename
+        p = Path(str(filename))
+        return f"{p.stem}{suffix}{p.suffix}"
 
     combined = build_combined_dashboard_data(
         runs_dir=str(runs_path),
@@ -2596,8 +4560,11 @@ def generate_paper_figures(
             "figure.dpi": 150,
             "savefig.dpi": 300,
             "font.size": 10,
-            "axes.titlesize": 11,
+            # Panel headers should match axis-label styling (e.g., "# vars (n)").
+            "axes.titlesize": 10,
+            "axes.titlepad": 4.0,
             "axes.labelsize": 10,
+            "axes.labelpad": 4.0,
             "legend.fontsize": 9,
         }
     )
@@ -2608,6 +4575,10 @@ def generate_paper_figures(
         "output_dir": str(out_dir),
         "accuracy_mode": str(accuracy_mode),
         "exclude_run_regex": str(exclude_run_regex),
+        "filename_suffix": str(suffix),
+        "only_figures": [str(x) for x in (only_figures or []) if str(x).strip()] or None,
+        "no_header": bool(no_header),
+        "write_descriptions": bool(write_descriptions),
         "groups_total": int(len(groups)),
         "groups_deduped": int(len(groups_deduped)),
         "run_selection": dict(run_selection) if isinstance(run_selection, Mapping) else None,
@@ -2631,6 +4602,12 @@ def generate_paper_figures(
             filename="fig_prompting_effects.pdf",
             fn=_figure_prompting_effects,
         ),
+        # RQ2 "popping" variant used in the paper text/caption (OpenAI gpt-5.2, think=none).
+        FigureSpec(
+            id="prompting_effects_openai52",
+            filename="fig_prompting_effects_openai52.pdf",
+            fn=_figure_prompting_effects_openai52_new,
+        ),
         FigureSpec(
             id="test_time_compute",
             filename="fig_test_time_compute.pdf",
@@ -2653,9 +4630,27 @@ def generate_paper_figures(
         ),
     ]
 
+    only_set = {str(x).strip() for x in (only_figures or []) if str(x).strip()}
+    if only_set:
+        figure_specs = [s for s in figure_specs if str(s.id) in only_set]
+
     for spec in figure_specs:
-        out_path = out_dir / spec.filename
-        fig_meta = spec.fn(
+        out_path = out_dir / _with_suffix(spec.filename)
+        fn = spec.fn
+        if no_header:
+            if spec.id == "representation_effects":
+                fn = _figure_representation_effects_new
+            elif spec.id == "prompting_effects":
+                fn = _figure_prompting_effects_new
+            elif spec.id == "test_time_compute":
+                fn = _figure_test_time_compute_new
+            elif spec.id == "model_comparison":
+                fn = _figure_model_comparison_new
+            elif spec.id == "supp_sat_unsat_asymmetry":
+                fn = _figure_supp_sat_unsat_asymmetry_new
+            elif spec.id == "supp_semantic_alignment_mismatch":
+                fn = _figure_supp_semantic_alignment_mismatch_new
+        fig_meta = fn(
             groups_deduped,
             out_path=out_path,
             accuracy_mode=accuracy_mode,
@@ -2666,10 +4661,11 @@ def generate_paper_figures(
         fig_meta["output"] = str(out_path)
         meta["figures"].append(fig_meta)
 
-    (out_dir / "paper_figures.meta.json").write_text(json.dumps(meta, indent=2, sort_keys=True), encoding="utf-8")
+    meta_base = f"paper_figures{suffix}" if suffix else "paper_figures"
+    (out_dir / f"{meta_base}.meta.json").write_text(json.dumps(meta, indent=2, sort_keys=True), encoding="utf-8")
 
     # Also write a focused selection report for auditing figure provenance.
-    (out_dir / "paper_figures.selection.json").write_text(
+    (out_dir / f"{meta_base}.selection.json").write_text(
         json.dumps(meta.get("selection") or {}, indent=2, sort_keys=True),
         encoding="utf-8",
     )
@@ -2697,7 +4693,7 @@ def generate_paper_figures(
         for run_name, n_cells in sorted(by_run.items(), key=lambda kv: (-int(kv[1]), kv[0])):
             lines.append(f"- **{run_name}**: {int(n_cells)} cells")
         lines.append("")
-    (out_dir / "paper_figures.selection.md").write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    (out_dir / f"{meta_base}.selection.md").write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
 
     return meta
 

@@ -1,0 +1,112 @@
+llmlog paper figure description (sidecar; not for the article)
+
+figure_pdf: fig_representation_effects.pdf
+figure_id: representation_effects
+variant: new
+
+What this figure shows
+- Overall SAT-decision accuracy vs number of variables (n) under examples-only prompting (k=3).
+- Two panels (left/right in the PDF):
+  left: OpenAI gpt-5.2-pro (think=high): Non-Horn compares Compact CNF vs Natural Language CNF (n<=50),
+        while Horn Compact CNF is included and remains at 1.00 through n=100.
+  right: OpenAI gpt-5.2 (think=none): Horn vs Non-Horn overlay for Compact CNF and Natural Language CNF (n<=50),
+         with If-then CNF shown on Horn only.
+
+Axis spacing note (important)
+- The x-axis is treated as a discrete set of n values for readability (spacing is not linear in n).
+- Tick layout: 10->0, 20->0.7, 30->1.4, 40->2.1, 50->2.8, 60->3.3, 80->3.7, 100->4
+- x-scale unification: panels share the same x-position mapping for n=10..50; left panel additionally shows n in {60,80,100}.
+- xlim: left panel [-0.2,4.2] ; right panel [-0.14,2.94] (x-position units)
+
+Selection / filters: left panel
+- provider: openai
+- model: gpt-5.2-pro
+- thinking_mode: think_high
+- prompt_label: examples_only
+- maxlen (k): 3
+- Non-Horn maxvars (n): [10, 20, 30, 40, 50]
+- Horn maxvars (n): [10, 20, 30, 40, 50, 60, 80, 100]
+- Note: Horn Natural Language CNF is not available for this target under examples-only, so Horn shows Compact CNF only.
+
+Selection / filters: right panel
+- provider: openai
+- model: gpt-5.2-2025-12-11
+- thinking_mode: think_none
+- prompt_label: examples_only
+- maxlen (k): 3
+- subset: Horn / Non-Horn (overlay)
+- maxvars (n): [10, 20, 30, 40, 50]
+- representations: Compact CNF, Natural Language CNF (both subsets); If-then CNF (Horn only)
+
+Metric definition
+- accuracy_mode: completed
+- completed denominator: answered + unclear (excludes pending + errors)
+- point inclusion threshold: completed >= 5
+
+Run sources used (suite/run)
+- sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2-pro__think-high / horn_ex_only_len3_vars10_50_case10
+- sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2-pro__think-high__extvars60_80_100 / horn_ex_only_len3_vars60_80_100_case10
+- sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2__think-none / horn_ex_only_cnf_compact_len3_vars10_50_case10
+- sat__repr-cnf_compact__subset-nonhornonly__prompt-examples_only__openai_gpt-5.2-pro__think-high / nonhorn_ex_only_cnf_compact_len3_vars10_50_case10
+- sat__repr-cnf_compact__subset-nonhornonly__prompt-examples_only__openai_gpt-5.2__think-none / nonhorn_ex_only_cnf_compact_len3_vars10_50_case10
+- sat__repr-cnf_nl__subset-hornonly__prompt-examples_only__openai_gpt-5.2__think-none / horn_ex_only_cnf_nl_len3_vars10_50_case10
+- sat__repr-cnf_nl__subset-nonhornonly__prompt-examples_only__openai_gpt-5.2-pro__think-high / nonhorn_ex_only_cnf_nl_len3_vars10_50_case10
+- sat__repr-cnf_nl__subset-nonhornonly__prompt-examples_only__openai_gpt-5.2__think-none / nonhorn_ex_only_cnf_nl_len3_vars10_50_case10
+- sat__repr-horn_if_then__subset-hornonly__prompt-examples_only__openai_gpt-5.2__think-none / baseline_case10_len3_vars10_50
+
+Numeric validation table: left panel Non-Horn (aggregated over sat+unsat)
+subset	representation	n	total	pending	errors	answered	unclear	completed	correct	acc_completed	plotted
+Non-Horn	Compact CNF	10	10	0	0	10	0	10	10	1.000	yes
+Non-Horn	Compact CNF	20	10	0	0	10	0	10	10	1.000	yes
+Non-Horn	Compact CNF	30	10	0	1	9	0	9	7	0.778	yes
+Non-Horn	Compact CNF	40	10	0	1	9	0	9	5	0.556	yes
+Non-Horn	Compact CNF	50	10	0	2	8	0	8	5	0.625	yes
+Non-Horn	Natural Language CNF	10	10	0	0	10	0	10	10	1.000	yes
+Non-Horn	Natural Language CNF	20	10	0	0	10	0	10	10	1.000	yes
+Non-Horn	Natural Language CNF	30	10	0	2	8	0	8	6	0.750	yes
+Non-Horn	Natural Language CNF	40	10	0	3	7	0	7	5	0.714	yes
+Non-Horn	Natural Language CNF	50	10	0	4	6	0	6	4	0.667	yes
+
+Numeric validation table: left panel Horn (Compact CNF only; aggregated over sat+unsat)
+Horn	Compact CNF	10	10	0	0	10	0	10	10	1.000	yes
+Horn	Compact CNF	20	10	0	0	10	0	10	10	1.000	yes
+Horn	Compact CNF	30	10	0	0	10	0	10	10	1.000	yes
+Horn	Compact CNF	40	10	0	0	10	0	10	10	1.000	yes
+Horn	Compact CNF	50	10	0	0	10	0	10	10	1.000	yes
+Horn	Compact CNF	60	10	0	0	10	0	10	10	1.000	yes
+Horn	Compact CNF	80	10	0	0	10	0	10	10	1.000	yes
+Horn	Compact CNF	100	10	0	0	10	0	10	10	1.000	yes
+
+Numeric validation table: right panel Horn (aggregated over sat+unsat)
+subset	representation	n	total	pending	errors	answered	unclear	completed	correct	acc_completed	plotted
+Horn	Compact CNF	10	10	0	0	10	0	10	10	1.000	yes
+Horn	Compact CNF	20	10	0	0	10	0	10	9	0.900	yes
+Horn	Compact CNF	30	10	0	0	10	0	10	8	0.800	yes
+Horn	Compact CNF	40	10	0	0	10	0	10	8	0.800	yes
+Horn	Compact CNF	50	10	0	0	10	0	10	10	1.000	yes
+Horn	Natural Language CNF	10	10	0	0	10	0	10	10	1.000	yes
+Horn	Natural Language CNF	20	10	0	0	10	0	10	9	0.900	yes
+Horn	Natural Language CNF	30	10	0	0	10	0	10	7	0.700	yes
+Horn	Natural Language CNF	40	10	0	0	10	0	10	7	0.700	yes
+Horn	Natural Language CNF	50	10	0	0	10	0	10	5	0.500	yes
+Horn	If-then CNF	10	10	0	0	10	0	10	10	1.000	yes
+Horn	If-then CNF	20	10	0	0	10	0	10	10	1.000	yes
+Horn	If-then CNF	30	10	0	0	10	0	10	10	1.000	yes
+Horn	If-then CNF	40	10	0	0	10	0	10	9	0.900	yes
+Horn	If-then CNF	50	10	0	0	10	0	10	8	0.800	yes
+
+Numeric validation table: right panel Non-Horn (aggregated over sat+unsat)
+subset	representation	n	total	pending	errors	answered	unclear	completed	correct	acc_completed	plotted
+Non-Horn	Compact CNF	10	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	Compact CNF	20	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	Compact CNF	30	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	Compact CNF	40	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	Compact CNF	50	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	Natural Language CNF	10	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	Natural Language CNF	20	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	Natural Language CNF	30	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	Natural Language CNF	40	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	Natural Language CNF	50	10	0	0	10	0	10	5	0.500	yes
+
+Notes
+- This file replaces the in-figure title/subtitle: all contextual detail is here and in the LaTeX caption.

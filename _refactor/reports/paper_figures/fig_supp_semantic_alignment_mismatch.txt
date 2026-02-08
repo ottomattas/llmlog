@@ -1,0 +1,82 @@
+llmlog paper figure description (sidecar; not for the article)
+
+figure_pdf: fig_supp_semantic_alignment_mismatch.pdf
+figure_id: supp_semantic_alignment_mismatch
+variant: new
+
+Header removed from PDF
+- title: Supplementary: semantic alignment mismatch control
+- context: Subset: aligned vs mismatched · Representation: If-then CNF · Prompt: examples-only + forward chaining variants · Targets: see x-axis
+
+Metric definition
+- accuracy_mode: completed
+- completed denominator: answered + unclear (excludes pending + errors)
+- point inclusion threshold: completed >= 5
+
+Numeric validation table: aligned/mismatched bars (aggregated over n,k; completed denominator)
+target	prompt	condition	total	pending	errors	answered	unclear	completed	correct	acc_completed	plotted
+Anthropic claude-opus-4-5-20251101 (none)	Examples-only	Aligned	150	0	0	150	0	150	147	0.980	yes
+Anthropic claude-opus-4-5-20251101 (none)	Examples-only	Mismatched	150	0	0	150	0	150	75	0.500	yes
+Anthropic claude-opus-4-5-20251101 (none)	Forward chaining (direct)	Aligned	150	0	0	150	0	150	146	0.973	yes
+Anthropic claude-opus-4-5-20251101 (none)	Forward chaining (direct)	Mismatched	150	0	0	150	0	150	65	0.433	yes
+Anthropic claude-opus-4-5-20251101 (none)	Forward chaining (with line citations)	Aligned	150	0	0	150	0	150	143	0.953	yes
+Anthropic claude-opus-4-5-20251101 (none)	Forward chaining (with line citations)	Mismatched	150	0	0	150	0	150	82	0.547	yes
+Google gemini-3-flash-preview (minimal)	Examples-only	Aligned	150	0	0	150	0	150	146	0.973	yes
+Google gemini-3-flash-preview (minimal)	Examples-only	Mismatched	150	0	0	150	0	150	75	0.500	yes
+Google gemini-3-flash-preview (minimal)	Forward chaining (direct)	Aligned	150	0	0	150	0	150	149	0.993	yes
+Google gemini-3-flash-preview (minimal)	Forward chaining (direct)	Mismatched	150	0	0	150	0	150	77	0.513	yes
+Google gemini-3-flash-preview (minimal)	Forward chaining (with line citations)	Aligned	150	0	0	149	1	150	142	0.947	yes
+Google gemini-3-flash-preview (minimal)	Forward chaining (with line citations)	Mismatched	150	0	0	150	0	150	76	0.507	yes
+Google gemini-3-pro-preview (high)	Examples-only	Aligned	150	0	8	130	12	142	130	0.915	yes
+Google gemini-3-pro-preview (high)	Examples-only	Mismatched	150	0	32	93	25	118	63	0.534	yes
+Google gemini-3-pro-preview (high)	Forward chaining (direct)	Aligned	150	0	2	141	7	148	141	0.953	yes
+Google gemini-3-pro-preview (high)	Forward chaining (direct)	Mismatched	150	0	23	102	25	127	69	0.543	yes
+Google gemini-3-pro-preview (high)	Forward chaining (with line citations)	Aligned	150	0	9	131	10	141	131	0.929	yes
+Google gemini-3-pro-preview (high)	Forward chaining (with line citations)	Mismatched	150	0	30	101	19	120	52	0.433	yes
+OpenAI gpt-5.2 (none)	Examples-only	Aligned	150	0	0	150	0	150	128	0.853	yes
+OpenAI gpt-5.2 (none)	Examples-only	Mismatched	150	0	0	150	0	150	76	0.507	yes
+OpenAI gpt-5.2 (none)	Forward chaining (direct)	Aligned	150	0	0	150	0	150	128	0.853	yes
+OpenAI gpt-5.2 (none)	Forward chaining (direct)	Mismatched	150	0	0	150	0	150	75	0.500	yes
+OpenAI gpt-5.2 (none)	Forward chaining (with line citations)	Aligned	150	0	0	150	0	150	118	0.787	yes
+OpenAI gpt-5.2 (none)	Forward chaining (with line citations)	Mismatched	150	0	0	150	0	150	77	0.513	yes
+
+Run sources used (suite/run)
+- sat__repr-horn_if_then__subset-hornonly__prompt-examples_only__anthropic_claude-opus-4-5-20251101__think-none / baseline_case10_len3_5_vars10_50
+- sat__repr-horn_if_then__subset-hornonly__prompt-examples_only__google_gemini-3-flash-preview__think-minimal / baseline_case10_len3_5_vars10_50_rerun_20260119
+- sat__repr-horn_if_then__subset-hornonly__prompt-examples_only__google_gemini-3-pro-preview__think-high / baseline_case10_len3_5_vars10_50_rerun_20260119
+- sat__repr-horn_if_then__subset-hornonly__prompt-examples_only__openai_gpt-5.2__think-none / baseline_case10_len3_vars10_50
+- sat__repr-horn_if_then__subset-hornonly__prompt-examples_only__openai_gpt-5.2__think-none / baseline_case10_len4_vars10_50
+- sat__repr-horn_if_then__subset-hornonly__prompt-examples_only__openai_gpt-5.2__think-none / baseline_case10_len5_vars10_50
+- sat__repr-horn_if_then__subset-hornonly__prompt-horn_alg_from__anthropic_claude-opus-4-5-20251101__think-none / baseline_case10_len3_5_vars10_50
+- sat__repr-horn_if_then__subset-hornonly__prompt-horn_alg_from__google_gemini-3-flash-preview__think-minimal / baseline_case10_len3_5_vars10_50_rerun_20260119
+- sat__repr-horn_if_then__subset-hornonly__prompt-horn_alg_from__google_gemini-3-pro-preview__think-high / baseline_case10_len3_5_vars10_50_rerun_20260119
+- sat__repr-horn_if_then__subset-hornonly__prompt-horn_alg_from__openai_gpt-5.2__think-none / baseline_case10_len3_vars10_50
+- sat__repr-horn_if_then__subset-hornonly__prompt-horn_alg_from__openai_gpt-5.2__think-none / baseline_case10_len4_vars10_50
+- sat__repr-horn_if_then__subset-hornonly__prompt-horn_alg_from__openai_gpt-5.2__think-none / baseline_case10_len5_vars10_50
+- sat__repr-horn_if_then__subset-hornonly__prompt-horn_alg_linear__anthropic_claude-opus-4-5-20251101__think-none / baseline_case10_len3_5_vars10_50
+- sat__repr-horn_if_then__subset-hornonly__prompt-horn_alg_linear__google_gemini-3-flash-preview__think-minimal / baseline_case10_len3_5_vars10_50_rerun_20260119
+- sat__repr-horn_if_then__subset-hornonly__prompt-horn_alg_linear__google_gemini-3-pro-preview__think-high / baseline_case10_len3_5_vars10_50_rerun_20260119
+- sat__repr-horn_if_then__subset-hornonly__prompt-horn_alg_linear__openai_gpt-5.2__think-none / baseline_case10_len3_vars10_50
+- sat__repr-horn_if_then__subset-hornonly__prompt-horn_alg_linear__openai_gpt-5.2__think-none / baseline_case10_len4_vars10_50
+- sat__repr-horn_if_then__subset-hornonly__prompt-horn_alg_linear__openai_gpt-5.2__think-none / baseline_case10_len5_vars10_50
+- sat__repr-horn_if_then__subset-nonhornonly__prompt-examples_only__anthropic_claude-opus-4-5-20251101__think-none / baseline_case10_len3_5_vars10_50
+- sat__repr-horn_if_then__subset-nonhornonly__prompt-examples_only__google_gemini-3-flash-preview__think-minimal / baseline_case10_len3_5_vars10_50_rerun_20260119
+- sat__repr-horn_if_then__subset-nonhornonly__prompt-examples_only__google_gemini-3-pro-preview__think-high / baseline_case10_len3_5_vars10_50_rerun_20260119
+- sat__repr-horn_if_then__subset-nonhornonly__prompt-examples_only__openai_gpt-5.2__think-none / baseline_case10_len3_vars10_50
+- sat__repr-horn_if_then__subset-nonhornonly__prompt-examples_only__openai_gpt-5.2__think-none / baseline_case10_len4_vars10_50
+- sat__repr-horn_if_then__subset-nonhornonly__prompt-examples_only__openai_gpt-5.2__think-none / baseline_case10_len5_vars10_50
+- sat__repr-horn_if_then__subset-nonhornonly__prompt-horn_alg_from__anthropic_claude-opus-4-5-20251101__think-none / baseline_case10_len3_5_vars10_50
+- sat__repr-horn_if_then__subset-nonhornonly__prompt-horn_alg_from__google_gemini-3-flash-preview__think-minimal / baseline_case10_len3_5_vars10_50_rerun_20260119
+- sat__repr-horn_if_then__subset-nonhornonly__prompt-horn_alg_from__google_gemini-3-pro-preview__think-high / baseline_case10_len3_5_vars10_50_rerun_20260119
+- sat__repr-horn_if_then__subset-nonhornonly__prompt-horn_alg_from__openai_gpt-5.2__think-none / baseline_case10_len3_vars10_50
+- sat__repr-horn_if_then__subset-nonhornonly__prompt-horn_alg_from__openai_gpt-5.2__think-none / baseline_case10_len4_vars10_50
+- sat__repr-horn_if_then__subset-nonhornonly__prompt-horn_alg_from__openai_gpt-5.2__think-none / baseline_case10_len5_vars10_50
+- sat__repr-horn_if_then__subset-nonhornonly__prompt-horn_alg_linear__anthropic_claude-opus-4-5-20251101__think-none / baseline_case10_len3_5_vars10_50
+- sat__repr-horn_if_then__subset-nonhornonly__prompt-horn_alg_linear__google_gemini-3-flash-preview__think-minimal / baseline_case10_len3_5_vars10_50_rerun_20260119
+- sat__repr-horn_if_then__subset-nonhornonly__prompt-horn_alg_linear__google_gemini-3-pro-preview__think-high / baseline_case10_len3_5_vars10_50_rerun_20260119
+- sat__repr-horn_if_then__subset-nonhornonly__prompt-horn_alg_linear__openai_gpt-5.2__think-none / baseline_case10_len3_vars10_50
+- sat__repr-horn_if_then__subset-nonhornonly__prompt-horn_alg_linear__openai_gpt-5.2__think-none / baseline_case10_len4_vars10_50
+- sat__repr-horn_if_then__subset-nonhornonly__prompt-horn_alg_linear__openai_gpt-5.2__think-none / baseline_case10_len5_vars10_50
+
+Notes
+- This file replaces the in-figure title/subtitle: contextual detail is here and in the LaTeX caption.

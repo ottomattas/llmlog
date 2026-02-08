@@ -1,0 +1,140 @@
+llmlog paper figure description (sidecar; not for the article)
+
+figure_pdf: fig_prompting_effects.pdf
+figure_id: prompting_effects
+variant: new
+
+What this figure shows
+- Overall SAT-decision accuracy vs number of variables (n) under three prompting variants.
+- Controlled target: OpenAI gpt-5.2 (think=none); representation: Compact CNF.
+- Panels: k in {3,4,5}; Horn vs Non-Horn are overlaid (line style).
+- Prompt variants: examples-only; algorithmic (direct); algorithmic (with line citations).
+
+Selection / filters
+- provider: openai
+- model: gpt-5.2-2025-12-11
+- thinking_mode: think_none
+- representation: cnf_compact
+- maxvars (n): [10, 20, 30, 40, 50]
+- maxlen (k): [3, 4, 5]
+
+Metric definition
+- accuracy_mode: completed
+- completed denominator: answered + unclear (excludes pending + errors)
+- point inclusion threshold: completed >= 5
+
+Run sources used (suite/run)
+- sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2__think-none / horn_ex_only_cnf_compact_len3_vars10_50_case10
+- sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2__think-none / horn_ex_only_cnf_compact_len4_vars10_50_case10
+- sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2__think-none / horn_ex_only_cnf_compact_len5_vars10_50_case10
+- sat__repr-cnf_compact__subset-hornonly__prompt-horn_alg_from__openai_gpt-5.2__think-none / horn_alg_from_cnf_compact_len3_vars10_50_case10
+- sat__repr-cnf_compact__subset-hornonly__prompt-horn_alg_from__openai_gpt-5.2__think-none / horn_alg_from_cnf_compact_len4_vars10_50_case10
+- sat__repr-cnf_compact__subset-hornonly__prompt-horn_alg_from__openai_gpt-5.2__think-none / horn_alg_from_cnf_compact_len5_vars10_50_case10
+- sat__repr-cnf_compact__subset-hornonly__prompt-horn_alg_linear__openai_gpt-5.2__think-none / horn_alg_linear_cnf_compact_len3_vars10_50_case10
+- sat__repr-cnf_compact__subset-hornonly__prompt-horn_alg_linear__openai_gpt-5.2__think-none / horn_alg_linear_cnf_compact_len4_vars10_50_case10
+- sat__repr-cnf_compact__subset-hornonly__prompt-horn_alg_linear__openai_gpt-5.2__think-none / horn_alg_linear_cnf_compact_len5_vars10_50_case10
+- sat__repr-cnf_compact__subset-nonhornonly__prompt-dpll_alg_from__openai_gpt-5.2__think-none / nonhorn_dpll_from_cnf_compact_len3_vars10_50_case10
+- sat__repr-cnf_compact__subset-nonhornonly__prompt-dpll_alg_from__openai_gpt-5.2__think-none / nonhorn_dpll_from_cnf_compact_len4_vars10_50_case10
+- sat__repr-cnf_compact__subset-nonhornonly__prompt-dpll_alg_from__openai_gpt-5.2__think-none / nonhorn_dpll_from_cnf_compact_len5_vars10_50_case10
+- sat__repr-cnf_compact__subset-nonhornonly__prompt-dpll_alg_linear__openai_gpt-5.2__think-none / nonhorn_dpll_linear_cnf_compact_len3_vars10_50_case10
+- sat__repr-cnf_compact__subset-nonhornonly__prompt-dpll_alg_linear__openai_gpt-5.2__think-none / nonhorn_dpll_linear_cnf_compact_len4_vars10_50_case10
+- sat__repr-cnf_compact__subset-nonhornonly__prompt-dpll_alg_linear__openai_gpt-5.2__think-none / nonhorn_dpll_linear_cnf_compact_len5_vars10_50_case10
+- sat__repr-cnf_compact__subset-nonhornonly__prompt-examples_only__openai_gpt-5.2__think-none / nonhorn_ex_only_cnf_compact_len3_vars10_50_case10
+- sat__repr-cnf_compact__subset-nonhornonly__prompt-examples_only__openai_gpt-5.2__think-none / nonhorn_ex_only_cnf_compact_len4_vars10_50_case10
+- sat__repr-cnf_compact__subset-nonhornonly__prompt-examples_only__openai_gpt-5.2__think-none / nonhorn_ex_only_cnf_compact_len5_vars10_50_case10
+
+Numeric validation table (aggregated over sat+unsat)
+subset	k	prompt	n	total	pending	errors	answered	unclear	completed	correct	acc_completed	plotted
+Horn	3	Examples-only	10	10	0	0	10	0	10	10	1.000	yes
+Horn	3	Examples-only	20	10	0	0	10	0	10	9	0.900	yes
+Horn	3	Examples-only	30	10	0	0	10	0	10	8	0.800	yes
+Horn	3	Examples-only	40	10	0	0	10	0	10	8	0.800	yes
+Horn	3	Examples-only	50	10	0	0	10	0	10	10	1.000	yes
+Horn	3	Algorithmic (direct)	10	10	0	0	10	0	10	10	1.000	yes
+Horn	3	Algorithmic (direct)	20	10	0	0	10	0	10	8	0.800	yes
+Horn	3	Algorithmic (direct)	30	10	0	0	10	0	10	8	0.800	yes
+Horn	3	Algorithmic (direct)	40	10	0	0	10	0	10	9	0.900	yes
+Horn	3	Algorithmic (direct)	50	10	0	0	10	0	10	8	0.800	yes
+Horn	3	Algorithmic (with line citations)	10	10	0	0	10	0	10	5	0.500	yes
+Horn	3	Algorithmic (with line citations)	20	10	0	0	10	0	10	5	0.500	yes
+Horn	3	Algorithmic (with line citations)	30	10	0	0	10	0	10	5	0.500	yes
+Horn	3	Algorithmic (with line citations)	40	10	0	0	10	0	10	6	0.600	yes
+Horn	3	Algorithmic (with line citations)	50	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	3	Examples-only	10	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	3	Examples-only	20	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	3	Examples-only	30	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	3	Examples-only	40	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	3	Examples-only	50	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	3	Algorithmic (direct)	10	10	0	0	10	0	10	6	0.600	yes
+Non-Horn	3	Algorithmic (direct)	20	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	3	Algorithmic (direct)	30	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	3	Algorithmic (direct)	40	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	3	Algorithmic (direct)	50	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	3	Algorithmic (with line citations)	10	10	0	0	10	0	10	4	0.400	yes
+Non-Horn	3	Algorithmic (with line citations)	20	10	0	0	10	0	10	6	0.600	yes
+Non-Horn	3	Algorithmic (with line citations)	30	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	3	Algorithmic (with line citations)	40	10	0	0	10	0	10	6	0.600	yes
+Non-Horn	3	Algorithmic (with line citations)	50	10	0	0	10	0	10	5	0.500	yes
+Horn	4	Examples-only	10	10	0	0	10	0	10	9	0.900	yes
+Horn	4	Examples-only	20	10	0	0	10	0	10	6	0.600	yes
+Horn	4	Examples-only	30	10	0	0	10	0	10	6	0.600	yes
+Horn	4	Examples-only	40	10	0	0	10	0	10	7	0.700	yes
+Horn	4	Examples-only	50	10	0	0	10	0	10	6	0.600	yes
+Horn	4	Algorithmic (direct)	10	10	0	0	10	0	10	9	0.900	yes
+Horn	4	Algorithmic (direct)	20	10	0	0	10	0	10	7	0.700	yes
+Horn	4	Algorithmic (direct)	30	10	0	0	10	0	10	7	0.700	yes
+Horn	4	Algorithmic (direct)	40	10	0	0	10	0	10	6	0.600	yes
+Horn	4	Algorithmic (direct)	50	10	0	0	10	0	10	7	0.700	yes
+Horn	4	Algorithmic (with line citations)	10	10	0	0	10	0	10	6	0.600	yes
+Horn	4	Algorithmic (with line citations)	20	10	0	0	10	0	10	4	0.400	yes
+Horn	4	Algorithmic (with line citations)	30	10	0	0	10	0	10	5	0.500	yes
+Horn	4	Algorithmic (with line citations)	40	10	0	0	10	0	10	6	0.600	yes
+Horn	4	Algorithmic (with line citations)	50	10	0	0	10	0	10	7	0.700	yes
+Non-Horn	4	Examples-only	10	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	4	Examples-only	20	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	4	Examples-only	30	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	4	Examples-only	40	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	4	Examples-only	50	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	4	Algorithmic (direct)	10	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	4	Algorithmic (direct)	20	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	4	Algorithmic (direct)	30	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	4	Algorithmic (direct)	40	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	4	Algorithmic (direct)	50	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	4	Algorithmic (with line citations)	10	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	4	Algorithmic (with line citations)	20	10	0	0	10	0	10	6	0.600	yes
+Non-Horn	4	Algorithmic (with line citations)	30	10	0	0	10	0	10	3	0.300	yes
+Non-Horn	4	Algorithmic (with line citations)	40	10	0	0	10	0	10	3	0.300	yes
+Non-Horn	4	Algorithmic (with line citations)	50	10	0	0	10	0	10	5	0.500	yes
+Horn	5	Examples-only	10	10	0	0	10	0	10	7	0.700	yes
+Horn	5	Examples-only	20	10	0	0	10	0	10	6	0.600	yes
+Horn	5	Examples-only	30	10	0	0	10	0	10	5	0.500	yes
+Horn	5	Examples-only	40	10	0	0	10	0	10	6	0.600	yes
+Horn	5	Examples-only	50	10	0	0	10	0	10	5	0.500	yes
+Horn	5	Algorithmic (direct)	10	10	0	0	10	0	10	6	0.600	yes
+Horn	5	Algorithmic (direct)	20	10	0	0	10	0	10	6	0.600	yes
+Horn	5	Algorithmic (direct)	30	10	0	0	10	0	10	6	0.600	yes
+Horn	5	Algorithmic (direct)	40	10	0	0	10	0	10	7	0.700	yes
+Horn	5	Algorithmic (direct)	50	10	0	0	10	0	10	6	0.600	yes
+Horn	5	Algorithmic (with line citations)	10	10	0	0	10	0	10	7	0.700	yes
+Horn	5	Algorithmic (with line citations)	20	10	0	0	10	0	10	6	0.600	yes
+Horn	5	Algorithmic (with line citations)	30	10	0	0	10	0	10	7	0.700	yes
+Horn	5	Algorithmic (with line citations)	40	10	0	0	10	0	10	4	0.400	yes
+Horn	5	Algorithmic (with line citations)	50	10	0	0	10	0	10	7	0.700	yes
+Non-Horn	5	Examples-only	10	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	5	Examples-only	20	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	5	Examples-only	30	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	5	Examples-only	40	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	5	Examples-only	50	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	5	Algorithmic (direct)	10	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	5	Algorithmic (direct)	20	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	5	Algorithmic (direct)	30	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	5	Algorithmic (direct)	40	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	5	Algorithmic (direct)	50	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	5	Algorithmic (with line citations)	10	10	0	0	10	0	10	5	0.500	yes
+Non-Horn	5	Algorithmic (with line citations)	20	10	0	0	10	0	10	3	0.300	yes
+Non-Horn	5	Algorithmic (with line citations)	30	10	0	0	10	0	10	4	0.400	yes
+Non-Horn	5	Algorithmic (with line citations)	40	10	0	0	10	0	10	4	0.400	yes
+Non-Horn	5	Algorithmic (with line citations)	50	10	0	0	10	0	10	3	0.300	yes
+
+Notes
+- This file replaces the in-figure title/subtitle: all contextual detail is here.
