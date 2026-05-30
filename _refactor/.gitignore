@@ -1,9 +1,0 @@
-# Generated artifacts (never commit)
-_api_probes/
-
-
-
-# Local secrets (recommended: use env vars instead)
-secrets.json
-
-

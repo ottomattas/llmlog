@@ -1,472 +1,98 @@
 ## llmlog
 
-### Active development (recommended)
-The actively maintained framework lives under `_refactor/` (config-driven runner + suites/targets/prompts).
+Config-driven framework for running **logic-focused LLM experiments** reproducibly.
 
-Start here:
-- `_refactor/README.md`
-- `_refactor/docs/README.md`
+Commands below assume your working directory is the **repository root**.
 
-Paper-facing artifacts (committed for review/traceability) live under `reports/` (e.g. `reports/paper_figures/`), including a
-per-model “source report” (`paper_figures.selection.md`) describing which run outputs were used to render each figure set.
+It supports an end-to-end workflow:
+- **Generate datasets** of propositional-logic problems (with ground truth + optional proof metadata)
+- **Render prompts** from Jinja templates
+- **Run suites** across multiple providers/models using YAML configs
+- **Parse outputs** into a unified schema
+- **Analyze results** (aggregation, plots, dashboards)
 
-### Legacy note
-The remainder of this README documents older frameworks (notably `experiments/` and `_legacy/`) that are kept for reference.
-
-This repository hosts a new, unified framework for running logic-focused LLM experiments efficiently and reproducibly. The legacy one-off scripts (exp1–exp8) have been moved under `_legacy/` and remain intact. The new setup replaces copy‑pasted per-experiment code with a single runner configured via YAML, prompt templates, and pluggable parsing/filters.
+### Design goals
+- **Reproducible**: dataset/run generation is parameterized (seed, config snapshot, checksums).
+- **Config-driven**: experiments are defined in YAML (not per-experiment forks).
+- **Clear separation**: code vs configs vs datasets vs generated artifacts.
 
 ### Quickstart
-1) Set up environment and install dependencies
+1) Create a virtual environment and install dependencies:
 ```
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate
 pip install -U pip
 pip install -r requirements.txt
 ```
 
-2) Provide API keys (alphabetically ordered providers)
+2) Provide API keys (via env vars or `secrets.json`):
 ```
 export ANTHROPIC_API_KEY=...
 export OPENAI_API_KEY=...
-# or use a secrets.json as documented below
+export GOOGLE_API_KEY=...
 ```
 
-3) Run a small test (limit=10) against Anthropic + OpenAI using a ready config
+3) Generate a problem dataset:
 ```
-python -m experiments.runner --config experiments/configs/exp8_horn_yesno.yaml \
-  --resume --limit 10 --only anthropic,openai
-```
-
-4) Analyze and plot results
-```
-python -m experiments.analyze_generic experiments/runs/exp8_horn_yesno/anthropic_claude-3-5-sonnet-latest.jsonl
-python -m experiments.analyze_generic experiments/runs/exp8_horn_yesno/openai_gpt-4o-2024-11-20.jsonl
-python -m experiments.plot_results
-ls experiments/plots
+python scripts/generate_problems.py --seed 12345 --dataset validation --name problems_validation_seed12345
 ```
 
-That’s it. Edit YAML configs under `experiments/configs/` to switch experiments or add more targets.
-
-### Naming Scheme for Config Files
-- Pattern: `exp<N>_<domain>_<task>[_<variant>]`
-  - `<domain>`: `cnf` | `horn`
-  - `<task>`: `contradiction` | `yesno` | `cot`
-  - `<variant>` (optional): `linear` | `parents` | `v1` | `v2`
-- Examples:
-  - `exp3_cnf_cot_linear`
-  - `exp4_cnf_cot_parents`
-  - `exp5_horn_cot_linear`
-  - `exp6_horn_yesno`
-  - `exp8_horn_yesno`
-
-This keeps descriptors in a consistent order: domain first, then task, then variant.
-
-### Goals
-- **Single runner, many configs**: No per-experiment code forks
-- **Prompt templating**: Jinja2 templates with per-run variables
-- **Pluggable parsing**: Swap out how model outputs are parsed (e.g., yes/no, contradiction)
-- **Flexible filtering**: Run subsets (e.g., horn-only) without editing code
-- **Concurrency + retries**: Faster runs with rate-limit aware backoff
-- **Resumability**: Safe to stop/resume without redoing completed items
-- **Standard JSONL outputs**: One schema across all experiments
-- **Reproducibility**: Save config, template hash, and git SHA per run
-
-### Directory Layout (new)
-- `.gitignore` - ignore files for git (e.g., secrets.json, experiments/runs/)
-- `_legacy/` — previous experiments kept as-is
-- `experiments/`
-  - `runner.py` — generic executor (config-driven)
-  - `analyze_generic.py` — analysis over the standard JSONL schema
-  - `plot_results.py` — generates PNG plots from run outputs
-  - `parsers.py` — output parsers (e.g., `yes_no`, `contradiction`)
-  - `filters.py` — input filters (e.g., `horn_only`, `skip`, `limit`)
-  - `schema.py` — Pydantic models for input/output rows
-  - `configs/` — YAML configs, one per experiment variant
-  - `runs/` — run artifacts (results, config snapshot, metadata)
-  - `plots/` — generated charts (PNG)
-- `prompts/` — Jinja2 prompt templates used by configs
-- `data/` — input JSONL problem sets (e.g., `problems_dist20_v1.js`)
-- `utils/` — shared helpers (providers, clients)
-
-Note: Some of these paths will be created as part of upcoming commits; the README documents the intended structure to enable a clean migration.
-
-### Installation
-1) Python 3.10+ recommended (repo currently uses a recent Python; 3.13 works).
-2) Install deps:
+4) Run a small test suite (limit 10):
 ```
-python -m venv venv
-source venv/bin/activate
-pip install -U pip
-pip install -r requirements.txt
+python scripts/run.py --suite configs/suites/sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2__think-none.yaml --run validation_001 --resume --limit 10
 ```
 
-### Provider Credentials (unified `secrets.json`)
-Providers are documented and listed alphabetically to avoid implying preference.
-All provider credentials live in a single root file: `secrets.json`.
-
-Minimal example (Anthropic + Google + OpenAI):
+5) Analyze results:
 ```
-{
-  "anthropic": {
-    "api_key": "sk-ant-..."
-  },
-  "google": {
-    "api_key": "sk-..."
-  },
-  "openai": {
-    "api_key": "sk-..."
-  }
-}
+python scripts/aggregate_results.py --run-id validation_001 --output reports/validation_001.aggregated.json
+python scripts/generate_dashboard.py --input reports/validation_001.aggregated.json --output reports/validation_001.dashboard.html
 ```
 
-Optional/extended keys per provider (only if needed by your account/deployment):
+6) (Optional) Export prompts + model outputs for human inspection:
 ```
-{
-  "anthropic": { "api_key": "..." },
-  "azure_openai": { "api_key": "...", "endpoint": "https://...", "deployment": "gpt-4o" },
-  "google": { "api_key": "..." },
-  "openai": { "api_key": "..." }
-}
+python scripts/export_provenance.py --provenance runs/sat__repr-cnf_compact__subset-mixed/validation_001/<provider>/<model>/<thinking_mode>/results.provenance.v2.jsonl --out reports/exports --limit 10 --no-raw
 ```
 
-Environment variables may override the file at runtime (if set):
-- `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`, `OPENAI_API_KEY`, etc.
-
-Provider wiring is centralized under `utils/`; additional providers can be added without changing experiment configs.
-
-### Input Data
-Inputs are JSONL (one JSON array/object per line). Existing datasets (e.g., `problems_dist20_v1.js`) can be reused. Header lines can be skipped via config.
-
-Generate a dataset with the legacy generator:
+7) (Optional) Export validation slices (single Markdown) for manual audits:
 ```
-python experiments/generate_dataset.py --output data/problems_dist20_v1.js
-```
-This wraps `_legacy/makeproblems.py` and writes the output to `data/`.
-
-### Config-Driven Runs
-Each experiment is defined by a YAML file under `experiments/configs/`.
-
-Single-target example (exp8-equivalent yes/no on horn clauses):
-```yaml
-name: exp8_yesno_horn
-provider: openai
-model: gpt-4o-2024-11-20
-temperature: 0
-seed: 1234
-max_tokens: 2000
-
-input_file: data/problems_dist20_v1.js
-output_file: experiments/runs/${name}/results.jsonl
-
-filters:
-  horn_only: true
-  skip_rows: 1     # skip header if present
-  limit_rows: null # or a number for quick tests
-
-prompt:
-  template: prompts/if_then_yesno.j2
-  variables: {}
-
-parse:
-  type: yes_no
-  yes_tokens: ["yes"]
-  no_tokens: ["no"]
-
-concurrency:
-  workers: 4
-  rate_limit_per_min: 120
-  retry:
-    max_attempts: 3
-    backoff_seconds: [2, 5, 10]
-
-resume: true
-save_prompt: true
-save_response: true
+python scripts/export_validation_slices_md.py --runs-dir runs --out reports/validation_slices_vars40_all.md --maxvars 40
 ```
 
-Multi-target example (run the same experiment for multiple providers/models):
-```yaml
-name: horn_yesno_suite
-
-# When `targets` is present, the runner fans out and runs each target concurrently
-targets:
-  - provider: openai
-    model: gpt-4o-2024-11-20
-    temperature: 0
-    seed: 1234
-    max_tokens: 2000
-  - provider: anthropic
-    model: claude-3-5-sonnet-latest
-    temperature: 0
-    seed: 1234
-    max_tokens: 2000
-
-input_file: data/problems_dist20_v1.js
-
-# Either write one merged results file, or shard by provider/model using a pattern
-output_file: experiments/runs/${name}/merged.results.jsonl
-# Alternatively:
-# output_pattern: experiments/runs/${name}/${provider}/${model}/results.jsonl
-
-filters:
-  horn_only: true
-  skip_rows: 1
-
-prompt:
-  template: prompts/if_then_yesno.j2
-
-parse:
-  type: yes_no
-
-concurrency:
-  workers: 4              # per-target concurrency over items
-  targets_workers: 2      # number of targets processed in parallel
-  rate_limit_per_min: 120 # applied per provider target
-  retry:
-    max_attempts: 3
-    backoff_seconds: [2, 5, 10]
-
-resume: true
-save_prompt: false
-save_response: true
+8) (Optional) Generate paper figures (PDF) + a provenance report:
+```
+python scripts/generate_paper_figures.py \
+  --runs-dir runs \
+  --output-dir reports/paper_figures \
+  --run-selection reports/paper_figures/run_selection.yaml
 ```
 
-Prompt template example `prompts/exp8_if_then_yesno.j2`:
-```jinja2
-Your task is to solve a problem in propositional logic containing both facts and if-then rules.
-You will get a list of facts and if-then rules and have to determine whether a fact p0 can be derived from this list.
-If a fact p0 can be derived, the last word of your answer should be 'yes', otherwise the last word should be 'no'.
+This writes:
+- figure PDFs + thumbnails (for quick review)
+- `paper_figures.selection.md` / `.json` showing exactly which run(s) were used per model
 
-Statements:
-{% for clause in clauses %}
-{{ clause }}
-{% endfor %}
+### Documentation
+- **Documentation index**: [`docs/README.md`](docs/README.md)
+- **Problem generation**: [`docs/problem-generation.md`](docs/problem-generation.md)
+- **Repository layout**: [`docs/repository-layout.md`](docs/repository-layout.md)
+- **Datasets**: [`docs/datasets.md`](docs/datasets.md)
+- **Runner + configs**: [`docs/runner-and-configs.md`](docs/runner-and-configs.md)
+- **Providers + secrets**: [`docs/providers-and-secrets.md`](docs/providers-and-secrets.md)
+- **Runs and results (artifacts policy)**: [`docs/runs-and-results.md`](docs/runs-and-results.md)
+- **Analysis**: [`docs/analysis.md`](docs/analysis.md)
+- **Migration plan**: [`docs/migration-plan.md`](docs/migration-plan.md)
 
-Please answer whether a fact p0 can be derived from the following facts and rules.
+### Directory layout
 ```
-
-### Running Experiments
-Run the new generic runner with a config:
+src/llmlog/           # importable package (runner, providers, analysis, datasets)
+scripts/              # CLI entrypoints (thin wrappers around src/llmlog/)
+configs/              # YAML experiment suites and shared target definitions
+prompts/              # Jinja prompt templates
+datasets/             # curated datasets (legacy/validation/production)
+runs/                 # run artifacts (committed after runs have finished, for traceability)
+reports/              # plots/tables/dashboards (gitignored by default)
+docs/                 # documentation
+_legacy/              # legacy experiments (exp1–exp8) kept for reference
 ```
-python experiments/runner.py --config experiments/configs/exp8_horn_yesno.yaml
-```
-Useful options (to be supported by the CLI):
-- `--limit 50` — process only the first 50 items
-- `--dry-run` — print prompts without calling the API
-- `--resume` — continue an interrupted run
-- `--only anthropic,openai` — restrict to a subset of providers in a multi-target config
-- `--models anthropic:claude-3-5-sonnet-latest,openai:gpt-4o-2024-11-20` — restrict models per provider
-- `--run 2025-09-23` — set a run id used in `${run}` output paths; defaults to timestamp when omitted
-
-Artifacts are stored under `experiments/runs/<name>/` and include:
-- `results.jsonl` or per-target files via `output_pattern` — standard output rows
-
-### Standard Output Schema
-Each line in `results.jsonl` is a JSON object with at least:
-```
-{
-  "id": <int|str>,
-  "meta": { "maxvars": int, "maxlen": int, "horn": 0|1, "satflag": 0|1, "proof": [...] },
-  "provider": "anthropic|google|openai|...",
-  "prompt": "...",               # optional if save_prompt=true
-  "completion_text": "...",      # optional if save_response=true
-  "parsed_answer": 0|1|2,         # 2 = unclear
-  "correct": true|false|null,     # null if no ground truth
-  "timing_ms": <int>,
-  "model": "...",
-  "seed": <int>,
-  "temperature": <number>,
-  "error": "..." | null
-}
-```
-
-### Analysis
-Use the generic analyzer on any run file:
-```
-python experiments/analyze_generic.py experiments/runs/exp8_horn_yesno/results.jsonl
-```
-It reports accuracy grouped by `maxvars`/`maxlen`/`horn` and, when present, per-depth stats using `proof` data.
-
-### Plotting
-Generate accuracy plots per experiment and an overall grouped chart. Requires matplotlib (already in `requirements.txt`).
-```
-python -m experiments.plot_results
-```
-Outputs PNG files under `experiments/plots/` (e.g., `overall.png`, `exp8_horn_yesno.png`).
-Provider series in plots are ordered alphabetically.
-
-### Thinking/Reasoning Configuration (Unified) and Validation
-
-We use a single, provider-agnostic schema for thinking/reasoning:
-
-```
-thinking:
-  enabled: true|false
-  budget_tokens: <int>        # Anthropic & Gemini only
-  effort: low|medium|high     # OpenAI only
-```
-
-Provider rules enforced by the runner (preflight validation):
-- Anthropic
-  - When `thinking.enabled: true`: set `temperature: 1`
-  - `budget_tokens >= 1024`
-  - `max_tokens > budget_tokens`
-  - Docs: https://docs.claude.com/en/docs/build-with-claude/extended-thinking
-- Google Gemini (2.5)
-  - Use `budget_tokens` for thinkingBudget
-  - Pro: cannot disable thinking; budget in [128, 32768] or `-1` for dynamic
-  - Flash: budget in [0, 24576] or `-1` for dynamic (0 disables)
-  - Flash-Lite: 0 disables, otherwise budget in [512, 24576] or `-1` for dynamic
-  - Docs: https://ai.google.dev/gemini-api/docs/thinking
-- OpenAI
-  - Reasoning effort only: `effort` in {low, medium, high}
-  - Prefer Responses API for reasoning models
-  - Docs: https://platform.openai.com/docs/guides/reasoning/advice-on-prompting#get-started-with-reasoning
-
-Notes:
-- `budget_tokens` is ignored for OpenAI; use `effort` instead.
-- `effort` is ignored for Anthropic/Gemini; use `budget_tokens` instead.
-- The runner validates configs on startup and before each call (to catch CLI overrides).
-
-### Normalized Response Metadata
-
-All providers return a unified metadata shape from the router:
-
-```
-{
-  "provider": "anthropic|google|openai",
-  "model": "...",
-  "finish_reason": "..." | null,
-  "usage": {
-    "input_tokens": <int|null>,
-    "output_tokens": <int|null>,
-    "reasoning_tokens": <int|null>
-  },
-  "raw_response": { ... }
-}
-```
-
-Provider-specific mapping:
-- Anthropic: `usage.input_tokens`/`usage.output_tokens` populated from API usage. When extended thinking blocks are present, `reasoning_tokens` is surfaced heuristically as `output_tokens` (per billing model).
-- Gemini: `usageMetadata.promptTokenCount` → input; `candidatesTokenCount` → output; `thoughtsTokenCount` → reasoning.
-- OpenAI (Responses & Chat): `usage.input_tokens`/`output_tokens` populated; `output_tokens_details.reasoning_tokens` → reasoning.
-
-Provenance files include this normalized `usage` alongside `raw_response` for auditability.
-
-### Troubleshooting
-
-- HTTP 429/529 (rate limit/overloaded)
-  - Lower `concurrency.workers` (e.g., 9 → 6 → 3), increase retry backoff (e.g., `[2,5,15,30,60]`), keep `--resume` on.
-  - In lockstep, all targets wait for the cohort; see TODO section for planned lockstep failure policies.
-
-- Anthropic validation errors
-  - "temperature must be 1 when thinking is enabled": set `temperature: 1` for those targets.
-  - "max_tokens must be greater than thinking.budget_tokens": increase `max_tokens` or reduce `budget_tokens`.
-
-- Gemini thinking
-  - Pro: cannot disable; use `budget_tokens: -1` (dynamic) or a value in 128..32768.
-  - Flash: 0 disables; otherwise 0..24576. Flash-Lite: 0 disables; otherwise 512..24576.
-
-- OpenAI reasoning
-  - Only `thinking.effort: low|medium|high` supported. Prefer Responses API.
-
-- Incomplete due to token limits
-  - Increase `max_tokens` to leave buffer for reasoning tokens (OpenAI recommends ~25k tokens for early experiments).
-
-- Resume interrupted runs
-  - Use `--resume` and keep `${run}` in `output_pattern` to compare runs over time.
-
-### Future Work / TODOs
-
-- Centralize request assembly
-  - One helper to build provider payloads from the unified config: messages (system/user), thinking (effort/budget), temperature/seed, and `max_tokens` mapping (OpenAI Responses vs Chat, etc.).
-  - Goal: remove per-client duplication and keep behavior uniform.
-
-- Normalize response metadata (single shape)
-  - Standardize: `{ provider, model, finish_reason, usage: { input_tokens, output_tokens, reasoning_tokens } }`.
-  - Map provider specifics:
-    - OpenAI: `output_tokens_details.reasoning_tokens` → `usage.reasoning_tokens`.
-    - Gemini: `usageMetadata.thoughtsTokenCount` → `usage.reasoning_tokens`.
-    - Anthropic: expose input/output tokens; set `reasoning_tokens` to `null` if not provided.
-
-- Consolidate error handling and retries
-  - One classifier for provider/HTTP errors → `{ error_class, retryable }` and shared backoff policy.
-  - Reduce scattered try/except and make retry behavior predictable.
-
-- Unify prompt/message construction
-  - Single helper to merge system+user for Anthropic/Gemini and to build Chat messages for OpenAI.
-  - Easier adoption of tools/function-calling later.
-
-- Tier presets (optional)
-  - `targets[].tier: flagship|medium|budget` → auto-fill recommended `thinking` and `max_tokens` per provider with overrides allowed.
-
-- Single path for max tokens semantics
-  - Convert unified `max_tokens` to provider-specific fields and document what counts (visible output vs thinking tokens).
-
-- Rate limiting and concurrency policy
-  - Central per-provider throttle (token bucket) to reduce 429s across clients; integrate with `concurrency` settings.
-  - Lockstep failure handling (design): add `lockstep_failure_policy` with options:
-    - `pause`: when any target 429/529s after retries, pause the entire cohort, sleep (e.g., 120/300/600s), then retry the same problem for all targets; limited cycles, then abort
-    - `skip`: when any target terminal-fails, mark the problem as blocked for all targets (write minimal rows), then continue to keep cohorts aligned
-    - `abort`: stop the run immediately on terminal 429/529 for any target; re-run later with `--resume`
-  - Add `pause_cooldown_seconds` and `pause_cycles` knobs
-
-- Provenance fidelity toggle
-  - One knob to include/exclude raw payloads, reasoning summaries, and timings; applied consistently across providers and both results/provenance files.
-
-- Structured logging/tracing
-  - Uniform logs for `request_id`, timing, attempts, validation outcome; optional JSON logs for later analysis.
-
-- Light test harness
-  - Golden tests per provider: validation failure cases, thinking tiers, message assembly, metadata normalization (using recorded/minimal fixtures).
-
-- CLI quality of life
-  - `--validate-only` to run config validation without API calls.
-  - `--print-prompts` to preview prompts per provider/model.
-  - Better error messages with suggested fixes (e.g., Anthropic `temperature=1`, Gemini ranges).
-
-- Caching (optional)
-  - Content-hash caching for identical requests to reduce cost during iterative runs.
-
-- Streaming and summaries (later)
-  - Add streaming support toggles and (where available) reasoning summaries capture behind the provenance knob.
-
-- Tools/function-calling (later)
-  - Shared function schema and return-shape normalization; Gemini thought signatures passthrough when tool use is enabled.
-
-### Comparing Runs Over Time
-1) Configure your configs with an output pattern including `${run}`, for example:
-```
-output_pattern: experiments/runs/${name}/${run}/${provider}/${model}/results.jsonl
-```
-2) Run experiments with different run ids:
-```
-python -m experiments.runner --config experiments/configs/exp8_horn_yesno.yaml --run 2025-09-23
-python -m experiments.runner --config experiments/configs/exp8_horn_yesno.yaml --run 2025-10-01
-```
-3) Compare accuracies across runs:
-```
-python -m experiments.compare_runs --name exp8_horn_yesno --runs 2025-09-23,2025-10-01
-```
-This prints a per-provider/model table with accuracy and deltas against the first run.
-
-### Porting a Legacy Experiment
-1) Identify the prompt style and parsing logic from `legacy/expX/`.
-2) Create a template in `prompts/` capturing that style.
-3) Add a YAML config under `experiments/configs/` that:
-   - points to the dataset
-   - references the template
-   - selects the appropriate parser type and tokens
-   - defines any filters (e.g., horn-only, skip/limit)
-4) Run and compare a small subset vs. the legacy output to validate parity.
-
-### Roadmap
-- Enhance runner concurrency (async), keep retry/backoff and resumability
-- Extend parsers/filters/schema and analyzer as needed
-- Wire providers via `utils/provider_router.py` (Anthropic, Google, OpenAI; optional others)
-- Optional: caching-by-hash to avoid duplicate API calls
 
 ### License
 Apache 2.0. See `LICENSE`.
-
-

@@ -1,0 +1,128 @@
+{
+  "metadata": {
+    "run_id": "horn_ex_only_len4_vars10_50_case10",
+    "runs_dir": "/Users/ottomattas/Downloads/repos/llmlog/runs",
+    "dataset": {
+      "min_vars": 10,
+      "max_vars": 50,
+      "min_len": 4,
+      "max_len": 4,
+      "total_problems": 50,
+      "horn_problems": 50,
+      "nonhorn_problems": 0,
+      "sat_problems": 25,
+      "unsat_problems": 25
+    }
+  },
+  "experiments": {
+    "sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2-pro__think-high": {
+      "name": "sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2-pro__think-high",
+      "models": {
+        "openai/gpt-5.2-pro/think_high": {
+          "provider": "openai",
+          "model": "gpt-5.2-pro",
+          "thinking_mode": "think_high",
+          "summary": {
+            "suite": "sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2-pro__think-high",
+            "run": "horn_ex_only_len4_vars10_50_case10",
+            "provider": "openai",
+            "model": "gpt-5.2-pro",
+            "thinking_mode": "think_high",
+            "dataset_selection": {
+              "only_maxvars": null,
+              "only_maxlen": null,
+              "only_ids": [
+                "14209"
+              ],
+              "case_limit": null
+            },
+            "pricing_table": "configs/pricing/openai_2025-12-18.yaml",
+            "pricing_rate": {
+              "provider": "openai",
+              "model": "gpt-5.2-pro",
+              "tier": "standard",
+              "input_per_million_usd": 21.0,
+              "output_per_million_usd": 168.0
+            },
+            "stats": {
+              "total": 50,
+              "answered": 50,
+              "correct": 50,
+              "unclear": 0,
+              "errors": 0,
+              "input_tokens": 69754,
+              "output_tokens": 184321,
+              "reasoning_tokens": 173852,
+              "cache_creation_input_tokens": 0,
+              "cache_read_input_tokens": 0,
+              "cost_total_usd": 32.430762,
+              "cost_input_usd": 1.4648339999999997,
+              "cost_output_usd": 30.965927999999995,
+              "attempts_total": 67
+            },
+            "accuracy": 1.0,
+            "pricing_tier": "standard"
+          },
+          "complexity_breakdown": {
+            "10": {
+              "accuracy": 1.0,
+              "total": 10,
+              "correct": 10
+            },
+            "20": {
+              "accuracy": 1.0,
+              "total": 10,
+              "correct": 10
+            },
+            "30": {
+              "accuracy": 1.0,
+              "total": 10,
+              "correct": 10
+            },
+            "40": {
+              "accuracy": 1.0,
+              "total": 10,
+              "correct": 10
+            },
+            "50": {
+              "accuracy": 1.0,
+              "total": 10,
+              "correct": 10
+            }
+          }
+        }
+      },
+      "summary": {
+        "total_models": 1,
+        "avg_accuracy": 1.0
+      }
+    }
+  },
+  "models": {
+    "openai/gpt-5.2-pro/think_high": {
+      "provider": "openai",
+      "model": "gpt-5.2-pro",
+      "thinking_mode": "think_high",
+      "experiments": {
+        "sat__repr-cnf_compact__subset-hornonly__prompt-examples_only__openai_gpt-5.2-pro__think-high": {
+          "accuracy": 1.0,
+          "total": 50,
+          "correct": 50,
+          "unclear": 0,
+          "input_tokens": 69754,
+          "output_tokens": 184321,
+          "reasoning_tokens": 173852,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 0,
+          "cost_total_usd": 32.430762,
+          "cost_input_usd": 1.4648339999999997,
+          "cost_output_usd": 30.965927999999995
+        }
+      }
+    }
+  },
+  "summary": {
+    "total_experiments": 1,
+    "total_models": 1
+  }
+}

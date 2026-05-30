@@ -21,5 +21,8 @@ build/
 # Paper draft (keep uncommitted for now)
 /article/
 
+# Generated artifacts (never commit)
+_api_probes/
+
 # Matplotlib cache used during paper-figure generation
-/_refactor/.mplconfig/
+/.mplconfig/
