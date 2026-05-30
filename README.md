@@ -89,7 +89,7 @@ configs/              # YAML experiment suites and shared target definitions
 prompts/              # Jinja prompt templates
 datasets/             # curated datasets (legacy/validation/production)
 runs/                 # run artifacts (committed after runs have finished, for traceability)
-reports/              # plots/tables/dashboards (gitignored by default)
+reports/              # plots/tables/dashboards
 docs/                 # documentation
 _legacy/              # legacy experiments (exp1–exp8) kept for reference
 ```
