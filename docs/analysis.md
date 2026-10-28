@@ -106,6 +106,17 @@ Then refresh the dashboard periodically (or run in watch mode too):
 python scripts/generate_combined_dashboard.py --output reports/combined.dashboard.html --watch-seconds 60
 ```
 
+### NeuS claim checks
+
+Two scripts recompute numbers that the Horn / NeuS paper prints. Both read `runs/` and start no new model runs.
+
+```
+python scripts/compute_claim_support_stats.py
+python scripts/extract_error_traces.py
+```
+
+`compute_claim_support_stats.py` reprints the Wilson 95% intervals for the headline comparisons and checks the per-cell counts against the figure sidecars. `extract_error_traces.py` characterises the `horn_alg_from` satisfiable-instance collapse for gpt-5.2 (think=none) on Compact CNF.
+
 ### Inspect prompts + reasoning
 If you enabled provenance output, you can export individual prompts and responses:
 ```

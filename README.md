@@ -70,6 +70,12 @@ This writes:
 - figure PDFs + thumbnails (for quick review)
 - `paper_figures.selection.md` / `.json` showing exactly which run(s) were used per model
 
+9) Recompute the NeuS paper's Wilson intervals and the satisfiable-instance error traces:
+```
+python scripts/compute_claim_support_stats.py
+python scripts/extract_error_traces.py
+```
+
 ### Documentation
 - **Documentation index**: [`docs/README.md`](docs/README.md)
 - **Problem generation**: [`docs/problem-generation.md`](docs/problem-generation.md)
